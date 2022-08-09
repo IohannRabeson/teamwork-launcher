@@ -83,6 +83,15 @@ impl MyApplication {
     fn accept_server(server_info: &ServerInfo, filter: &str) -> bool {
         server_info.name.as_str().to_lowercase().contains(&filter)
     }
+
+    fn launch_game(&self, ip: &std::net::Ipv4Addr, port: u16) {
+        use std::process::Command;
+
+        Command::new(r"C:\Program Files (x86)\Steam\Steam.exe")
+            .args(["-applaunch", "440", "+connect", &format!("{}:{}", ip, port)])
+            .output()
+            .expect("failed to execute process");
+    }
 }
 
 const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
@@ -118,7 +127,7 @@ impl Application for MyApplication {
             Messages::UpdateServers => return Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse),
             Messages::FilterChanged(filter) => self.filter = filter.to_lowercase(),
             Messages::ClearFilter => self.filter.clear(),
-            Messages::Connect(ip, port) => println!("Connect to {}:{}", ip, port),
+            Messages::Connect(ip, port) => self.launch_game(&ip, port),
         }
         
         Command::none()
