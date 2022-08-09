@@ -17,11 +17,18 @@ enum Error {
     Ui(#[from] Arc<iced::Error>)
 }
 
+enum States {
+    Reload,
+    DisplayServers,
+    Error,
+}
+
 struct MyApplication 
 {
     server_infos: Vec<ServerInfo>,
     error_message: Option<String>,
     filter: String,
+    state: States,
 }
 
 #[derive(Debug, Clone)]
@@ -92,49 +99,20 @@ impl MyApplication {
             .output()
             .expect("failed to execute process");
     }
-}
 
-const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
-
-impl Application for MyApplication {
-    type Message = Messages;
-    type Executor = iced::executor::Default;
-    type Flags = ();
-
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self {
-            server_infos: Vec::new(),
-            error_message: None,
-            filter: String::new(),
-        }, Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse))
+    fn reload_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+        text("Reloading...")
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .horizontal_alignment(iced::alignment::Horizontal::Center)
+            .vertical_alignment(iced::alignment::Vertical::Center)
+            .into()
     }
 
-    fn title(&self) -> String {
-        "TF2 launcher".to_string()
-    }
-
-    fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
-        match message {
-            Messages::ServersInfoResponse(response) => {
-                match response {
-                    Ok(servers_info) => {
-                        self.server_infos = servers_info;
-                        self.error_message = None;
-                    },
-                    Err(error_message) => self.error_message = Some(error_message.to_string()),
-                };
-            },
-            Messages::UpdateServers => return Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse),
-            Messages::FilterChanged(filter) => self.filter = filter.to_lowercase(),
-            Messages::ClearFilter => self.filter.clear(),
-            Messages::Connect(ip, port) => self.launch_game(&ip, port),
-        }
-        
-        Command::none()
-    }
-
-    fn view(&self) -> iced::pure::Element<Messages> {
-        let filter = text_input("Filter...", &self.filter, Messages::FilterChanged);
+    fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+        let filter = 
+            text_input("Filter...", &self.filter, Messages::FilterChanged)
+            ;
         let row: Row<Messages> = Row::new()
             .push(filter)
             .push(button("X").on_press(Messages::ClearFilter))
@@ -149,6 +127,70 @@ impl Application for MyApplication {
             ;
 
         column.into()
+    }
+
+    fn error_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+        let column: Column<Messages> = Column::new()
+            .push(text(self.error_message.as_ref().unwrap()))
+            .push(button("Retry").on_press(Messages::UpdateServers))
+            .width(Length::Fill)
+            .padding(3)
+            ;
+
+        column.into()
+    }
+}
+
+const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
+
+impl Application for MyApplication {
+    type Message = Messages;
+    type Executor = iced::executor::Default;
+    type Flags = ();
+
+    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        (Self {
+            server_infos: Vec::new(),
+            error_message: None,
+            filter: String::new(),
+            state: States::Reload,
+        }, Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse))
+    }
+
+    fn title(&self) -> String {
+        "TF2 launcher".to_string()
+    }
+
+    fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
+        match message {
+            Messages::ServersInfoResponse(response) => {
+                match response {
+                    Ok(servers_info) => {
+                        self.server_infos = servers_info;
+                        self.error_message = None;
+                        self.state = States::DisplayServers;
+                    },
+                    Err(error_message) => {
+                        self.error_message = Some(error_message.to_string());
+                        self.state = States::Error;
+                    }
+                };
+            },
+            Messages::UpdateServers => return Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse),
+            Messages::FilterChanged(filter) => self.filter = filter.to_lowercase(),
+            Messages::ClearFilter => self.filter.clear(),
+            Messages::Connect(ip, port) => self.launch_game(&ip, port),
+        }
+        
+        Command::none()
+    }
+
+    fn view(&self) -> iced::pure::Element<Messages> {
+        match self.state {
+            States::Reload => self.reload_view(),
+            States::DisplayServers => self.display_servers_view(),
+            States::Error => self.error_view(),
+        }
     }
 }
 
