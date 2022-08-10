@@ -1,22 +1,23 @@
 use enum_as_inner::EnumAsInner;
-use iced::pure::text_input;
 use iced::{
     pure::{
-        button, container, scrollable, text,
+        button, container, scrollable, text, text_input, toggler,
         widget::{Column, Row},
         Application,
     },
     Background, Command, Length, Settings, Space,
 };
+use serde::{Deserialize, Serialize};
 
 use iced_color_helpers::parse_color;
-use iced_pure::toggler;
-use serde::{Deserialize, Serialize};
 use server_info::{parse_server_infos, ServerInfo};
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::Path;
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::HashSet,
+    fs::File,
+    io::{Read, Write},
+    path::Path,
+    sync::Arc,
+};
 use thiserror::Error;
 
 mod iced_color_helpers;
@@ -91,7 +92,10 @@ struct Palette {
 
 impl Default for Palette {
     fn default() -> Self {
-        Self { background: parse_color("#F2F2F2"), foreground: parse_color("#0D0D0D") }
+        Self {
+            background: parse_color("#F2F2F2"),
+            foreground: parse_color("#0D0D0D"),
+        }
     }
 }
 
@@ -131,7 +135,6 @@ struct ServerCardStyleSheet;
 
 impl iced_pure::widget::button::StyleSheet for ServerCardStyleSheet {
     fn active(&self) -> iced::button::Style {
-        use iced_color_helpers::parse_color;
         let mut style = iced::button::Style::default();
         style.background = Some(Background::Color(parse_color("#8C3232")));
         style.text_color = parse_color("#F2F2F2");
@@ -140,7 +143,6 @@ impl iced_pure::widget::button::StyleSheet for ServerCardStyleSheet {
     }
 
     fn hovered(&self) -> iced::button::Style {
-        use iced_color_helpers::parse_color;
         let mut active = self.active();
         active.background = Some(Background::Color(parse_color("#BF7449")));
 
@@ -388,7 +390,11 @@ impl Application for MyApplication {
             States::Error => self.error_view(),
         };
 
-        container(content).style(MainContainerStyle::new(&self.palette)).height(Length::Fill).padding(12).into()
+        container(content)
+            .style(MainContainerStyle::new(&self.palette))
+            .height(Length::Fill)
+            .padding(12)
+            .into()
     }
 }
 
