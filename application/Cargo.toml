@@ -12,3 +12,7 @@ iced = { version = "0.4", features = ["pure", "tokio", "image"] }
 iced_native = "0.5.1"
 select = "0.5.0"
 nom = "7.1.1"
+iced_pure = "0.2.2"
+enum-as-inner = "0.5.1"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
