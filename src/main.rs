@@ -1,21 +1,16 @@
 use enum_as_inner::EnumAsInner;
-use iced::pure::text_input;
 use iced::{
     pure::{
-        button, container, scrollable, text,
+        button, container, scrollable, text, text_input, toggler,
         widget::{Column, Row},
         Application,
     },
     Background, Command, Length, Settings, Space,
 };
-use iced_pure::toggler;
+use serde::{Deserialize, Serialize};
 use server_info::{parse_server_infos, ServerInfo};
-use std::fs::File;
-use std::io::{Write, Read};
-use std::path::Path;
-use std::{collections::HashSet, sync::Arc};
+use std::{fs::File, io::{Read, Write}, path::Path, collections::HashSet, sync::Arc};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 mod server_info;
 
@@ -48,23 +43,26 @@ impl UserSettings {
     const USER_SETTINGS_FILE_NAME: &'static str = "tf2-launcher";
 
     fn save_settings(settings: &UserSettings) -> Result<(), Error> {
-        let json = serde_json::to_string(settings).map_err(|e|Error::Json(Arc::new(e)))?;
-        let mut file = File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
-        
-        file.write_all(json.as_bytes()).map_err(|e|Error::Io(Arc::new(e)))
+        let json = serde_json::to_string(settings).map_err(|e| Error::Json(Arc::new(e)))?;
+        let mut file =
+            File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
+
+        file.write_all(json.as_bytes())
+            .map_err(|e| Error::Io(Arc::new(e)))
     }
 
     fn load_settings() -> Result<UserSettings, Error> {
         if !Path::new(Self::USER_SETTINGS_FILE_NAME).is_file() {
-            return Ok(UserSettings::default())
+            return Ok(UserSettings::default());
         }
 
-        let mut file = File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
+        let mut file =
+            File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
         let mut json = String::new();
 
-        file.read_to_string(&mut json);
+        file.read_to_string(&mut json).map_err(|e| Error::Io(Arc::new(e)))?;
 
-        Ok(serde_json::from_str(&json).map_err(|e|Error::Json(Arc::new(e)))?)
+        Ok(serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))?)
     }
 }
 
@@ -74,7 +72,6 @@ struct MyApplication {
     settings: UserSettings,
     state: States,
     edit_favorites: bool,
-    
 }
 
 #[derive(Debug, Clone)]
@@ -246,8 +243,7 @@ impl MyApplication {
             .args(["-applaunch", "440", "+connect", &format!("{}:{}", ip, port)])
             .output()
             .expect("failed to execute process");
-    }    
-    
+    }
 }
 
 const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
@@ -342,5 +338,6 @@ impl Application for MyApplication {
 }
 
 fn main() -> Result<(), Error> {
-    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?)).map_err(|e| Error::Ui(Arc::new(e)))
+    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?))
+        .map_err(|e| Error::Ui(Arc::new(e)))
 }
