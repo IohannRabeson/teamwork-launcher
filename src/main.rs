@@ -8,15 +8,18 @@ use iced::{
     },
     Background, Command, Length, Settings, Space,
 };
+
+use iced_color_helpers::parse_color;
 use iced_pure::toggler;
+use serde::{Deserialize, Serialize};
 use server_info::{parse_server_infos, ServerInfo};
 use std::fs::File;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 use std::path::Path;
 use std::{collections::HashSet, sync::Arc};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
+mod iced_color_helpers;
 mod server_info;
 
 #[derive(Error, Debug, Clone)]
@@ -48,23 +51,27 @@ impl UserSettings {
     const USER_SETTINGS_FILE_NAME: &'static str = "tf2-launcher";
 
     fn save_settings(settings: &UserSettings) -> Result<(), Error> {
-        let json = serde_json::to_string(settings).map_err(|e|Error::Json(Arc::new(e)))?;
-        let mut file = File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
-        
-        file.write_all(json.as_bytes()).map_err(|e|Error::Io(Arc::new(e)))
+        let json = serde_json::to_string(settings).map_err(|e| Error::Json(Arc::new(e)))?;
+        let mut file =
+            File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
+
+        file.write_all(json.as_bytes())
+            .map_err(|e| Error::Io(Arc::new(e)))
     }
 
     fn load_settings() -> Result<UserSettings, Error> {
         if !Path::new(Self::USER_SETTINGS_FILE_NAME).is_file() {
-            return Ok(UserSettings::default())
+            return Ok(UserSettings::default());
         }
 
-        let mut file = File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
+        let mut file =
+            File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
         let mut json = String::new();
 
-        file.read_to_string(&mut json);
+        file.read_to_string(&mut json)
+            .map_err(|e| Error::Io(Arc::new(e)))?;
 
-        Ok(serde_json::from_str(&json).map_err(|e|Error::Json(Arc::new(e)))?)
+        Ok(serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))?)
     }
 }
 
@@ -74,7 +81,38 @@ struct MyApplication {
     settings: UserSettings,
     state: States,
     edit_favorites: bool,
-    
+    palette: Box<Palette>,
+}
+
+struct Palette {
+    pub background: iced::Color,
+    pub foreground: iced::Color,
+}
+
+impl Default for Palette {
+    fn default() -> Self {
+        Self { background: parse_color("#F2F2F2"), foreground: parse_color("#0D0D0D") }
+    }
+}
+
+struct MainContainerStyle<'l> {
+    palette: &'l Palette,
+}
+
+impl<'l> iced::container::StyleSheet for MainContainerStyle<'l> {
+    fn style(&self) -> iced::container::Style {
+        iced::container::Style {
+            text_color: Some(self.palette.foreground),
+            background: Some(Background::Color(self.palette.background)),
+            ..Default::default()
+        }
+    }
+}
+
+impl<'l> MainContainerStyle<'l> {
+    pub fn new(palette: &'l Palette) -> Self {
+        Self { palette: palette }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -93,11 +131,27 @@ struct ServerCardStyleSheet;
 
 impl iced_pure::widget::button::StyleSheet for ServerCardStyleSheet {
     fn active(&self) -> iced::button::Style {
+        use iced_color_helpers::parse_color;
         let mut style = iced::button::Style::default();
-        style.background = Some(Background::Color(iced::Color::from_rgb8(80, 0, 0)));
-        style.text_color = iced::Color::from_rgb8(230, 230, 230);
+        style.background = Some(Background::Color(parse_color("#8C3232")));
+        style.text_color = parse_color("#F2F2F2");
         style.border_radius = 6f32;
         style
+    }
+
+    fn hovered(&self) -> iced::button::Style {
+        use iced_color_helpers::parse_color;
+        let mut active = self.active();
+        active.background = Some(Background::Color(parse_color("#BF7449")));
+
+        active
+    }
+
+    fn pressed(&self) -> iced::button::Style {
+        iced::button::Style {
+            shadow_offset: iced::Vector::default(),
+            ..self.active()
+        }
     }
 }
 
@@ -131,23 +185,20 @@ impl MyApplication {
                 self.settings.favorites.contains(&server_info.name),
                 move |toggled| Messages::FavoriteClicked(toggled, index),
             ));
+        } else {
+            buttons = buttons.push(button("Copy").on_press(Messages::CopyClicked(index)));
         }
-        buttons = buttons
-            .push(button("Copy").on_press(Messages::CopyClicked(index)))
-            .width(Length::Fill);
         let content = Row::new().push(informations).push(buttons);
 
         button(content)
             .style(ServerCardStyleSheet {})
             .on_press(Messages::Connect(server_info.ip, server_info.port))
             .padding(12)
-            .height(Length::Units(120))
-            .width(Length::Fill)
             .into()
     }
 
     fn servers_view<'a>(&self) -> iced::pure::Element<'a, Messages> {
-        let mut column: Column<Messages> = Column::new().width(Length::Fill).spacing(12);
+        let mut column: Column<Messages> = Column::new().spacing(12);
 
         for server_element in self
             .server_infos
@@ -190,7 +241,7 @@ impl MyApplication {
             .into()
     }
 
-    fn filter<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+    fn filter_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
         let filter = container(text_input(
             "Filter...",
             &self.settings.filter,
@@ -209,7 +260,7 @@ impl MyApplication {
     }
 
     fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
-        let filter = self.filter();
+        let filter = self.filter_view();
         let favorite_settings = toggler(
             "Edit Favorites".to_string(),
             self.edit_favorites,
@@ -246,8 +297,7 @@ impl MyApplication {
             .args(["-applaunch", "440", "+connect", &format!("{}:{}", ip, port)])
             .output()
             .expect("failed to execute process");
-    }    
-    
+    }
 }
 
 const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
@@ -271,6 +321,7 @@ impl Application for MyApplication {
                 settings,
                 state: States::Reload,
                 edit_favorites: false,
+                palette: Box::new(Palette::default()),
             },
             Command::perform(
                 MyApplication::request_servers_infos(SKIAL_URL),
@@ -337,10 +388,11 @@ impl Application for MyApplication {
             States::Error => self.error_view(),
         };
 
-        container(content).padding(12).into()
+        container(content).style(MainContainerStyle::new(&self.palette)).height(Length::Fill).padding(12).into()
     }
 }
 
 fn main() -> Result<(), Error> {
-    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?)).map_err(|e| Error::Ui(Arc::new(e)))
+    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?))
+        .map_err(|e| Error::Ui(Arc::new(e)))
 }
