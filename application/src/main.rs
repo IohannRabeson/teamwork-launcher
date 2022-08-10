@@ -1,11 +1,21 @@
+use enum_as_inner::EnumAsInner;
+use iced::pure::text_input;
 use iced::{
-    pure::{button, text, widget::{Column, Row}, scrollable, Application}, 
-    Settings, Command, Length
+    pure::{
+        button, container, scrollable, text,
+        widget::{Column, Row},
+        Application,
+    },
+    Background, Command, Length, Settings, Space,
 };
-use iced::pure::{text_input, column};
-use server_info::{ServerInfo, parse_server_infos};
+use iced_pure::toggler;
+use server_info::{parse_server_infos, ServerInfo};
+use std::fs::File;
+use std::io::{Write, Read};
+use std::path::Path;
+use std::{collections::HashSet, sync::Arc};
 use thiserror::Error;
-use std::sync::Arc;
+use serde::{Serialize, Deserialize};
 
 mod server_info;
 
@@ -14,31 +24,81 @@ enum Error {
     #[error("HTTP error: {0}")]
     Http(#[from] Arc<reqwest::Error>),
     #[error("UI error: {0}")]
-    Ui(#[from] Arc<iced::Error>)
+    Ui(#[from] Arc<iced::Error>),
+    #[error("JSON error: {0}")]
+    Json(#[from] Arc<serde_json::Error>),
+    #[error("IO error: {0}")]
+    Io(#[from] Arc<std::io::Error>),
 }
 
+#[derive(Debug, EnumAsInner)]
 enum States {
     Reload,
     DisplayServers,
     Error,
 }
 
-struct MyApplication 
-{
+#[derive(Default, Serialize, Deserialize)]
+struct UserSettings {
+    pub favorites: HashSet<String>,
+    pub filter: String,
+}
+
+impl UserSettings {
+    const USER_SETTINGS_FILE_NAME: &'static str = "tf2-launcher";
+
+    fn save_settings(settings: &UserSettings) -> Result<(), Error> {
+        let json = serde_json::to_string(settings).map_err(|e|Error::Json(Arc::new(e)))?;
+        let mut file = File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
+        
+        file.write_all(json.as_bytes()).map_err(|e|Error::Io(Arc::new(e)))
+    }
+
+    fn load_settings() -> Result<UserSettings, Error> {
+        if !Path::new(Self::USER_SETTINGS_FILE_NAME).is_file() {
+            return Ok(UserSettings::default())
+        }
+
+        let mut file = File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e|Error::Io(Arc::new(e)))?;
+        let mut json = String::new();
+
+        file.read_to_string(&mut json);
+
+        Ok(serde_json::from_str(&json).map_err(|e|Error::Json(Arc::new(e)))?)
+    }
+}
+
+struct MyApplication {
     server_infos: Vec<ServerInfo>,
     error_message: Option<String>,
-    filter: String,
+    settings: UserSettings,
     state: States,
+    edit_favorites: bool,
+    
 }
 
 #[derive(Debug, Clone)]
-enum Messages
-{
+enum Messages {
     UpdateServers,
     ServersInfoResponse(Result<Vec<ServerInfo>, Error>),
     FilterChanged(String),
     ClearFilter,
     Connect(std::net::Ipv4Addr, u16),
+    EditFavorites(bool),
+    FavoriteClicked(bool, usize),
+    CopyClicked(usize),
+}
+
+struct ServerCardStyleSheet;
+
+impl iced_pure::widget::button::StyleSheet for ServerCardStyleSheet {
+    fn active(&self) -> iced::button::Style {
+        let mut style = iced::button::Style::default();
+        style.background = Some(Background::Color(iced::Color::from_rgb8(80, 0, 0)));
+        style.text_color = iced::Color::from_rgb8(230, 230, 230);
+        style.border_radius = 6f32;
+        style
+    }
 }
 
 impl MyApplication {
@@ -48,56 +108,77 @@ impl MyApplication {
             .map_err(|e| Error::Http(Arc::new(e)))?
             .text()
             .await
-            .map_err(|e| Error::Http(Arc::new(e)))?
-            ;
-        
+            .map_err(|e| Error::Http(Arc::new(e)))?;
+
         Ok(parse_server_infos(&html))
     }
 
-    fn make_server(server_info: &ServerInfo) -> iced::pure::Element<Messages> {
-        let element = Column::new()
+    fn server_view<'l>(
+        &self,
+        server_info: &ServerInfo,
+        index: usize,
+    ) -> iced::pure::Element<'l, Messages> {
+        let informations = Column::new()
             .push(text(&server_info.name))
-            .push(text(server_info.ip.to_string()))
-            .push(text(format!("{} / {} players", server_info.current_players_count, server_info.max_players_count)))
-            ;
+            .push(text(format!(
+                "{} / {} players",
+                server_info.current_players_count, server_info.max_players_count
+            )));
+        let mut buttons = Row::new().push(Space::with_width(Length::Fill));
+        if self.edit_favorites {
+            buttons = buttons.push(toggler(
+                "Add to favorites".to_string(),
+                self.settings.favorites.contains(&server_info.name),
+                move |toggled| Messages::FavoriteClicked(toggled, index),
+            ));
+        }
+        buttons = buttons
+            .push(button("Copy").on_press(Messages::CopyClicked(index)))
+            .width(Length::Fill);
+        let content = Row::new().push(informations).push(buttons);
 
-        let button = button(text("Connect"))
+        button(content)
+            .style(ServerCardStyleSheet {})
             .on_press(Messages::Connect(server_info.ip, server_info.port))
-            ;
-
-        Row::new()
-            .push(column().push(button).align_items(iced::Alignment::Center))
-            .push(element.width(Length::Fill))
+            .padding(12)
+            .height(Length::Units(120))
             .width(Length::Fill)
-            .height(Length::Shrink)
             .into()
     }
 
-    fn make_servers_list<'a>(&self, server_infos: &'a [ServerInfo], filter: &str) -> iced::pure::Element<'a, Messages> {
-        let mut column: Column<Messages> = Column::new();
+    fn servers_view<'a>(&self) -> iced::pure::Element<'a, Messages> {
+        let mut column: Column<Messages> = Column::new().width(Length::Fill).spacing(12);
 
-        for server_element in server_infos
+        for server_element in self
+            .server_infos
             .iter()
-            .filter(|server_info| filter.is_empty() || Self::accept_server(*server_info, filter))
-            .map(MyApplication::make_server)
+            .enumerate()
+            .filter(|(_, server_info)| self.accept_server(*server_info))
+            .map(|(index, server_info)| self.server_view(server_info, index))
         {
             column = column.push(server_element);
         }
 
-        scrollable(column.width(Length::Fill)).into()
+        scrollable(column).into()
     }
 
-    fn accept_server(server_info: &ServerInfo, filter: &str) -> bool {
-        server_info.name.as_str().to_lowercase().contains(&filter)
+    fn accept_server(&self, server_info: &ServerInfo) -> bool {
+        self.accept_filter(server_info) && self.accept_favorite(server_info)
     }
 
-    fn launch_game(&self, ip: &std::net::Ipv4Addr, port: u16) {
-        use std::process::Command;
+    fn accept_filter(&self, server_info: &ServerInfo) -> bool {
+        self.settings.filter.is_empty()
+            || server_info
+                .name
+                .as_str()
+                .to_lowercase()
+                .contains(&self.settings.filter)
+    }
 
-        Command::new(r"C:\Program Files (x86)\Steam\Steam.exe")
-            .args(["-applaunch", "440", "+connect", &format!("{}:{}", ip, port)])
-            .output()
-            .expect("failed to execute process");
+    fn accept_favorite(&self, server_info: &ServerInfo) -> bool {
+        self.edit_favorites
+            || self.settings.favorites.is_empty()
+            || self.settings.favorites.contains(&server_info.name)
     }
 
     fn reload_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
@@ -109,22 +190,39 @@ impl MyApplication {
             .into()
     }
 
-    fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
-        let filter = 
-            text_input("Filter...", &self.filter, Messages::FilterChanged)
-            ;
+    fn filter<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+        let filter = container(text_input(
+            "Filter...",
+            &self.settings.filter,
+            Messages::FilterChanged,
+        ))
+        .center_y()
+        .height(Length::Units(25))
+        .width(Length::Fill);
         let row: Row<Messages> = Row::new()
             .push(filter)
             .push(button("X").on_press(Messages::ClearFilter))
             .push(button("Refresh").on_press(Messages::UpdateServers))
-            ;
+            .spacing(6);
+
+        row.into()
+    }
+
+    fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
+        let filter = self.filter();
+        let favorite_settings = toggler(
+            "Edit Favorites".to_string(),
+            self.edit_favorites,
+            Messages::EditFavorites,
+        );
         let column: Column<Messages> = Column::new()
-            .push(row)
-            .push(self.make_servers_list(&self.server_infos, &self.filter))
+            .push(filter)
+            .push(favorite_settings)
+            .push(self.servers_view())
             .push(text(self.error_message.as_ref().unwrap_or(&String::new())))
             .width(Length::Fill)
             .padding(3)
-            ;
+            .spacing(12);
 
         column.into()
     }
@@ -134,27 +232,51 @@ impl MyApplication {
             .push(text(self.error_message.as_ref().unwrap()))
             .push(button("Retry").on_press(Messages::UpdateServers))
             .width(Length::Fill)
-            .padding(3)
-            ;
+            .height(Length::Fill)
+            .align_items(iced::Alignment::Center)
+            .padding(3);
 
         column.into()
     }
+
+    fn launch_game(&self, ip: &std::net::Ipv4Addr, port: u16) {
+        use std::process::Command;
+
+        Command::new(r"C:\Program Files (x86)\Steam\Steam.exe")
+            .args(["-applaunch", "440", "+connect", &format!("{}:{}", ip, port)])
+            .output()
+            .expect("failed to execute process");
+    }    
+    
 }
 
 const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
 
+impl Drop for MyApplication {
+    fn drop(&mut self) {
+        UserSettings::save_settings(&self.settings).expect("Write settings");
+    }
+}
+
 impl Application for MyApplication {
     type Message = Messages;
     type Executor = iced::executor::Default;
-    type Flags = ();
+    type Flags = UserSettings;
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        (Self {
-            server_infos: Vec::new(),
-            error_message: None,
-            filter: String::new(),
-            state: States::Reload,
-        }, Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse))
+    fn new(settings: Self::Flags) -> (Self, Command<Self::Message>) {
+        (
+            Self {
+                server_infos: Vec::new(),
+                error_message: None,
+                settings,
+                state: States::Reload,
+                edit_favorites: false,
+            },
+            Command::perform(
+                MyApplication::request_servers_infos(SKIAL_URL),
+                Messages::ServersInfoResponse,
+            ),
+        )
     }
 
     fn title(&self) -> String {
@@ -169,31 +291,56 @@ impl Application for MyApplication {
                         self.server_infos = servers_info;
                         self.error_message = None;
                         self.state = States::DisplayServers;
-                    },
+                    }
                     Err(error_message) => {
                         self.error_message = Some(error_message.to_string());
                         self.state = States::Error;
                     }
                 };
-            },
-            Messages::UpdateServers => return Command::perform(MyApplication::request_servers_infos(SKIAL_URL), Messages::ServersInfoResponse),
-            Messages::FilterChanged(filter) => self.filter = filter.to_lowercase(),
-            Messages::ClearFilter => self.filter.clear(),
+            }
+            Messages::UpdateServers => {
+                return Command::perform(
+                    MyApplication::request_servers_infos(SKIAL_URL),
+                    Messages::ServersInfoResponse,
+                )
+            }
+            Messages::FilterChanged(filter) => self.settings.filter = filter.to_lowercase(),
+            Messages::ClearFilter => self.settings.filter.clear(),
             Messages::Connect(ip, port) => self.launch_game(&ip, port),
+            Messages::FavoriteClicked(toggled, server_index) => {
+                match toggled {
+                    true => self
+                        .settings
+                        .favorites
+                        .insert(self.server_infos[server_index].name.clone()),
+                    false => self
+                        .settings
+                        .favorites
+                        .remove(&self.server_infos[server_index].name),
+                };
+            }
+            Messages::CopyClicked(server_index) => {
+                println!("Copy {}", server_index);
+            }
+            Messages::EditFavorites(toggled) => {
+                self.edit_favorites = toggled;
+            }
         }
-        
+
         Command::none()
     }
 
     fn view(&self) -> iced::pure::Element<Messages> {
-        match self.state {
+        let content = match self.state {
             States::Reload => self.reload_view(),
             States::DisplayServers => self.display_servers_view(),
             States::Error => self.error_view(),
-        }
+        };
+
+        container(content).padding(12).into()
     }
 }
 
 fn main() -> Result<(), Error> {
-    MyApplication::run(Settings::default()).map_err(|e| Error::Ui(Arc::new(e)))
+    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?)).map_err(|e| Error::Ui(Arc::new(e)))
 }
