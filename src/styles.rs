@@ -108,7 +108,7 @@ impl<'l> iced_pure::widget::button::StyleSheet for CardButtonStyleSheet<'l> {
 }
 
 pub struct ToggleStyle<'l> {
-    palette: &'l Palette
+    palette: &'l Palette,
 }
 
 impl<'l> ToggleStyle<'l> {

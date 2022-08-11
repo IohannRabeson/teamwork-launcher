@@ -1,7 +1,4 @@
-use nom::{
-    bytes::complete::tag, combinator::map, multi::separated_list0, sequence::separated_pair,
-    IResult,
-};
+use nom::{bytes::complete::tag, combinator::map, multi::separated_list0, sequence::separated_pair, IResult};
 use select::{
     document::Document,
     predicate::{Attr, Name, Predicate},
@@ -65,32 +62,20 @@ pub fn parse_server_infos(html: &str) -> Vec<ServerInfo> {
         .find(Attr("id", "servers").descendant(Name("th")))
         .map(|n| n.text())
         .collect::<Vec<String>>();
-    let name_column = columns_name
-        .iter()
-        .position(|n| n == "Name")
-        .expect("Column Name");
+    let name_column = columns_name.iter().position(|n| n == "Name").expect("Column Name");
     let players_column = columns_name
         .iter()
         .position(|n| n == "Players")
         .expect("Column Players");
-    let slots_column = columns_name
-        .iter()
-        .position(|n| n == "Slots")
-        .expect("Column Slots");
-    let map_column = columns_name
-        .iter()
-        .position(|n| n == "Map")
-        .expect("Column Map");
+    let slots_column = columns_name.iter().position(|n| n == "Slots").expect("Column Slots");
+    let map_column = columns_name.iter().position(|n| n == "Map").expect("Column Map");
     let address_column = columns_name
         .iter()
         .position(|n| n == "Address")
         .expect("Column Address");
 
     for tr_node in document.find(Name("tbody").descendant(Name("tr"))) {
-        let cells = tr_node
-            .find(Name("td"))
-            .map(|n| n.text())
-            .collect::<Vec<String>>();
+        let cells = tr_node.find(Name("td")).map(|n| n.text()).collect::<Vec<String>>();
         let mut server_info = ServerInfo::default();
         let address_and_port = &cells[address_column];
         let (_, (address, port)) = parse_ip_and_port(address_and_port).unwrap();

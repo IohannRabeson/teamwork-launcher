@@ -1,16 +1,15 @@
+use iced::pure::widget::Svg;
+use iced::pure::{button, Element};
 ///! Note for myself about component creation.
 /// The type called State is dedicated to the animation of the component.
 /// Remember Iced is based on Elm and this means each time the widget is drawn
 /// the value it displays are passed as parameter, the widget does not store the changing value
 /// it only stores what will be displayed.
-
 use iced::svg;
-use iced::pure::widget::Svg;
-use iced_lazy::pure::{Component, self};
-use iced::pure::{Element, button};
+use iced_lazy::pure::{self, Component};
 
-use crate::icons::load_svg;
 use crate::styles::Palette;
+use crate::ApplicationIcons;
 
 pub struct FavoriteButton<'l, Message> {
     icon_on: svg::Handle,
@@ -21,12 +20,13 @@ pub struct FavoriteButton<'l, Message> {
 }
 
 impl<'l, Message> FavoriteButton<'l, Message> {
-    pub fn new<F>(palette: &'l Palette, toggled: bool, f: F) -> Self
-    where F: 'l + Fn(bool) -> Message
+    pub fn new<F>(icons: &ApplicationIcons, palette: &'l Palette, toggled: bool, f: F) -> Self
+    where
+        F: 'l + Fn(bool) -> Message,
     {
         Self {
-            icon_on: load_svg(include_bytes!("../../icons/favorite.svg"), &palette.card_foreground).expect("favorite.svg"),
-            icon_off: load_svg(include_bytes!("../../icons/favorite_border.svg"), &palette.card_foreground).expect("favorite.svg"),
+            icon_on: icons.favorite_on.clone(),
+            icon_off: icons.favorite_off.clone(),
             on_toggle: Box::new(f),
             toggled,
             palette,
@@ -41,11 +41,11 @@ pub enum Event {
 
 #[derive(Default, Clone)]
 pub struct FavoriteButtonState {
-    pub toggled: bool
+    pub toggled: bool,
 }
 
 struct ButtonStyleSheet<'l> {
-    palette: &'l Palette
+    palette: &'l Palette,
 }
 
 impl<'l> ButtonStyleSheet<'l> {
@@ -67,26 +67,22 @@ impl<'l> iced::pure::widget::button::StyleSheet for ButtonStyleSheet<'l> {
     }
 }
 
-impl<'l, Message, Renderer: 'l> Component<Message, Renderer> for FavoriteButton<'l, Message> 
+impl<'l, Message, Renderer: 'l> Component<Message, Renderer> for FavoriteButton<'l, Message>
 where
     Renderer: iced_native::text::Renderer + iced_native::svg::Renderer,
 {
     type State = ();
     type Event = Event;
 
-    fn update(
-        &mut self,
-        _state: &mut Self::State,
-        event: Self::Event,
-    ) -> Option<Message> {
+    fn update(&mut self, _state: &mut Self::State, event: Self::Event) -> Option<Message> {
         match event {
             Event::Pressed => {
                 self.toggled = !self.toggled;
 
                 let message = (self.on_toggle)(self.toggled);
 
-                return Some(message)
-            },
+                return Some(message);
+            }
         }
     }
 
@@ -95,7 +91,7 @@ where
             true => self.icon_on.clone(),
             false => self.icon_off.clone(),
         };
-        
+
         button(Svg::new(icon))
             .on_press(Event::Pressed)
             .style(ButtonStyleSheet::new(&self.palette))
@@ -104,10 +100,10 @@ where
 }
 
 impl<'l, Message> From<FavoriteButton<'l, Message>> for Element<'l, Message>
-    where
-        Message: 'l,
-    {
-        fn from(button: FavoriteButton<'l, Message>) -> Self {
-            pure::component(button)
-        }
+where
+    Message: 'l,
+{
+    fn from(button: FavoriteButton<'l, Message>) -> Self {
+        pure::component(button)
     }
+}

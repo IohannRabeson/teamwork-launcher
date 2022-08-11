@@ -2,29 +2,22 @@ use enum_as_inner::EnumAsInner;
 use iced::{
     pure::{
         button, container, scrollable, text, text_input, toggler,
-        widget::{Column, Row, Svg},
+        widget::{Column, Row},
         Application,
     },
     svg, Command, Length, Settings, Space,
 };
-use serde::{Deserialize, Serialize};
 
 use server_info::{parse_server_infos, ServerInfo};
-use styles::{Palette, CardButtonStyleSheet};
-use std::{
-    collections::HashSet,
-    fs::File,
-    io::{Read, Write},
-    path::Path,
-    sync::Arc,
-};
+use settings::UserSettings;
+use std::sync::Arc;
+use styles::Palette;
 use thiserror::Error;
-
-use crate::ui::favorite_button::FavoriteButton;
 
 mod colors;
 mod icons;
 mod server_info;
+mod settings;
 mod styles;
 mod ui;
 
@@ -62,42 +55,7 @@ pub enum Messages {
     FavoriteClicked(bool, usize),
     CopyClicked(usize),
 }
-
-#[derive(Default, Serialize, Deserialize)]
-struct UserSettings {
-    pub favorites: HashSet<String>,
-    pub filter: String,
-}
-
-impl UserSettings {
-    const USER_SETTINGS_FILE_NAME: &'static str = "tf2-launcher";
-
-    fn save_settings(settings: &UserSettings) -> Result<(), Error> {
-        let json = serde_json::to_string(settings).map_err(|e| Error::Json(Arc::new(e)))?;
-        let mut file =
-            File::create(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
-
-        file.write_all(json.as_bytes())
-            .map_err(|e| Error::Io(Arc::new(e)))
-    }
-
-    fn load_settings() -> Result<UserSettings, Error> {
-        if !Path::new(Self::USER_SETTINGS_FILE_NAME).is_file() {
-            return Ok(UserSettings::default());
-        }
-
-        let mut file =
-            File::open(Self::USER_SETTINGS_FILE_NAME).map_err(|e| Error::Io(Arc::new(e)))?;
-        let mut json = String::new();
-
-        file.read_to_string(&mut json)
-            .map_err(|e| Error::Io(Arc::new(e)))?;
-
-        Ok(serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))?)
-    }
-}
-
-struct ApplicationIcons {
+pub struct ApplicationIcons {
     copy_image_handle: svg::Handle,
     favorite_on: svg::Handle,
     favorite_off: svg::Handle,
@@ -106,36 +64,27 @@ struct ApplicationIcons {
 }
 
 impl ApplicationIcons {
-pub fn load_application_icons(light_color: &iced::Color, dark_color: &iced::Color) -> ApplicationIcons
-{
-    ApplicationIcons {
-        copy_image_handle: crate::icons::load_svg(
-            include_bytes!("../icons/copy.svg"),
-            light_color,
-        )
-        .expect("copy.svg"),
-        favorite_on: crate::icons::load_svg(
-            include_bytes!("../icons/favorite.svg"),
-            light_color,
-        )
-        .expect("favorite.svg"),
-        favorite_off: crate::icons::load_svg(
-            include_bytes!("../icons/favorite_border.svg"),
-            light_color,
-        )
-        .expect("favorite_border.svg"),
-        refresh: crate::icons::load_svg(
-            include_bytes!("../icons/refresh.svg"),
-            dark_color,
-        )
-        .expect("refresh.svg"),
-        clear: crate::icons::load_svg(
-            include_bytes!("../icons/clear.svg"),
-            dark_color,
-        )
-        .expect("refresh.svg")
+    pub fn load_application_icons(light_color: &iced::Color, dark_color: &iced::Color) -> ApplicationIcons {
+        ApplicationIcons {
+            copy_image_handle: crate::icons::load_svg(
+                include_bytes!("../icons/copy.svg"),
+                light_color,
+                "copy.svg",
+            ),
+            favorite_on: crate::icons::load_svg(
+                include_bytes!("../icons/favorite.svg"),
+                light_color,
+                "favorite.svg",
+            ),
+            favorite_off: crate::icons::load_svg(
+                include_bytes!("../icons/favorite_border.svg"),
+                light_color,
+                "favorite_border.svg",
+            ),
+            refresh: crate::icons::load_svg(include_bytes!("../icons/refresh.svg"), dark_color, "refresh.svg"),
+            clear: crate::icons::load_svg(include_bytes!("../icons/clear.svg"), dark_color, "clear.svg"),
+        }
     }
-}
 }
 
 struct MyApplication {
@@ -160,24 +109,25 @@ impl MyApplication {
         Ok(parse_server_infos(&html))
     }
 
-    fn server_view<'l>(
-        &'l self,
-        server_info: &ServerInfo,
-        index: usize,
-    ) -> iced::pure::Element<'l, Messages> {
-        let informations = Column::new()
-            .push(text(&server_info.name))
-            .push(text(format!(
-                "{} / {} players",
-                server_info.current_players_count, server_info.max_players_count
-            )));
+    fn server_view<'l>(&'l self, server_info: &ServerInfo, index: usize) -> iced::pure::Element<'l, Messages> {
+        let informations = Column::new().push(text(&server_info.name)).push(text(format!(
+            "{} / {} players",
+            server_info.current_players_count, server_info.max_players_count
+        )));
         let mut buttons = Row::new().push(Space::with_width(Length::Fill));
         if self.edit_favorites {
-            buttons = buttons.push(ui::favorite_button::FavoriteButton::new(&self.palette, self.settings.favorites.contains(&server_info.name), move |toggled| {
-                Messages::FavoriteClicked(toggled, index)
-            }));
+            buttons = buttons.push(ui::favorite_button::FavoriteButton::new(
+                &self.icons,
+                &self.palette,
+                self.settings.favorites.contains(&server_info.name),
+                move |toggled| Messages::FavoriteClicked(toggled, index),
+            ));
         } else {
-            buttons = buttons.push(ui::svg_card_button(self.icons.copy_image_handle.clone(), Messages::CopyClicked(index), &self.palette));
+            buttons = buttons.push(ui::svg_card_button(
+                self.icons.copy_image_handle.clone(),
+                Messages::CopyClicked(index),
+                &self.palette,
+            ));
         }
         let content = Row::new().push(informations).push(buttons);
 
@@ -209,12 +159,7 @@ impl MyApplication {
     }
 
     fn accept_filter(&self, server_info: &ServerInfo) -> bool {
-        self.settings.filter.is_empty()
-            || server_info
-                .name
-                .as_str()
-                .to_lowercase()
-                .contains(&self.settings.filter)
+        self.settings.filter.is_empty() || server_info.name.as_str().to_lowercase().contains(&self.settings.filter)
     }
 
     fn accept_favorite(&self, server_info: &ServerInfo) -> bool {
@@ -227,22 +172,27 @@ impl MyApplication {
         container(text("Reloading..."))
             .width(Length::Fill)
             .height(Length::Fill)
-            .center_x().center_y()
+            .center_x()
+            .center_y()
             .into()
     }
 
     fn filter_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
-        let filter = container(text_input(
-            "Filter...",
-            &self.settings.filter,
-            Messages::FilterChanged,
-        ).padding(6))
-        .center_y()
-        .width(Length::Fill);
+        let filter = container(text_input("Filter...", &self.settings.filter, Messages::FilterChanged).padding(6))
+            .center_y()
+            .width(Length::Fill);
         let row: Row<Messages> = Row::new()
             .push(filter)
-            .push(ui::svg_default_button(self.icons.clear.clone(), Messages::ClearFilter, 32u16))
-            .push(ui::svg_default_button(self.icons.refresh.clone(), Messages::UpdateServers, 32u16))
+            .push(ui::svg_default_button(
+                self.icons.clear.clone(),
+                Messages::ClearFilter,
+                32u16,
+            ))
+            .push(ui::svg_default_button(
+                self.icons.refresh.clone(),
+                Messages::UpdateServers,
+                32u16,
+            ))
             .spacing(6);
 
         row.into()
@@ -360,10 +310,7 @@ impl Application for MyApplication {
                         .settings
                         .favorites
                         .insert(self.server_infos[server_index].name.clone()),
-                    false => self
-                        .settings
-                        .favorites
-                        .remove(&self.server_infos[server_index].name),
+                    false => self.settings.favorites.remove(&self.server_infos[server_index].name),
                 };
             }
             Messages::CopyClicked(server_index) => {
@@ -394,6 +341,5 @@ impl Application for MyApplication {
 }
 
 fn main() -> Result<(), Error> {
-    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?))
-        .map_err(|e| Error::Ui(Arc::new(e)))
+    MyApplication::run(Settings::with_flags(UserSettings::load_settings()?)).map_err(|e| Error::Ui(Arc::new(e)))
 }
