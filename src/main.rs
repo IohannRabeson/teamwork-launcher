@@ -2,15 +2,15 @@ use enum_as_inner::EnumAsInner;
 use iced::{
     pure::{
         button, container, scrollable, text, text_input, toggler,
-        widget::{Column, Row},
+        widget::{Column, Row, Svg},
         Application,
     },
-    Background, Command, Length, Settings, Space,
+    svg, Command, Length, Settings, Space,
 };
 use serde::{Deserialize, Serialize};
 
-use iced_color_helpers::parse_color;
 use server_info::{parse_server_infos, ServerInfo};
+use styles::{Palette, CardButtonStyleSheet};
 use std::{
     collections::HashSet,
     fs::File,
@@ -20,11 +20,14 @@ use std::{
 };
 use thiserror::Error;
 
-mod iced_color_helpers;
+mod colors;
+mod icons;
 mod server_info;
+mod styles;
+mod ui;
 
 #[derive(Error, Debug, Clone)]
-enum Error {
+pub enum Error {
     #[error("HTTP error: {0}")]
     Http(#[from] Arc<reqwest::Error>),
     #[error("UI error: {0}")]
@@ -33,6 +36,10 @@ enum Error {
     Json(#[from] Arc<serde_json::Error>),
     #[error("IO error: {0}")]
     Io(#[from] Arc<std::io::Error>),
+    #[error("XML parse error: {0}")]
+    Xml(#[from] Arc<xmltree::ParseError>),
+    #[error("XML error: {0}")]
+    XmlTree(#[from] Arc<xmltree::Error>),
 }
 
 #[derive(Debug, EnumAsInner)]
@@ -40,6 +47,18 @@ enum States {
     Reload,
     DisplayServers,
     Error,
+}
+
+#[derive(Debug, Clone)]
+pub enum Messages {
+    UpdateServers,
+    ServersInfoResponse(Result<Vec<ServerInfo>, Error>),
+    FilterChanged(String),
+    ClearFilter,
+    Connect(std::net::Ipv4Addr, u16),
+    EditFavorites(bool),
+    FavoriteClicked(bool, usize),
+    CopyClicked(usize),
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -76,6 +95,47 @@ impl UserSettings {
     }
 }
 
+struct ApplicationIcons {
+    copy_image_handle: svg::Handle,
+    favorite_on: svg::Handle,
+    favorite_off: svg::Handle,
+    refresh: svg::Handle,
+    clear: svg::Handle,
+}
+
+impl ApplicationIcons {
+pub fn load_application_icons(light_color: &iced::Color, dark_color: &iced::Color) -> ApplicationIcons
+{
+    ApplicationIcons {
+        copy_image_handle: crate::icons::load_svg(
+            include_bytes!("../icons/copy.svg"),
+            light_color,
+        )
+        .expect("copy.svg"),
+        favorite_on: crate::icons::load_svg(
+            include_bytes!("../icons/favorite.svg"),
+            light_color,
+        )
+        .expect("favorite.svg"),
+        favorite_off: crate::icons::load_svg(
+            include_bytes!("../icons/favorite_border.svg"),
+            light_color,
+        )
+        .expect("favorite_border.svg"),
+        refresh: crate::icons::load_svg(
+            include_bytes!("../icons/refresh.svg"),
+            dark_color,
+        )
+        .expect("refresh.svg"),
+        clear: crate::icons::load_svg(
+            include_bytes!("../icons/clear.svg"),
+            dark_color,
+        )
+        .expect("refresh.svg")
+    }
+}
+}
+
 struct MyApplication {
     server_infos: Vec<ServerInfo>,
     error_message: Option<String>,
@@ -83,78 +143,7 @@ struct MyApplication {
     state: States,
     edit_favorites: bool,
     palette: Box<Palette>,
-}
-
-struct Palette {
-    pub background: iced::Color,
-    pub foreground: iced::Color,
-}
-
-impl Default for Palette {
-    fn default() -> Self {
-        Self {
-            background: parse_color("#F2F2F2"),
-            foreground: parse_color("#0D0D0D"),
-        }
-    }
-}
-
-struct MainContainerStyle<'l> {
-    palette: &'l Palette,
-}
-
-impl<'l> iced::container::StyleSheet for MainContainerStyle<'l> {
-    fn style(&self) -> iced::container::Style {
-        iced::container::Style {
-            text_color: Some(self.palette.foreground),
-            background: Some(Background::Color(self.palette.background)),
-            ..Default::default()
-        }
-    }
-}
-
-impl<'l> MainContainerStyle<'l> {
-    pub fn new(palette: &'l Palette) -> Self {
-        Self { palette: palette }
-    }
-}
-
-#[derive(Debug, Clone)]
-enum Messages {
-    UpdateServers,
-    ServersInfoResponse(Result<Vec<ServerInfo>, Error>),
-    FilterChanged(String),
-    ClearFilter,
-    Connect(std::net::Ipv4Addr, u16),
-    EditFavorites(bool),
-    FavoriteClicked(bool, usize),
-    CopyClicked(usize),
-}
-
-struct ServerCardStyleSheet;
-
-impl iced_pure::widget::button::StyleSheet for ServerCardStyleSheet {
-    fn active(&self) -> iced::button::Style {
-        let mut style = iced::button::Style::default();
-        style.background = Some(Background::Color(parse_color("#8C3232")));
-        style.text_color = parse_color("#F2F2F2");
-        style.border_radius = 6f32;
-        style
-    }
-
-    fn hovered(&self) -> iced::button::Style {
-        let mut active = self.active();
-        active.background = Some(Background::Color(parse_color("#BF7449")));
-
-        active
-    }
-
-    fn pressed(&self) -> iced::button::Style {
-        iced::button::Style {
-            shadow_offset: iced::Vector::default(),
-            ..self.active()
-        }
-    }
+    icons: ApplicationIcons,
 }
 
 impl MyApplication {
@@ -170,7 +159,7 @@ impl MyApplication {
     }
 
     fn server_view<'l>(
-        &self,
+        &'l self,
         server_info: &ServerInfo,
         index: usize,
     ) -> iced::pure::Element<'l, Messages> {
@@ -188,18 +177,18 @@ impl MyApplication {
                 move |toggled| Messages::FavoriteClicked(toggled, index),
             ));
         } else {
-            buttons = buttons.push(button("Copy").on_press(Messages::CopyClicked(index)));
+            buttons = buttons.push(ui::svg_card_button(self.icons.copy_image_handle.clone(), Messages::CopyClicked(index), &self.palette));
         }
         let content = Row::new().push(informations).push(buttons);
 
         button(content)
-            .style(ServerCardStyleSheet {})
+            .style(styles::ServerCardStyleSheet::new(&self.palette))
             .on_press(Messages::Connect(server_info.ip, server_info.port))
             .padding(12)
             .into()
     }
 
-    fn servers_view<'a>(&self) -> iced::pure::Element<'a, Messages> {
+    fn servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
         let mut column: Column<Messages> = Column::new().spacing(12);
 
         for server_element in self
@@ -235,11 +224,10 @@ impl MyApplication {
     }
 
     fn reload_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
-        text("Reloading...")
+        container(text("Reloading..."))
             .width(Length::Fill)
             .height(Length::Fill)
-            .horizontal_alignment(iced::alignment::Horizontal::Center)
-            .vertical_alignment(iced::alignment::Vertical::Center)
+            .center_x().center_y()
             .into()
     }
 
@@ -248,14 +236,14 @@ impl MyApplication {
             "Filter...",
             &self.settings.filter,
             Messages::FilterChanged,
-        ))
+        ).padding(6))
         .center_y()
-        .height(Length::Units(25))
+        //.height(Length::Units(25))
         .width(Length::Fill);
         let row: Row<Messages> = Row::new()
             .push(filter)
-            .push(button("X").on_press(Messages::ClearFilter))
-            .push(button("Refresh").on_press(Messages::UpdateServers))
+            .push(ui::svg_default_button(self.icons.clear.clone(), Messages::ClearFilter, 32u16))
+            .push(ui::svg_default_button(self.icons.refresh.clone(), Messages::UpdateServers, 32u16))
             .spacing(6);
 
         row.into()
@@ -264,10 +252,12 @@ impl MyApplication {
     fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
         let filter = self.filter_view();
         let favorite_settings = toggler(
-            "Edit Favorites".to_string(),
+            "Edit Favorites: ".to_string(),
             self.edit_favorites,
             Messages::EditFavorites,
-        );
+        )
+        .text_alignment(iced::alignment::Horizontal::Right)
+        .style(styles::ToggleStyle::new(&self.palette));
         let column: Column<Messages> = Column::new()
             .push(filter)
             .push(favorite_settings)
@@ -316,6 +306,10 @@ impl Application for MyApplication {
     type Flags = UserSettings;
 
     fn new(settings: Self::Flags) -> (Self, Command<Self::Message>) {
+        let palette = Box::new(Palette::default());
+        let card_foreground_color = palette.card_foreground.clone();
+        let foreground_color = palette.foreground.clone();
+
         (
             Self {
                 server_infos: Vec::new(),
@@ -323,7 +317,8 @@ impl Application for MyApplication {
                 settings,
                 state: States::Reload,
                 edit_favorites: false,
-                palette: Box::new(Palette::default()),
+                palette,
+                icons: ApplicationIcons::load_application_icons(&card_foreground_color, &foreground_color),
             },
             Command::perform(
                 MyApplication::request_servers_infos(SKIAL_URL),
@@ -391,8 +386,9 @@ impl Application for MyApplication {
         };
 
         container(content)
-            .style(MainContainerStyle::new(&self.palette))
+            .style(styles::MainContainerStyle::new(&self.palette))
             .height(Length::Fill)
+            .width(Length::Fill)
             .padding(12)
             .into()
     }
