@@ -24,6 +24,7 @@ mod colors;
 mod icons;
 mod server_info;
 mod styles;
+mod ui;
 
 #[derive(Error, Debug, Clone)]
 pub enum Error {
@@ -91,33 +92,6 @@ impl UserSettings {
             .map_err(|e| Error::Io(Arc::new(e)))?;
 
         Ok(serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))?)
-    }
-}
-
-mod ui
-{
-    use iced::{svg, Svg, Length};
-    use iced_pure::button;
-
-    use crate::{Messages, styles::{CardButtonStyleSheet, Palette}};
-
-    pub fn svg_card_button<'l>(svg: svg::Handle, message: Messages, palette: &'l Palette) -> iced::pure::Element<'l, Messages> 
-    {
-        button(Svg::new(svg.clone()))
-                .width(Length::Units(24))
-                .height(Length::Units(24))    
-                .style(CardButtonStyleSheet::new(&palette))
-                .on_press(message)
-                .into()
-    }
-
-    pub fn svg_default_button<'l>(svg: svg::Handle, message: Messages, size: u16) -> iced::pure::Element<'l, Messages> 
-    {
-        button(Svg::new(svg.clone()))
-                .width(Length::Units(size))
-                .height(Length::Units(size))    
-                .on_press(message)
-                .into()
     }
 }
 
@@ -250,11 +224,10 @@ impl MyApplication {
     }
 
     fn reload_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
-        text("Reloading...")
+        container(text("Reloading..."))
             .width(Length::Fill)
             .height(Length::Fill)
-            .horizontal_alignment(iced::alignment::Horizontal::Center)
-            .vertical_alignment(iced::alignment::Vertical::Center)
+            .center_x().center_y()
             .into()
     }
 
@@ -279,10 +252,12 @@ impl MyApplication {
     fn display_servers_view<'l>(&'l self) -> iced::pure::Element<'l, Messages> {
         let filter = self.filter_view();
         let favorite_settings = toggler(
-            "Edit Favorites".to_string(),
+            "Edit Favorites: ".to_string(),
             self.edit_favorites,
             Messages::EditFavorites,
-        );
+        )
+        .text_alignment(iced::alignment::Horizontal::Right)
+        .style(styles::ToggleStyle::new(&self.palette));
         let column: Column<Messages> = Column::new()
             .push(filter)
             .push(favorite_settings)

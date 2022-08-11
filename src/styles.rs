@@ -8,6 +8,7 @@ pub struct Palette {
     pub card_background: iced::Color,
     pub card_foreground: iced::Color,
     pub card_background_hover: iced::Color,
+    pub toggler_background: iced::Color,
 }
 
 impl Default for Palette {
@@ -18,6 +19,7 @@ impl Default for Palette {
             card_background: parse_color("#8C3232"),
             card_foreground: parse_color("#F2F2F2"),
             card_background_hover: parse_color("#BF7449"),
+            toggler_background: parse_color("#457F8C"),
         }
     }
 }
@@ -102,5 +104,37 @@ impl<'l> iced_pure::widget::button::StyleSheet for CardButtonStyleSheet<'l> {
         active.border_color = self.palette.background.clone();
         active.border_width = 1f32;
         active
+    }
+}
+
+pub struct ToggleStyle<'l> {
+    palette: &'l Palette
+}
+
+impl<'l> ToggleStyle<'l> {
+    pub fn new(palette: &'l Palette) -> Self {
+        Self { palette }
+    }
+}
+
+impl<'l> iced::pure::widget::toggler::StyleSheet for ToggleStyle<'l> {
+    fn active(&self, is_active: bool) -> iced::toggler::Style {
+        iced::toggler::Style {
+            background: if is_active {
+                self.palette.toggler_background.clone()
+            } else {
+                iced::Color::from_rgb(0.7, 0.7, 0.7)
+            },
+            background_border: None,
+            foreground: iced::Color::WHITE,
+            foreground_border: None,
+        }
+    }
+
+    fn hovered(&self, is_active: bool) -> iced::toggler::Style {
+        iced::toggler::Style {
+            foreground: iced::Color::from_rgb(0.95, 0.95, 0.95),
+            ..self.active(is_active)
+        }
     }
 }
