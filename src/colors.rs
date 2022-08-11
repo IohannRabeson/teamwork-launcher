@@ -1,6 +1,8 @@
 mod details {
     use nom::{
-        bytes::complete::{tag, take_while_m_n}, combinator::{map, map_res}, multi::separated_list0, sequence::{separated_pair, tuple},
+        bytes::complete::{tag, take_while_m_n},
+        combinator::map_res,
+        sequence::tuple,
         IResult,
     };
 
@@ -26,4 +28,17 @@ mod details {
 
 pub fn parse_color(text: &str) -> iced::Color {
     details::hex_color(text).unwrap().1
+}
+
+fn compute_color_component(value: f32) -> u8 {
+    (value * u8::MAX as f32) as u8
+}
+
+pub fn color_to_str(color: &iced::Color) -> String {
+    format!(
+        "#{:02x}{:02x}{:02x}",
+        compute_color_component(color.r),
+        compute_color_component(color.g),
+        compute_color_component(color.b)
+    )
 }
