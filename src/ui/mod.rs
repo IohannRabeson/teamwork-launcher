@@ -1,6 +1,8 @@
 use iced::{svg, Svg, Length, pure::widget::Row};
 use iced_pure::{button, text};
 
+pub mod favorite_button;
+
 use crate::{Messages, styles::{CardButtonStyleSheet, Palette}};
 
 pub fn svg_card_button<'l>(svg: svg::Handle, message: Messages, palette: &'l Palette) -> iced::pure::Element<'l, Messages> 

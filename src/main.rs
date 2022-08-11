@@ -20,6 +20,8 @@ use std::{
 };
 use thiserror::Error;
 
+use crate::ui::favorite_button::FavoriteButton;
+
 mod colors;
 mod icons;
 mod server_info;
@@ -171,11 +173,9 @@ impl MyApplication {
             )));
         let mut buttons = Row::new().push(Space::with_width(Length::Fill));
         if self.edit_favorites {
-            buttons = buttons.push(toggler(
-                "Add to favorites".to_string(),
-                self.settings.favorites.contains(&server_info.name),
-                move |toggled| Messages::FavoriteClicked(toggled, index),
-            ));
+            buttons = buttons.push(ui::favorite_button::FavoriteButton::new(&self.palette, self.settings.favorites.contains(&server_info.name), move |toggled| {
+                Messages::FavoriteClicked(toggled, index)
+            }));
         } else {
             buttons = buttons.push(ui::svg_card_button(self.icons.copy_image_handle.clone(), Messages::CopyClicked(index), &self.palette));
         }
@@ -238,7 +238,6 @@ impl MyApplication {
             Messages::FilterChanged,
         ).padding(6))
         .center_y()
-        //.height(Length::Units(25))
         .width(Length::Fill);
         let row: Row<Messages> = Row::new()
             .push(filter)
