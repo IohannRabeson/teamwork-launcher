@@ -314,7 +314,9 @@ impl Application for MyApplication {
                 };
             }
             Messages::CopyClicked(server_index) => {
-                println!("Copy {}", server_index);
+                let server = &self.server_infos[server_index];
+
+                return iced::clipboard::write(format!("connect {}:{}", server.ip, server.port));
             }
             Messages::EditFavorites(toggled) => {
                 self.edit_favorites = toggled;
