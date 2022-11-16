@@ -110,10 +110,10 @@ impl MyApplication {
     }
 
     fn server_view<'l>(&'l self, server_info: &ServerInfo, index: usize) -> iced::pure::Element<'l, Messages> {
-        let informations = Column::new().push(text(&server_info.name)).push(text(format!(
-            "{} / {} players",
-            server_info.current_players_count, server_info.max_players_count
-        )));
+        let informations = Column::new()
+            .push(text(&server_info.name))
+            .push(text(format!("{} / {} players", server_info.current_players_count, server_info.max_players_count)))
+            .push(text(&server_info.map));
         let mut buttons = Row::new().push(Space::with_width(Length::Fill));
         if self.edit_favorites {
             buttons = buttons.push(ui::favorite_button::FavoriteButton::new(
