@@ -15,13 +15,10 @@ impl Icons {
             storage: Rc::new(IconsStorage {
                 clear: load_svg(include_bytes!("clear.svg"), light_color, "clear.svg"),
                 copy: load_svg(include_bytes!("copy.svg"), light_color, "copy.svg"),
-                favorite_border: load_svg(
-                    include_bytes!("favorite_border.svg"),
-                    light_color,
-                    "favorite_border.svg",
-                ),
+                favorite_border: load_svg(include_bytes!("favorite_border.svg"), light_color, "favorite_border.svg"),
                 favorite: load_svg(include_bytes!("favorite.svg"), light_color, "favorite.svg"),
                 refresh: load_svg(include_bytes!("refresh.svg"), light_color, "refresh.svg"),
+                settings: load_svg(include_bytes!("settings.svg"), light_color, "settings.svg"),
             }),
         }
     }
@@ -41,6 +38,9 @@ impl Icons {
     pub fn refresh(&self) -> SvgHandle {
         self.storage.refresh.clone()
     }
+    pub fn settings(&self) -> SvgHandle {
+        self.storage.settings.clone()
+    }
 }
 
 struct IconsStorage {
@@ -49,6 +49,7 @@ struct IconsStorage {
     favorite_border: SvgHandle,
     favorite: SvgHandle,
     refresh: SvgHandle,
+    settings: SvgHandle,
 }
 
 fn load_svg(bytes: &[u8], color: &Color, error_message: &str) -> SvgHandle {

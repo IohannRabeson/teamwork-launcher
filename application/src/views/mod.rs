@@ -2,9 +2,7 @@ use std::collections::BTreeSet;
 
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{
-        button, column, container, horizontal_space, row, scrollable, text, text_input, Button, Column, Row, Svg,
-    },
+    widget::{button, column, container, horizontal_space, row, scrollable, text, text_input, Button, Column, Row, Svg},
     Alignment, Element, Length,
 };
 
@@ -24,9 +22,7 @@ impl From<&Server> for LaunchParams {
 }
 
 fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
-    button(Svg::new(svg))
-        .width(Length::Units(size))
-        .height(Length::Units(size))
+    button(Svg::new(svg)).width(Length::Units(size)).height(Length::Units(size))
 }
 
 fn text_button<'a, M: Clone + 'a>(content: &str) -> Button<'a, M> {
@@ -52,6 +48,7 @@ pub fn header_view<'a>(title: &str, icons: &Icons, edit_favorites: bool) -> Elem
     row![
         text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),
         horizontal_space(iced::Length::Fill),
+        svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings(true)),
         svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshServers),
         favorite_button(edit_favorites, icons, BIG_BUTTON_SIZE).on_press(Messages::EditFavorites(!edit_favorites))
     ]
@@ -93,31 +90,19 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     .into()
 }
 
-fn server_view_buttons<'a>(
-    server: &Server,
-    is_favorite: bool,
-    icons: &Icons,
-    edit_favorites: bool,
-) -> Row<'a, Messages> {
+fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Row<'a, Messages> {
     if edit_favorites {
         row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.name.clone())),]
     } else {
         row![
-            svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(format!(
-                "connect {}:{}",
-                server.ip, server.port
-            ))),
+            svg_button(icons.copy(), 28)
+                .on_press(Messages::CopyToClipboard(format!("connect {}:{}", server.ip, server.port))),
             text_button("Launch!").on_press(Messages::StartGame(server.into())),
         ]
     }
 }
 
-fn server_view<'a>(
-    server: &Server,
-    is_favorite: bool,
-    icons: &Icons,
-    edit_favorites: bool,
-) -> Element<'a, Messages> {
+fn server_view<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
@@ -139,7 +124,7 @@ fn server_view<'a>(
 }
 
 pub fn refreshing_view<'a>() -> Element<'a, Messages> {
-    text("Reloading")
+    text("Reloading...")
         .width(Length::Fill)
         .height(Length::Fill)
         .horizontal_alignment(Horizontal::Center)
@@ -147,4 +132,14 @@ pub fn refreshing_view<'a>() -> Element<'a, Messages> {
         .font(fonts::TF2_SECONDARY)
         .size(40)
         .into()
+}
+
+pub fn settings_view<'a>(icons: &Icons) -> Element<'a, Messages> {
+    column![row![
+        text("Settings...").font(fonts::TF2_SECONDARY).size(40),
+        horizontal_space(Length::Fill),
+        svg_button(icons.clear(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings(false)),
+    ],]
+    .padding(12)
+    .into()
 }
