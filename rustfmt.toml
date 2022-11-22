@@ -1,2 +1,2 @@
-max_width = 115
+max_width = 125
 imports_granularity = "Crate"
