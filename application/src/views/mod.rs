@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::fmt::Display;
 
 use iced::{
     alignment::{Horizontal, Vertical},
@@ -6,7 +6,7 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{application::Messages, fonts, icons::Icons, servers::Server};
+use crate::{application::{Messages, States}, fonts, icons::Icons, servers::{Server, SourceId}, settings::UserSettings};
 use crate::{icons::SvgHandle, launcher::LaunchParams};
 
 const VISUAL_SPACING_SMALL: u16 = 4;
@@ -19,6 +19,76 @@ impl From<&Server> for LaunchParams {
             server_port: server.port,
         }
     }
+}
+
+pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a, Messages> {
+    match state {
+        States::Normal => {
+            row![
+                text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),
+                horizontal_space(iced::Length::Fill),
+                svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings),
+                svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshServers),
+                svg_button(icons.favorite_border(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
+            ]
+            .spacing(VISUAL_SPACING_SMALL)
+            .into()
+        },
+        _ => {
+            row![
+                text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),
+                horizontal_space(iced::Length::Fill),
+                svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
+            ]
+            .spacing(VISUAL_SPACING_SMALL)
+            .into()
+        }
+    }
+    
+    
+}
+
+pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(servers_iterator: I,
+    icons: &Icons,
+    settings: &UserSettings) -> Element<'a, Messages> {
+    servers_view(servers_iterator, icons, settings, true)
+}
+
+pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+    servers_iterator: I,
+    icons: &Icons,
+    settings: &UserSettings,
+    edit_favorites: bool,
+) -> Element<'a, Messages> {
+    column![
+        servers_filter_view(&settings.filter, icons),
+        scrollable(
+            servers_iterator
+                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, (server, _source_id)| {
+                    column.push(server_view(
+                        server,
+                        settings.favorites.contains(&server.name),
+                        icons,
+                        edit_favorites,
+                    ))
+                })
+                .width(Length::Fill)
+                .padding([0, 8, 0, 0]),
+        )
+        .scrollbar_width(8)
+        .scroller_width(8)
+    ].into()
+}
+
+pub fn refreshing_view<'a>() -> Element<'a, Messages> {
+    text("Reloading...")
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .horizontal_alignment(Horizontal::Center)
+        .vertical_alignment(Vertical::Center)
+        .font(fonts::TF2_SECONDARY)
+        .size(40)
+        .into()
 }
 
 fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
@@ -44,49 +114,14 @@ fn favorite_button<'a, M: Clone + 'a>(is_favorite: bool, icons: &Icons, size: u1
     svg_button(icon, size)
 }
 
-pub fn header_view<'a>(title: &str, icons: &Icons, edit_favorites: bool) -> Element<'a, Messages> {
-    row![
-        text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),
-        horizontal_space(iced::Length::Fill),
-        svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings(true)),
-        svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshServers),
-        favorite_button(edit_favorites, icons, BIG_BUTTON_SIZE).on_press(Messages::EditFavorites(!edit_favorites))
-    ]
-    .spacing(VISUAL_SPACING_SMALL)
-    .into()
-}
-
-pub fn filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
+fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
     row![
         text_input("Filter", text, Messages::FilterChanged),
         svg_button(icons.clear(), 28).on_press(Messages::FilterChanged(String::new())),
     ]
     .align_items(iced::Alignment::Center)
     .spacing(VISUAL_SPACING_SMALL)
-    .into()
-}
-
-pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
-    servers_iterator: I,
-    icons: &Icons,
-    favorite_servers: &BTreeSet<String>,
-    edit_favorites: bool,
-) -> Element<'a, Messages> {
-    scrollable(
-        servers_iterator
-            .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                column.push(server_view(
-                    server,
-                    favorite_servers.contains(&server.name),
-                    icons,
-                    edit_favorites,
-                ))
-            })
-            .width(Length::Fill)
-            .padding([0, 8, 0, 0]),
-    )
-    .scrollbar_width(8)
-    .scroller_width(8)
+    .padding([0, 4])
     .into()
 }
 
@@ -123,23 +158,19 @@ fn server_view<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favor
     .into()
 }
 
-pub fn refreshing_view<'a>() -> Element<'a, Messages> {
-    text("Reloading...")
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .horizontal_alignment(Horizontal::Center)
-        .vertical_alignment(Vertical::Center)
-        .font(fonts::TF2_SECONDARY)
-        .size(40)
-        .into()
+pub fn settings_view<'a>() -> Element<'a, Messages> {
+    column![
+        text("Settings").font(fonts::TF2_SECONDARY).size(32),
+    ]
+    .padding(12)
+    .into()
 }
 
-pub fn settings_view<'a>(icons: &Icons) -> Element<'a, Messages> {
-    column![row![
-        text("Settings...").font(fonts::TF2_SECONDARY).size(40),
-        horizontal_space(Length::Fill),
-        svg_button(icons.clear(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings(false)),
-    ],]
+pub fn error_view<'a>(message: &str) -> Element<'a, Messages> {
+    column![
+        text("Error").font(fonts::TF2_SECONDARY).size(32),
+        text(message)
+    ]
     .padding(12)
     .into()
 }

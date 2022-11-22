@@ -1,14 +1,19 @@
-use std::sync::Arc;
+use std::{sync::Arc, fmt::Display};
+use std::error::Error;
 
-use iced::{widget::column, widget::vertical_space, Application as IcedApplication, Command, Element, Length, Theme};
+use iced::{
+    widget::{column, vertical_space},
+    Application as IcedApplication, Command, Element, Length, Theme,
+};
 
+use crate::views::error_view;
 use crate::{
     icons::Icons,
     launcher::{LaunchParams, Launcher},
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
     setup::setup_launcher,
-    views::{filter_view, header_view, refreshing_view, servers_view, settings_view},
+    views::{header_view, refreshing_view, servers_view, settings_view, edit_favorite_servers_view},
 };
 
 #[derive(Debug, Clone)]
@@ -21,8 +26,51 @@ pub enum Messages {
     CopyToClipboard(String),
     /// The server is identified by its name.
     FavoriteClicked(String),
-    EditFavorites(bool),
-    EditSettings(bool),
+    EditFavorites,
+    EditSettings,
+    Back,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum States {
+    Normal,
+    Favorites,
+    Settings,
+    Reloading,
+    Error{ message: String },
+}
+
+struct StatesStack {
+    states: Vec<States>,
+}
+
+impl StatesStack {
+    pub fn new(initial: States) -> Self {
+        Self {
+            states: vec![initial],
+        }
+    }
+
+    pub fn current(&self) -> &States {
+        self.states.last().expect("states must never be empty")
+    }
+
+    pub fn current_is(&self, state: States) -> bool {
+        self.current() == &state
+    }
+
+    pub fn reset(&mut self, state: States) {
+        self.states.clear();
+        self.states.push(state);
+    }
+
+    pub fn push(&mut self, state: States) {
+        self.states.push(state);
+    }
+
+    pub fn pop(&mut self) {
+        self.states.pop();
+    }
 }
 
 pub struct Application {
@@ -30,9 +78,7 @@ pub struct Application {
     icons: Icons,
     servers_provider: Arc<ServersProvider>,
     servers: Vec<(Server, SourceId)>,
-    edit_favorites: bool,
-    edit_settings: bool,
-    reloading: bool,
+    states: StatesStack,
     launcher: Box<dyn Launcher>,
 }
 
@@ -40,23 +86,22 @@ impl Application {
     fn refresh_command(&mut self) -> Command<Messages> {
         let servers_provider = self.servers_provider.clone();
 
-        self.reloading = true;
+        self.states.push(States::Reloading);
         self.servers.clear();
 
         Command::perform(async move { servers_provider.refresh().await }, Messages::ServersRefreshed)
     }
 
-    fn filtered_servers(&self) -> impl Iterator<Item = &Server> {
+    fn favorite_servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
         self.servers
             .iter()
             .filter(move |(server, _id)| self.filter_server(server))
-            .map(|(server, _id)| server)
     }
 
     fn filter_server(&self, server: &Server) -> bool {
         let text_filter = self.settings.filter.trim().to_lowercase();
 
-        if !self.edit_favorites && !self.settings.favorites.contains(&server.name) {
+        if !self.states.current_is(States::Favorites) && !self.settings.favorites.contains(&server.name) {
             return false;
         }
 
@@ -81,31 +126,24 @@ impl Application {
     }
 
     fn refresh_finished(&mut self, result: Result<Vec<(Server, SourceId)>, servers::Error>) {
-        self.reloading = false;
         match result {
-            Ok(servers) => self.servers = servers,
-            Err(error) => println!("{}", error),
+            Ok(servers) => {
+                self.servers = servers;
+                self.states.pop();
+            },
+            Err(error) => {
+                self.states.reset(States::Normal);
+                self.states.push(States::Error{ message: error.to_string() });
+            },
         };
     }
 
-    fn main_view(&self) -> Element<Messages> {
-        let main_view = match self.reloading {
-            true => refreshing_view(),
-            false => servers_view(
-                self.filtered_servers(),
-                &self.icons,
-                &self.settings.favorites,
-                self.edit_favorites,
-            ),
-        };
+    fn normal_view<'a>(&self, content: Element<'a, Messages>) -> Element<'a, Messages> {
         column![
-            header_view(&self.title(), &self.icons, self.edit_favorites),
+            header_view(&self.title(), &self.icons, self.states.current()),
             vertical_space(Length::Units(4)),
-            filter_view(&self.settings.filter, &self.icons),
-            vertical_space(Length::Units(4)),
-            main_view,
-            // Elements after the servers view might be invisible if there are enough
-            // server in the list.234
+            content,
+            // Elements after the content might be invisible if it is tall enough.
         ]
         .padding(12)
         .into()
@@ -127,9 +165,7 @@ impl IcedApplication for Application {
             servers: Vec::new(),
             settings,
             launcher: setup_launcher(),
-            edit_favorites: false,
-            edit_settings: false,
-            reloading: false,
+            states: StatesStack::new(States::Normal),
         };
         let command = launcher.refresh_command();
 
@@ -148,17 +184,21 @@ impl IcedApplication for Application {
             Messages::StartGame(params) => self.launch(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_name) => self.switch_favorite_server(&server_name),
-            Messages::EditFavorites(edit_favorites) => self.edit_favorites = edit_favorites,
-            Messages::EditSettings(edit_settings) => self.edit_settings = edit_settings,
+            Messages::EditFavorites => self.states.push(States::Favorites),
+            Messages::EditSettings => self.states.push(States::Settings),
+            Messages::Back => self.states.pop(),
         }
 
         Command::none()
     }
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
-        match self.edit_settings {
-            true => settings_view(&self.icons),
-            false => self.main_view(),
+        match self.states.current() {
+            States::Normal => self.normal_view(servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false)),
+            States::Favorites => self.normal_view(edit_favorite_servers_view(self.servers.iter(), &self.icons, &self.settings)),
+            States::Settings => self.normal_view(settings_view()),
+            States::Reloading => refreshing_view(),
+            States::Error{ message } => self.normal_view(error_view(message)),
         }
     }
 }

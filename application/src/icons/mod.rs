@@ -19,6 +19,7 @@ impl Icons {
                 favorite: load_svg(include_bytes!("favorite.svg"), light_color, "favorite.svg"),
                 refresh: load_svg(include_bytes!("refresh.svg"), light_color, "refresh.svg"),
                 settings: load_svg(include_bytes!("settings.svg"), light_color, "settings.svg"),
+                back: load_svg(include_bytes!("back.svg"), light_color, "back.svg"),
             }),
         }
     }
@@ -41,6 +42,9 @@ impl Icons {
     pub fn settings(&self) -> SvgHandle {
         self.storage.settings.clone()
     }
+    pub fn back(&self) -> SvgHandle {
+        self.storage.back.clone()
+    }
 }
 
 struct IconsStorage {
@@ -50,6 +54,7 @@ struct IconsStorage {
     favorite: SvgHandle,
     refresh: SvgHandle,
     settings: SvgHandle,
+    back: SvgHandle,
 }
 
 fn load_svg(bytes: &[u8], color: &Color, error_message: &str) -> SvgHandle {
