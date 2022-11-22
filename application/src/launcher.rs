@@ -12,9 +12,9 @@ pub struct LaunchParams {
 #[derive(thiserror::Error, Debug)]
 #[error("Failed to start executable: {message}")]
 pub struct LaunchError {
-    message: String,
-    origin: Option<Box<dyn Error>>,
-    params: LaunchParams,
+    pub message: String,
+    pub origin: Option<Box<dyn Error>>,
+    pub params: LaunchParams,
 }
 
 pub trait Launcher {
@@ -75,12 +75,11 @@ impl Launcher for ExecutableLauncher {
     fn launch(&self, params: &LaunchParams) -> Result<(), LaunchError> {
         use std::process::Command;
 
-        // r"C:\Program Files (x86)\Steam\Steam.exe"
         Command::new(&self.executable_path)
             .args(self.arguments.iter().map(|arg| arg.format_to_string(params)))
             .output()
             .map_err(|error| LaunchError {
-                message: format!("Can start executable '{0}'", &self.executable_path.to_string_lossy()),
+                message: format!("Cannot start executable '{0}'", &self.executable_path.to_string_lossy()),
                 origin: Some(Box::new(error)),
                 params: params.clone(),
             })?;

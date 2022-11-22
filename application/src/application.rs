@@ -1,5 +1,4 @@
-use std::{sync::Arc, fmt::Display};
-use std::error::Error;
+use std::{sync::Arc};
 
 use iced::{
     widget::{column, vertical_space},
@@ -72,9 +71,9 @@ impl Application {
         server.name.as_str().to_lowercase().contains(&text_filter)
     }
 
-    fn launch(&mut self, params: &LaunchParams) {
+    fn launch_executable(&mut self, params: &LaunchParams) {
         if let Err(error) = self.launcher.launch(params) {
-            println!("Error: {:?}", error)
+            self.states.push(States::Error { message: error.message });
         }
     }
 
@@ -98,6 +97,7 @@ impl Application {
         };
     }
 
+    /// Display a content with a title and a header.
     fn normal_view<'a>(&self, content: Element<'a, Messages>) -> Element<'a, Messages> {
         column![
             header_view(&self.title(), &self.icons, self.states.current()),
@@ -141,7 +141,7 @@ impl IcedApplication for Application {
             Messages::ServersRefreshed(result) => self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
             Messages::FilterChanged(text_filter) => self.settings.filter = text_filter,
-            Messages::StartGame(params) => self.launch(&params),
+            Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_name) => self.switch_favorite_server(&server_name),
             Messages::EditFavorites => self.states.push(States::Favorites),

@@ -36,6 +36,6 @@ impl UserSettings {
 
         file.read_to_string(&mut json).map_err(|e| Error::Io(Arc::new(e)))?;
 
-        Ok(serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))?)
+        serde_json::from_str(&json).map_err(|e| Error::Json(Arc::new(e)))
     }
 }
