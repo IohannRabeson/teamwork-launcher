@@ -38,6 +38,7 @@ pub struct Application {
     servers: Vec<(Server, SourceId)>,
     states: StatesStack,
     launcher: Box<dyn Launcher>,
+    theme: Theme,
 }
 
 impl Application {
@@ -135,6 +136,7 @@ impl IcedApplication for Application {
             settings,
             launcher: setup_launcher(),
             states: StatesStack::new(States::Normal),
+            theme: Theme::Dark,
         };
         let command = launcher.refresh_command();
 
@@ -162,17 +164,21 @@ impl IcedApplication for Application {
     }
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
-        match self.states.current() {
+        self.normal_view(match self.states.current() {
             States::Normal => {
-                self.normal_view(servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false))
+                servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false)
             }
             States::Favorites => {
-                self.normal_view(edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings))
+                edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings)
             }
-            States::Settings => self.normal_view(settings_view()),
-            States::Reloading => self.normal_view(refreshing_view()),
-            States::Error { message } => self.normal_view(error_view(message)),
-        }
+            States::Settings => settings_view(),
+            States::Reloading => refreshing_view(),
+            States::Error { message } => error_view(message),
+        })
+    }
+
+    fn theme(&self) -> Theme {
+        self.theme.clone()
     }
 }
 
