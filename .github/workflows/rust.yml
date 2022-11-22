@@ -11,12 +11,12 @@ env:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: Update Rust
+      run: export MACOSX_DEPLOYMENT_TARGET=10.8
       run: rustup update
     - name: Build
       run: cargo build --verbose
