@@ -4,7 +4,14 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{application::{Messages}, fonts, icons::Icons, servers::{Server, SourceId}, settings::UserSettings, states::States};
+use crate::{
+    application::Messages,
+    fonts,
+    icons::Icons,
+    servers::{Server, SourceId},
+    settings::UserSettings,
+    states::States,
+};
 use crate::{icons::SvgHandle, launcher::LaunchParams};
 
 const VISUAL_SPACING_SMALL: u16 = 4;
@@ -29,11 +36,9 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
                 svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshServers),
                 svg_button(icons.favorite_border(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
             ]
-        },
+        }
         States::Reloading => {
-            row![
-                text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),
-            ]
+            row![text(title).font(crate::fonts::TF2_BUILD).size(BIG_BUTTON_SIZE),]
         }
         _ => {
             row![
@@ -42,13 +47,16 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
                 svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
             ]
         }
-    }.spacing(VISUAL_SPACING_SMALL)
+    }
+    .spacing(VISUAL_SPACING_SMALL)
     .into()
 }
 
-pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(servers_iterator: I,
+pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+    servers_iterator: I,
     icons: &Icons,
-    settings: &UserSettings) -> Element<'a, Messages> {
+    settings: &UserSettings,
+) -> Element<'a, Messages> {
     servers_view(servers_iterator, icons, settings, true)
 }
 
@@ -75,7 +83,8 @@ pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
         )
         .scrollbar_width(8)
         .scroller_width(8)
-    ].into()
+    ]
+    .into()
 }
 
 pub fn refreshing_view<'a>() -> Element<'a, Messages> {
@@ -157,18 +166,13 @@ fn server_view<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favor
 }
 
 pub fn settings_view<'a>() -> Element<'a, Messages> {
-    column![
-        text("Settings").font(fonts::TF2_SECONDARY).size(32),
-    ]
-    .padding(12)
-    .into()
+    column![text("Settings").font(fonts::TF2_SECONDARY).size(32),]
+        .padding(12)
+        .into()
 }
 
 pub fn error_view<'a>(message: &str) -> Element<'a, Messages> {
-    column![
-        text("Error").font(fonts::TF2_SECONDARY).size(32),
-        text(message)
-    ]
-    .padding(12)
-    .into()
+    column![text("Error").font(fonts::TF2_SECONDARY).size(32), text(message)]
+        .padding(12)
+        .into()
 }

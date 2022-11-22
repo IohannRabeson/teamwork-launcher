@@ -4,7 +4,7 @@ pub enum States {
     Favorites,
     Settings,
     Reloading,
-    Error{ message: String },
+    Error { message: String },
 }
 
 pub struct StatesStack {
@@ -13,17 +13,11 @@ pub struct StatesStack {
 
 impl StatesStack {
     pub fn new(initial: States) -> Self {
-        Self {
-            states: vec![initial],
-        }
+        Self { states: vec![initial] }
     }
 
     pub fn current(&self) -> &States {
         self.states.last().expect("states must never be empty")
-    }
-
-    pub fn current_is(&self, state: States) -> bool {
-        self.current() == &state
     }
 
     pub fn reset(&mut self, state: States) {

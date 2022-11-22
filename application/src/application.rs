@@ -1,11 +1,11 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use iced::{
     widget::{column, vertical_space},
     Application as IcedApplication, Command, Element, Length, Theme,
 };
 
-use crate::states::{StatesStack, States};
+use crate::states::{States, StatesStack};
 use crate::views::error_view;
 use crate::{
     icons::Icons,
@@ -13,7 +13,7 @@ use crate::{
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
     setup::setup_launcher,
-    views::{header_view, refreshing_view, servers_view, settings_view, edit_favorite_servers_view},
+    views::{edit_favorite_servers_view, header_view, refreshing_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
@@ -30,7 +30,6 @@ pub enum Messages {
     EditSettings,
     Back,
 }
-
 
 pub struct Application {
     settings: UserSettings,
@@ -51,24 +50,32 @@ impl Application {
         Command::perform(async move { servers_provider.refresh().await }, Messages::ServersRefreshed)
     }
 
+    /// Returns the servers filtered by text.
+    fn servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
+        self.servers
+            .iter()
+            .filter(|(server, _source_id)| self.filter_server_by_text(server))
+    }
+
+    /// Returns the favorites servers, filtered by text.
     fn favorite_servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
         self.servers
             .iter()
-            .filter(move |(server, _id)| self.filter_server(server))
+            .filter(move |(server, _id)| self.filter_favorite_server(server))
     }
 
-    fn filter_server(&self, server: &Server) -> bool {
+    fn filter_server_by_text(&self, server: &Server) -> bool {
         let text_filter = self.settings.filter.trim().to_lowercase();
-
-        if !self.states.current_is(States::Favorites) && !self.settings.favorites.contains(&server.name) {
-            return false;
-        }
 
         if text_filter.is_empty() {
             return true;
         }
 
         server.name.as_str().to_lowercase().contains(&text_filter)
+    }
+
+    fn filter_favorite_server(&self, server: &Server) -> bool {
+        self.settings.favorites.contains(&server.name)
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {
@@ -89,11 +96,13 @@ impl Application {
             Ok(servers) => {
                 self.servers = servers;
                 self.states.pop();
-            },
+            }
             Err(error) => {
                 self.states.reset(States::Normal);
-                self.states.push(States::Error{ message: error.to_string() });
-            },
+                self.states.push(States::Error {
+                    message: error.to_string(),
+                });
+            }
         };
     }
 
@@ -154,11 +163,15 @@ impl IcedApplication for Application {
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         match self.states.current() {
-            States::Normal => self.normal_view(servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false)),
-            States::Favorites => self.normal_view(edit_favorite_servers_view(self.servers.iter(), &self.icons, &self.settings)),
+            States::Normal => {
+                self.normal_view(servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false))
+            }
+            States::Favorites => {
+                self.normal_view(edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings))
+            }
             States::Settings => self.normal_view(settings_view()),
             States::Reloading => self.normal_view(refreshing_view()),
-            States::Error{ message } => self.normal_view(error_view(message)),
+            States::Error { message } => self.normal_view(error_view(message)),
         }
     }
 }
