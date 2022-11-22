@@ -1,6 +1,6 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, horizontal_space, row, scrollable, text, text_input, Button, Column, Row, Svg},
+    widget::{button, column, container, vertical_space, horizontal_space, row, scrollable, text, text_input, Button, Column, Row, Svg},
     Alignment, Element, Length,
 };
 
@@ -68,6 +68,7 @@ pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
 ) -> Element<'a, Messages> {
     column![
         servers_filter_view(&settings.filter, icons),
+        vertical_space(Length::Units(4)),
         scrollable(
             servers_iterator
                 .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, (server, _source_id)| {
