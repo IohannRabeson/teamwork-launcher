@@ -11,6 +11,7 @@ mod settings;
 mod setup;
 mod skial_source;
 mod views;
+mod states;
 
 fn main() -> anyhow::Result<()> {
     setup::setup_logger()?;

@@ -6,6 +6,7 @@ use iced::{
     Application as IcedApplication, Command, Element, Length, Theme,
 };
 
+use crate::states::{StatesStack, States};
 use crate::views::error_view;
 use crate::{
     icons::Icons,
@@ -31,47 +32,6 @@ pub enum Messages {
     Back,
 }
 
-#[derive(PartialEq, Eq)]
-pub enum States {
-    Normal,
-    Favorites,
-    Settings,
-    Reloading,
-    Error{ message: String },
-}
-
-struct StatesStack {
-    states: Vec<States>,
-}
-
-impl StatesStack {
-    pub fn new(initial: States) -> Self {
-        Self {
-            states: vec![initial],
-        }
-    }
-
-    pub fn current(&self) -> &States {
-        self.states.last().expect("states must never be empty")
-    }
-
-    pub fn current_is(&self, state: States) -> bool {
-        self.current() == &state
-    }
-
-    pub fn reset(&mut self, state: States) {
-        self.states.clear();
-        self.states.push(state);
-    }
-
-    pub fn push(&mut self, state: States) {
-        self.states.push(state);
-    }
-
-    pub fn pop(&mut self) {
-        self.states.pop();
-    }
-}
 
 pub struct Application {
     settings: UserSettings,
@@ -197,7 +157,7 @@ impl IcedApplication for Application {
             States::Normal => self.normal_view(servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false)),
             States::Favorites => self.normal_view(edit_favorite_servers_view(self.servers.iter(), &self.icons, &self.settings)),
             States::Settings => self.normal_view(settings_view()),
-            States::Reloading => refreshing_view(),
+            States::Reloading => self.normal_view(refreshing_view()),
             States::Error{ message } => self.normal_view(error_view(message)),
         }
     }
