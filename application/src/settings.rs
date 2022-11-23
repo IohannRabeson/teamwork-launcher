@@ -20,7 +20,7 @@ pub enum Error {
     Io(#[from] Arc<std::io::Error>),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserSettings {
     pub favorites: BTreeSet<String>,
     pub filter: String,
@@ -32,7 +32,10 @@ impl Default for UserSettings {
         Self {
             favorites: Default::default(),
             filter: Default::default(),
+            #[cfg(target_os = "windows")]
             game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
+            #[cfg(not(target_os = "windows"))]
+            game_executable_path: Default::default(),
         }
     }
 }
