@@ -116,7 +116,7 @@ impl Application {
             vertical_space(Length::Units(4)),
             content,
             // Elements after the content might be invisible if it is tall enough.
-            // There are no grid layout yet (see https://github.com/iced-rs/iced/issues/34). 
+            // There are no grid layout yet (see https://github.com/iced-rs/iced/issues/34).
         ]
         .padding(12)
         .into()

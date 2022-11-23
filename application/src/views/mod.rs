@@ -13,13 +13,17 @@ use crate::{
     settings::UserSettings,
 };
 
-pub use self::buttons::{favorite_button, svg_button, text_button};
-pub use {header::header_view, servers::servers_view, settings::settings_view};
+pub use {
+    self::buttons::{favorite_button, svg_button, text_button},
+    header::header_view,
+    servers::servers_view,
+    settings::settings_view,
+};
 
 mod buttons;
+mod header;
 mod servers;
 mod settings;
-mod header;
 
 const VISUAL_SPACING_SMALL: u16 = 4;
 const BIG_BUTTON_SIZE: u16 = 36;

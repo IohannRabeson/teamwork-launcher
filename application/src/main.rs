@@ -1,6 +1,8 @@
 use {
-    application::Application,
+    application::{Application, Flags},
     iced::{Application as IcedApplication, Settings},
+    launcher::ExecutableLauncher,
+    log::{debug, error},
     settings::UserSettings,
 };
 
@@ -14,12 +16,6 @@ mod setup;
 mod skial_source;
 mod states;
 mod views;
-
-use {
-    application::Flags,
-    launcher::ExecutableLauncher,
-    log::{debug, error},
-};
 
 use clap::Parser;
 

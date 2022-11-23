@@ -53,12 +53,7 @@ fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
     .into()
 }
 
-fn server_view_buttons<'a>(
-    server: &Server,
-    is_favorite: bool,
-    icons: &Icons,
-    edit_favorites: bool,
-) -> Row<'a, Messages> {
+fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Row<'a, Messages> {
     if edit_favorites {
         row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.name.clone())),]
     } else {
@@ -70,12 +65,7 @@ fn server_view_buttons<'a>(
     }
 }
 
-fn server_view<'a>(
-    server: &Server,
-    is_favorite: bool,
-    icons: &Icons,
-    edit_favorites: bool,
-) -> Element<'a, Messages> {
+fn server_view<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
