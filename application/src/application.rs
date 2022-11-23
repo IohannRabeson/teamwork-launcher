@@ -116,6 +116,7 @@ impl Application {
             vertical_space(Length::Units(4)),
             content,
             // Elements after the content might be invisible if it is tall enough.
+            // There are no grid layout yet (see https://github.com/iced-rs/iced/issues/34). 
         ]
         .padding(12)
         .into()
@@ -139,11 +140,11 @@ impl IcedApplication for Application {
         let mut launcher = Self {
             icons: Icons::new(&theme),
             servers_provider,
-            servers: Vec::new(),
             settings: flags.settings,
             launcher: flags.launcher,
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
+            servers: Vec::new(),
         };
         let command = launcher.refresh_command();
 
