@@ -1,18 +1,20 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, vertical_space, horizontal_space, row, scrollable, text, text_input, Button, Column, Row, Svg},
+    widget::{column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column, Row},
     Alignment, Element, Length,
 };
 
 use crate::{
     application::Messages,
     fonts,
-    icons::Icons,
+    icons::{Icons, SvgHandle},
+    launcher::LaunchParams,
     servers::{Server, SourceId},
     settings::UserSettings,
     states::States,
 };
-use crate::{icons::SvgHandle, launcher::LaunchParams};
+
+use self::buttons::{favorite_button, svg_button, text_button};
 
 const VISUAL_SPACING_SMALL: u16 = 4;
 const BIG_BUTTON_SIZE: u16 = 36;
@@ -99,27 +101,39 @@ pub fn refreshing_view<'a>() -> Element<'a, Messages> {
         .into()
 }
 
-fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
-    button(Svg::new(svg)).width(Length::Units(size)).height(Length::Units(size))
-}
-
-fn text_button<'a, M: Clone + 'a>(content: &str) -> Button<'a, M> {
-    button(
-        text(content)
-            .height(Length::Units(18))
-            .vertical_alignment(Vertical::Center)
-            .font(crate::fonts::TF2_SECONDARY)
-            .size(16),
-    )
-}
-
-fn favorite_button<'a, M: Clone + 'a>(is_favorite: bool, icons: &Icons, size: u16) -> Button<'a, M> {
-    let icon = match is_favorite {
-        true => icons.favorite(),
-        false => icons.favorite_border(),
+mod buttons {
+    use {
+        crate::{icons::Icons, views::SvgHandle},
+        iced::alignment::Vertical,
     };
 
-    svg_button(icon, size)
+    use iced::{
+        widget::{button, text, Button, Svg},
+        Length,
+    };
+
+    pub(crate) fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
+        button(Svg::new(svg)).width(Length::Units(size)).height(Length::Units(size))
+    }
+
+    pub(crate) fn text_button<'a, M: Clone + 'a>(content: &str) -> Button<'a, M> {
+        button(
+            text(content)
+                .height(Length::Units(18))
+                .vertical_alignment(Vertical::Center)
+                .font(crate::fonts::TF2_SECONDARY)
+                .size(16),
+        )
+    }
+
+    pub(crate) fn favorite_button<'a, M: Clone + 'a>(is_favorite: bool, icons: &Icons, size: u16) -> Button<'a, M> {
+        let icon = match is_favorite {
+            true => icons.favorite(),
+            false => icons.favorite_border(),
+        };
+
+        svg_button(icon, size)
+    }
 }
 
 fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {

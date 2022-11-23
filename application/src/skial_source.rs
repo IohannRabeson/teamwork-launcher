@@ -1,10 +1,12 @@
-use async_trait::async_trait;
-use nom::{bytes::complete::tag, combinator::map, multi::separated_list0, sequence::separated_pair, IResult};
-use select::{
-    document::Document,
-    predicate::{Attr, Name, Predicate},
+use {
+    async_trait::async_trait,
+    nom::{bytes::complete::tag, combinator::map, multi::separated_list0, sequence::separated_pair, IResult},
+    select::{
+        document::Document,
+        predicate::{Attr, Name, Predicate},
+    },
+    std::net::Ipv4Addr,
 };
-use std::net::Ipv4Addr;
 
 use crate::servers::{GetServersInfosError, Server, Source};
 

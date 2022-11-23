@@ -1,14 +1,15 @@
 use std::{
     collections::BTreeSet,
     fs::File,
-    io::Read,
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
 
-use log::{error, info};
-use serde::{Deserialize, Serialize};
+use {
+    log::{error, info},
+    serde::{Deserialize, Serialize},
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -35,7 +36,7 @@ impl UserSettings {
 
             if let Err(error) = std::fs::create_dir_all(&path) {
                 error!("Unable to create directory '{}': {}", path.to_string_lossy(), error);
-                return None
+                return None;
             }
         }
 

@@ -5,15 +5,14 @@ use iced::{
     Application as IcedApplication, Command, Element, Length, Theme,
 };
 
-use crate::states::{States, StatesStack};
-use crate::views::error_view;
 use crate::{
     icons::Icons,
     launcher::{LaunchParams, Launcher},
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
     setup::setup_launcher,
-    views::{edit_favorite_servers_view, header_view, refreshing_view, servers_view, settings_view},
+    states::{States, StatesStack},
+    views::{edit_favorite_servers_view, error_view, header_view, refreshing_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
@@ -165,12 +164,8 @@ impl IcedApplication for Application {
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         self.normal_view(match self.states.current() {
-            States::Normal => {
-                servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false)
-            }
-            States::Favorites => {
-                edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings)
-            }
+            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false),
+            States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings),
             States::Settings => settings_view(),
             States::Reloading => refreshing_view(),
             States::Error { message } => error_view(message),

@@ -1,6 +1,8 @@
-use application::Application;
-use iced::{Application as IcedApplication, Settings};
-use settings::UserSettings;
+use {
+    application::Application,
+    iced::{Application as IcedApplication, Settings},
+    settings::UserSettings,
+};
 
 mod application;
 mod fonts;

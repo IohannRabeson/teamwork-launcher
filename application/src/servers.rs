@@ -2,8 +2,7 @@ use std::time::Instant;
 
 use async_trait::async_trait;
 
-use crate::skial_source::SkialSource;
-use log::debug;
+use {crate::skial_source::SkialSource, log::debug};
 
 #[derive(Default)]
 pub struct ServersProvider {
