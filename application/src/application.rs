@@ -11,7 +11,7 @@ use crate::{
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
     states::{States, StatesStack},
-    views::{edit_favorite_servers_view, error_view, header_view, refreshing_view, servers_view, settings_view},
+    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
@@ -20,12 +20,16 @@ pub enum Messages {
     ServersRefreshed(Result<Vec<(Server, SourceId)>, servers::Error>),
     FilterChanged(String),
     StartGame(LaunchParams),
+    ModifySettings(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
     FavoriteClicked(String),
+    /// Show the page to edit the favorite servers.
     EditFavorites,
+    /// SHow the page to edit the application settings.
     EditSettings,
+    /// Pop the current state.
     Back,
 }
 
@@ -161,6 +165,7 @@ impl IcedApplication for Application {
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
+            Messages::ModifySettings(settings) => self.settings = settings,
         }
 
         Command::none()
@@ -170,8 +175,8 @@ impl IcedApplication for Application {
         self.normal_view(match self.states.current() {
             States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false),
             States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings),
-            States::Settings => settings_view(),
-            States::Reloading => refreshing_view(),
+            States::Settings => settings_view(&self.settings),
+            States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
         })
     }
