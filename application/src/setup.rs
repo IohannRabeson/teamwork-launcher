@@ -1,4 +1,4 @@
-use crate::launcher::Launcher;
+// use crate::launcher::Launcher;
 
 const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -11,16 +11,15 @@ pub fn setup_logger() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(debug_assertions)]
-pub fn setup_launcher() -> Box<dyn Launcher> {
-    use crate::launcher::DebugLauncher;
+// pub fn setup_launcher() -> Box<dyn Launcher> {
+//     use crate::launcher::DebugLauncher;
 
-    Box::new(DebugLauncher::default())
-}
+//     Box::new(DebugLauncher::default())
+// }
 
-#[cfg(not(debug_assertions))]
-pub fn setup_launcher() -> Box<dyn Launcher> {
-    use crate::launcher::ExecutableLauncher;
+// #[cfg(not(debug_assertions))]
+// pub fn setup_launcher() -> Box<dyn Launcher> {
+//     use crate::launcher::ExecutableLauncher;
 
-    Box::new(ExecutableLauncher::new(r"C:\Program Files (x86)\Steam\Steam.exe"))
-}
+//     Box::new(ExecutableLauncher::new(r"C:\Program Files (x86)\Steam\Steam.exe"))
+// }

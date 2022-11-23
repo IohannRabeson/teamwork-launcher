@@ -19,3 +19,4 @@ log = "0.4"
 fern = "0.6"
 anyhow = "1.0.66"
 platform-dirs = "0.3.0"
+clap = { version = "4.0.26", features = ["derive"] }

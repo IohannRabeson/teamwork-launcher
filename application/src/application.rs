@@ -7,10 +7,9 @@ use iced::{
 
 use crate::{
     icons::Icons,
-    launcher::{LaunchParams, Launcher},
+    launcher::{ExecutableLauncher, LaunchParams},
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
-    setup::setup_launcher,
     states::{States, StatesStack},
     views::{edit_favorite_servers_view, error_view, header_view, refreshing_view, servers_view, settings_view},
 };
@@ -36,7 +35,7 @@ pub struct Application {
     servers_provider: Arc<ServersProvider>,
     servers: Vec<(Server, SourceId)>,
     states: StatesStack,
-    launcher: Box<dyn Launcher>,
+    launcher: ExecutableLauncher,
     theme: Theme,
 }
 
@@ -79,7 +78,7 @@ impl Application {
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {
-        if let Err(error) = self.launcher.launch(params) {
+        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path, params) {
             self.states.push(States::Error { message: error.message });
         }
     }
@@ -119,21 +118,26 @@ impl Application {
     }
 }
 
+pub struct Flags {
+    pub settings: UserSettings,
+    pub launcher: ExecutableLauncher,
+}
+
 impl IcedApplication for Application {
     type Executor = iced::executor::Default;
     type Message = Messages;
-    type Flags = UserSettings;
+    type Flags = Flags;
     type Theme = Theme;
 
-    fn new(settings: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
         let mut launcher = Self {
             icons: Icons::new(&theme),
             servers_provider,
             servers: Vec::new(),
-            settings,
-            launcher: setup_launcher(),
+            settings: flags.settings,
+            launcher: flags.launcher,
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
         };

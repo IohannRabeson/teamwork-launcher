@@ -1,5 +1,6 @@
 use std::{
     collections::BTreeSet,
+    ffi::OsString,
     fs::File,
     io::{Read, Write},
     path::{Path, PathBuf},
@@ -19,10 +20,21 @@ pub enum Error {
     Io(#[from] Arc<std::io::Error>),
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UserSettings {
     pub favorites: BTreeSet<String>,
     pub filter: String,
+    pub game_executable_path: OsString,
+}
+
+impl Default for UserSettings {
+    fn default() -> Self {
+        Self {
+            favorites: Default::default(),
+            filter: Default::default(),
+            game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
+        }
+    }
 }
 
 impl UserSettings {
