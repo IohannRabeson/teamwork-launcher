@@ -1,6 +1,8 @@
 use {
-    application::Application,
+    application::{Application, Flags},
     iced::{Application as IcedApplication, Settings},
+    launcher::ExecutableLauncher,
+    log::{debug, error},
     settings::UserSettings,
 };
 
@@ -15,11 +17,31 @@ mod skial_source;
 mod states;
 mod views;
 
-use log::error;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CliParameters {
+    #[arg(short, long)]
+    testing_mode: bool,
+}
 
 fn main() -> anyhow::Result<()> {
+    let cli_params = CliParameters::parse();
+
     setup::setup_logger()?;
 
+    debug!("CLI parameters: {:?}", cli_params);
+
+    Application::run(Settings::with_flags(Flags {
+        settings: load_user_settings(),
+        launcher: ExecutableLauncher::new(cli_params.testing_mode),
+    }))?;
+
+    Ok(())
+}
+
+fn load_user_settings() -> UserSettings {
     let settings = match UserSettings::load_settings() {
         Ok(settings) => settings,
         Err(error) => {
@@ -27,8 +49,5 @@ fn main() -> anyhow::Result<()> {
             UserSettings::default()
         }
     };
-
-    Application::run(Settings::with_flags(settings))?;
-
-    Ok(())
+    settings
 }

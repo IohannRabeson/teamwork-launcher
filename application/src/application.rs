@@ -7,12 +7,11 @@ use iced::{
 
 use crate::{
     icons::Icons,
-    launcher::{LaunchParams, Launcher},
+    launcher::{ExecutableLauncher, LaunchParams},
     servers::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
-    setup::setup_launcher,
     states::{States, StatesStack},
-    views::{edit_favorite_servers_view, error_view, header_view, refreshing_view, servers_view, settings_view},
+    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
@@ -21,12 +20,16 @@ pub enum Messages {
     ServersRefreshed(Result<Vec<(Server, SourceId)>, servers::Error>),
     FilterChanged(String),
     StartGame(LaunchParams),
+    ModifySettings(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
     FavoriteClicked(String),
+    /// Show the page to edit the favorite servers.
     EditFavorites,
+    /// SHow the page to edit the application settings.
     EditSettings,
+    /// Pop the current state.
     Back,
 }
 
@@ -36,7 +39,7 @@ pub struct Application {
     servers_provider: Arc<ServersProvider>,
     servers: Vec<(Server, SourceId)>,
     states: StatesStack,
-    launcher: Box<dyn Launcher>,
+    launcher: ExecutableLauncher,
     theme: Theme,
 }
 
@@ -79,7 +82,7 @@ impl Application {
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {
-        if let Err(error) = self.launcher.launch(params) {
+        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path, params) {
             self.states.push(States::Error { message: error.message });
         }
     }
@@ -113,29 +116,35 @@ impl Application {
             vertical_space(Length::Units(4)),
             content,
             // Elements after the content might be invisible if it is tall enough.
+            // There are no grid layout yet (see https://github.com/iced-rs/iced/issues/34).
         ]
         .padding(12)
         .into()
     }
 }
 
+pub struct Flags {
+    pub settings: UserSettings,
+    pub launcher: ExecutableLauncher,
+}
+
 impl IcedApplication for Application {
     type Executor = iced::executor::Default;
     type Message = Messages;
-    type Flags = UserSettings;
+    type Flags = Flags;
     type Theme = Theme;
 
-    fn new(settings: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
         let mut launcher = Self {
             icons: Icons::new(&theme),
             servers_provider,
-            servers: Vec::new(),
-            settings,
-            launcher: setup_launcher(),
+            settings: flags.settings,
+            launcher: flags.launcher,
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
+            servers: Vec::new(),
         };
         let command = launcher.refresh_command();
 
@@ -157,6 +166,7 @@ impl IcedApplication for Application {
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
+            Messages::ModifySettings(settings) => self.settings = settings,
         }
 
         Command::none()
@@ -166,8 +176,8 @@ impl IcedApplication for Application {
         self.normal_view(match self.states.current() {
             States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false),
             States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings),
-            States::Settings => settings_view(),
-            States::Reloading => refreshing_view(),
+            States::Settings => settings_view(&self.settings),
+            States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
         })
     }

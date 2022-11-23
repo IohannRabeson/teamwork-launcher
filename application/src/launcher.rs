@@ -1,7 +1,4 @@
-use std::{
-    error::Error,
-    ffi::{OsStr, OsString},
-};
+use std::{error::Error, ffi::OsStr};
 
 #[derive(Debug, Clone)]
 pub struct LaunchParams {
@@ -17,22 +14,60 @@ pub struct LaunchError {
     pub params: LaunchParams,
 }
 
-pub trait Launcher {
-    fn launch(&self, params: &LaunchParams) -> Result<(), LaunchError>;
+trait Launcher {
+    fn launch_game(
+        &self,
+        executable_path: &OsStr,
+        params: &LaunchParams,
+        arguments: &[ExecutableArgument],
+    ) -> Result<(), LaunchError>;
 }
 
 #[derive(Default)]
-pub struct DebugLauncher;
+struct GameLauncher;
 
-impl Launcher for DebugLauncher {
-    fn launch(&self, params: &LaunchParams) -> Result<(), LaunchError> {
-        println!("Debug launcher launch: {:?}", params);
+impl Launcher for GameLauncher {
+    fn launch_game(
+        &self,
+        executable_path: &OsStr,
+        params: &LaunchParams,
+        arguments: &[ExecutableArgument],
+    ) -> Result<(), LaunchError> {
+        use std::process::Command;
+
+        Command::new(executable_path)
+            .args(arguments.iter().map(|arg| arg.format_to_string(params)))
+            .output()
+            .map_err(|error| LaunchError {
+                message: format!("Cannot start executable '{0}'", executable_path.to_string_lossy()),
+                origin: Some(Box::new(error)),
+                params: params.clone(),
+            })?;
 
         Ok(())
     }
 }
 
-pub enum ExecutableArgument {
+#[derive(Default)]
+struct DebugLauncher;
+
+impl Launcher for DebugLauncher {
+    fn launch_game(
+        &self,
+        executable_path: &OsStr,
+        params: &LaunchParams,
+        arguments: &[ExecutableArgument],
+    ) -> Result<(), LaunchError> {
+        println!("Debug launcher launch: {:?}", params);
+        println!("Executable: {:?}", executable_path);
+        println!("Arguments: {:?}", arguments);
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+enum ExecutableArgument {
     Argument(String),
     Server,
 }
@@ -53,12 +88,12 @@ impl From<&str> for ExecutableArgument {
 }
 
 pub struct ExecutableLauncher {
-    executable_path: OsString,
     arguments: Vec<ExecutableArgument>,
+    launcher: Box<dyn Launcher>,
 }
 
 impl ExecutableLauncher {
-    pub fn new<P: AsRef<OsStr>>(executable_path: P) -> Self {
+    pub fn new(testing: bool) -> Self {
         Self {
             arguments: vec![
                 "-applaunch".into(),
@@ -66,24 +101,14 @@ impl ExecutableLauncher {
                 "+connect".into(),
                 ExecutableArgument::Server,
             ],
-            executable_path: executable_path.as_ref().to_os_string(),
+            launcher: match testing {
+                true => Box::new(DebugLauncher::default()),
+                false => Box::new(GameLauncher::default()),
+            },
         }
     }
-}
 
-impl Launcher for ExecutableLauncher {
-    fn launch(&self, params: &LaunchParams) -> Result<(), LaunchError> {
-        use std::process::Command;
-
-        Command::new(&self.executable_path)
-            .args(self.arguments.iter().map(|arg| arg.format_to_string(params)))
-            .output()
-            .map_err(|error| LaunchError {
-                message: format!("Cannot start executable '{0}'", &self.executable_path.to_string_lossy()),
-                origin: Some(Box::new(error)),
-                params: params.clone(),
-            })?;
-
-        Ok(())
+    pub fn launch(&self, executable_path: &OsStr, params: &LaunchParams) -> Result<(), LaunchError> {
+        self.launcher.launch_game(executable_path, params, &self.arguments)
     }
 }
