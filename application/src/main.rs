@@ -13,9 +13,8 @@ mod launcher;
 mod servers_provider;
 mod settings;
 mod setup;
-mod skial_source;
 mod states;
-mod teamwork_source;
+mod sources;
 mod views;
 
 use clap::Parser;
