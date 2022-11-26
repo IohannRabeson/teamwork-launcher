@@ -1,8 +1,9 @@
 use {
     application::{Application, Flags},
+    clap::Parser,
     iced::{Application as IcedApplication, Settings},
     launcher::ExecutableLauncher,
-    log::{debug, error},
+    log::{error, warn},
     settings::UserSettings,
 };
 
@@ -13,11 +14,9 @@ mod launcher;
 mod servers_provider;
 mod settings;
 mod setup;
-mod states;
 mod sources;
+mod states;
 mod views;
-
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -31,7 +30,9 @@ fn main() -> anyhow::Result<()> {
 
     setup::setup_logger()?;
 
-    debug!("CLI parameters: {:?}", cli_params);
+    if cli_params.testing_mode {
+        warn!("Testing mode enabled");
+    }
 
     Application::run(Settings::with_flags(Flags {
         settings: load_user_settings(),

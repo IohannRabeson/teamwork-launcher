@@ -1,7 +1,9 @@
 use {async_trait::async_trait, log::debug, std::time::Instant};
 
-use crate::{settings::UserSettings, skial_source::SkialSource, teamwork_source::TeamworkSource};
-
+use crate::{
+    settings::UserSettings,
+    sources::{SkialSource, TeamworkSource},
+};
 pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
@@ -78,6 +80,7 @@ impl ServersProvider {
         }
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
+
         Ok(servers)
     }
 }
