@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 pub use models::{GameMode, Server};
 use {self::models::GameModes, serde::Deserialize};
 
@@ -15,9 +17,9 @@ pub enum Error {
     TeamworkError { address: String, error: String },
 }
 
-pub struct Client {
-    base_url: String,
-}
+/// Notice the client is Send + Sync and it must stay as is.
+#[derive(Default)]
+pub struct Client;
 
 #[derive(Deserialize)]
 struct TeamworkErrorResponse {
@@ -25,17 +27,11 @@ struct TeamworkErrorResponse {
     pub message: String,
 }
 
-impl Default for Client {
-    fn default() -> Self {
-        Self {
-            base_url: "https://teamwork.tf/api/v1".into(),
-        }
-    }
-}
+const TEAMWORK_TF_API: &str = "https://teamwork.tf/api/v1";
 
 impl Client {
     pub async fn query_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
-        let address = format!("{}/quickplay?key={}", self.base_url, api_key);
+        let address = format!("{}/quickplay?key={}", TEAMWORK_TF_API, api_key);
         let response = reqwest::get(&address).await.map_err(Error::HttpRequest)?;
         let raw_text = response.text().await?;
 
@@ -68,7 +64,7 @@ impl Client {
     }
 
     async fn query_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<models::Server>, Error> {
-        let address = format!("{}/quickplay/{}/servers?key={}", self.base_url, game_mode_id, api_key);
+        let address = format!("{}/quickplay/{}/servers?key={}", TEAMWORK_TF_API, game_mode_id, api_key);
         println!("GET '{}'", address);
 
         let mut servers: Vec<Server> = reqwest::get(address)

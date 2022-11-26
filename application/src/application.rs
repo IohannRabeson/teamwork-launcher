@@ -27,7 +27,7 @@ pub enum Messages {
     FavoriteClicked(String),
     /// Show the page to edit the favorite servers.
     EditFavorites,
-    /// SHow the page to edit the application settings.
+    /// Show the page to edit the application settings.
     EditSettings,
     /// Pop the current state.
     Back,

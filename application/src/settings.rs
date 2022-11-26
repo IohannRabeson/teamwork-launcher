@@ -8,12 +8,8 @@ use std::{
 
 use {
     async_rwlock::RwLock,
-    serde::{Deserializer, Serializer},
-};
-
-use {
     log::{error, info},
-    serde::{Deserialize, Serialize},
+    serde::{Deserialize, Deserializer, Serialize, Serializer},
 };
 
 #[derive(thiserror::Error, Debug)]
@@ -90,7 +86,7 @@ impl UserSettings {
     }
 
     pub fn teamwork_api_key(&self) -> String {
-        let mut inner = self.storage.try_write().unwrap();
+        let inner = self.storage.try_write().unwrap();
 
         inner.teamwork_api_key.clone()
     }

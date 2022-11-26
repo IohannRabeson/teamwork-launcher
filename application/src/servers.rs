@@ -8,7 +8,9 @@ pub struct ServersProvider {
 
 impl Default for ServersProvider {
     fn default() -> Self {
-        Self { sources: vec![Box::new(SkialSource::default()), Box::new(TeamworkSource::default())] }
+        Self {
+            sources: vec![Box::new(SkialSource::default()), Box::new(TeamworkSource::default())],
+        }
     }
 }
 
