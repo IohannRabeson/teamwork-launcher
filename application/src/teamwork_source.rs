@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use {async_trait::async_trait, teamwork::Client as TeamworkClient};
 
 use crate::{
-    servers::{GetServersInfosError, Server, Source},
+    servers_provider::{GetServersInfosError, Server, Source},
     settings::UserSettings,
 };
 

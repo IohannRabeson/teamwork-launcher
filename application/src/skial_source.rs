@@ -9,7 +9,7 @@ use {
 };
 
 use crate::{
-    servers::{GetServersInfosError, Server, Source},
+    servers_provider::{GetServersInfosError, Server, Source},
     settings::UserSettings,
 };
 

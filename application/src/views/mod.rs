@@ -9,7 +9,7 @@ use crate::{
     fonts,
     icons::{Icons, SvgHandle},
     launcher::LaunchParams,
-    servers::{Server, SourceId},
+    servers_provider::{Server, SourceId},
     settings::UserSettings,
 };
 

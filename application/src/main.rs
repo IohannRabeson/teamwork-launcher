@@ -10,7 +10,7 @@ mod application;
 mod fonts;
 mod icons;
 mod launcher;
-mod servers;
+mod servers_provider;
 mod settings;
 mod setup;
 mod skial_source;

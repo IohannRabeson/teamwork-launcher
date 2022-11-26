@@ -5,7 +5,7 @@ use {
     crate::{
         application::Messages,
         icons::Icons,
-        servers::{Server, SourceId},
+        servers_provider::{Server, SourceId},
         settings::UserSettings,
     },
     iced::{

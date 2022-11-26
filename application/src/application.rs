@@ -8,7 +8,7 @@ use iced::{
 use crate::{
     icons::Icons,
     launcher::{ExecutableLauncher, LaunchParams},
-    servers::{self, Server, ServersProvider, SourceId},
+    servers_provider::{self, Server, ServersProvider, SourceId},
     settings::UserSettings,
     states::{States, StatesStack},
     views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
@@ -17,7 +17,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub enum Messages {
     RefreshServers,
-    ServersRefreshed(Result<Vec<(Server, SourceId)>, servers::Error>),
+    ServersRefreshed(Result<Vec<(Server, SourceId)>, servers_provider::Error>),
     FilterChanged(String),
     StartGame(LaunchParams),
     ModifySettings(UserSettings),
@@ -90,7 +90,7 @@ impl Application {
         self.settings.switch_favorite_server(server_name)
     }
 
-    fn refresh_finished(&mut self, result: Result<Vec<(Server, SourceId)>, servers::Error>) {
+    fn refresh_finished(&mut self, result: Result<Vec<(Server, SourceId)>, servers_provider::Error>) {
         match result {
             Ok(servers) => {
                 self.servers = servers;
