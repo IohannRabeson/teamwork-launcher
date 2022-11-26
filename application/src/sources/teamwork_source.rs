@@ -3,8 +3,8 @@ use std::{str::FromStr, time::Duration};
 use {async_trait::async_trait, teamwork::Client as TeamworkClient};
 
 use crate::{
-    servers_provider::{GetServersInfosError, Server, Source},
-    settings::UserSettings,
+    servers_provider::{GetServersInfosError, Source},
+    settings::UserSettings, models::{Server, IpPort},
 };
 
 const GAMEMODE_IDS: &[&str] = &[
@@ -40,8 +40,8 @@ impl From<teamwork::Server> for Server {
             map: server.map_name,
             current_players_count: server.players,
             max_players_count: server.max_players,
-            port: server.port,
-            ip: std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"),
+            ip_port: IpPort::new(std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"), server.port),
+            source: None,
         }
     }
 }

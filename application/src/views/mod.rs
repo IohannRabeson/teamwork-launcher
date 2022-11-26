@@ -9,8 +9,7 @@ use crate::{
     fonts,
     icons::{Icons, SvgHandle},
     launcher::LaunchParams,
-    servers_provider::{Server, SourceId},
-    settings::UserSettings,
+    settings::UserSettings, models::Server,
 };
 
 pub use {
@@ -31,13 +30,13 @@ const BIG_BUTTON_SIZE: u16 = 36;
 impl From<&Server> for LaunchParams {
     fn from(server: &Server) -> Self {
         Self {
-            server_ip: server.ip,
-            server_port: server.port,
+            server_ip: server.ip_port.ip().clone(),
+            server_port: server.ip_port.port(),
         }
     }
 }
 
-pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     icons: &Icons,
     settings: &UserSettings,

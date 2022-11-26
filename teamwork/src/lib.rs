@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 pub use models::{GameMode, Server};
 use {self::models::GameModes, serde::Deserialize};
 
@@ -7,6 +5,8 @@ mod parsing;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("No Teamwork.tf API key. To request an API key, connect to teamwork.tf then go to https://teamwork.tf/settings")]
+    NoTeamworkApiKey,
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
     #[error("IO error: {0}")]
@@ -64,6 +64,10 @@ impl Client {
     }
 
     async fn query_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<models::Server>, Error> {
+        if api_key.is_empty() {
+            return Err(Error::NoTeamworkApiKey)
+        }
+        
         let address = format!("{}/quickplay/{}/servers?key={}", TEAMWORK_TF_API, game_mode_id, api_key);
         println!("GET '{}'", address);
 

@@ -1,11 +1,12 @@
 use iced::{widget::container, Length};
 
+use crate::models::Server;
+
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages,
         icons::Icons,
-        servers_provider::{Server, SourceId},
         settings::UserSettings,
     },
     iced::{
@@ -13,8 +14,9 @@ use {
         Alignment, Element,
     },
 };
+use itertools::Itertools;
 
-pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     icons: &Icons,
     settings: &UserSettings,
@@ -25,10 +27,11 @@ pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         scrollable(
             servers_iterator
-                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, (server, _source_id)| {
+                .unique_by(|server|&server.ip_port)
+                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
                     column.push(server_view(
                         server,
-                        settings.filter_servers_favorite(&server.name),
+                        settings.filter_servers_favorite(&server),
                         icons,
                         edit_favorites,
                     ))
@@ -55,11 +58,11 @@ fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
 
 fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Row<'a, Messages> {
     if edit_favorites {
-        row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.name.clone())),]
+        row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.ip_port.clone())),]
     } else {
         row![
             svg_button(icons.copy(), 28)
-                .on_press(Messages::CopyToClipboard(format!("connect {}:{}", server.ip, server.port))),
+                .on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
             text_button("Play").on_press(Messages::StartGame(server.into())),
         ]
     }

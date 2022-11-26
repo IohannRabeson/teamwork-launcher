@@ -17,6 +17,7 @@ mod setup;
 mod sources;
 mod states;
 mod views;
+mod models;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

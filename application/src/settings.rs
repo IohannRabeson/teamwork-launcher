@@ -6,6 +6,8 @@ use std::{
     sync::Arc,
 };
 
+use crate::models::{Server, IpPort};
+
 use {
     async_rwlock::RwLock,
     log::{error, info},
@@ -23,7 +25,7 @@ pub enum Error {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct InnerUserSettings {
     #[serde(default)]
-    pub favorites: BTreeSet<String>,
+    pub favorites: BTreeSet<IpPort>,
     #[serde(rename = "filter_text", default)]
     pub servers_filter_text: String,
     #[serde(default)]
@@ -114,10 +116,20 @@ impl UserSettings {
         name.as_ref().to_lowercase().contains(text_filter)
     }
 
-    pub fn filter_servers_favorite<S: AsRef<str>>(&self, name: S) -> bool {
+    pub fn filter_servers_favorite(&self, server: &Server) -> bool {
         let inner = self.storage.try_read().unwrap();
 
-        inner.favorites.contains(name.as_ref())
+        inner.favorites.contains(&server.ip_port)
+    }
+
+    pub fn switch_favorite_server(&mut self, ip_port: &IpPort) {
+        let mut inner = self.storage.try_write().unwrap();
+        let favorites = &mut inner.favorites;
+
+        match favorites.contains(ip_port) {
+            true => favorites.remove(ip_port),
+            false => favorites.insert(ip_port.clone()),
+        };
     }
 
     pub fn set_game_executable_path<S: AsRef<str>>(&mut self, path: S) {
@@ -132,16 +144,6 @@ impl UserSettings {
         inner.game_executable_path.clone()
     }
 
-    pub fn switch_favorite_server<S: AsRef<str>>(&mut self, name: S) {
-        let mut inner = self.storage.try_write().unwrap();
-        let favorites = &mut inner.favorites;
-        let name = name.as_ref();
-
-        match favorites.contains(name) {
-            true => favorites.remove(name),
-            false => favorites.insert(name.to_string()),
-        };
-    }
 
     fn file_settings_path(create_directory: bool) -> Option<PathBuf> {
         let mut path = platform_dirs::AppDirs::new("tf2-launcher".into(), false)

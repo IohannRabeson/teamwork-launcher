@@ -8,23 +8,23 @@ use iced::{
 use crate::{
     icons::Icons,
     launcher::{ExecutableLauncher, LaunchParams},
-    servers_provider::{self, Server, ServersProvider, SourceId},
+    servers_provider::{self, ServersProvider},
     settings::UserSettings,
     states::{States, StatesStack},
-    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
+    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view}, models::{Server, IpPort},
 };
 
 #[derive(Debug, Clone)]
 pub enum Messages {
     RefreshServers,
-    ServersRefreshed(Result<Vec<(Server, SourceId)>, servers_provider::Error>),
+    ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     FilterChanged(String),
     StartGame(LaunchParams),
     ModifySettings(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
-    FavoriteClicked(String),
+    FavoriteClicked(IpPort),
     /// Show the page to edit the favorite servers.
     EditFavorites,
     /// Show the page to edit the application settings.
@@ -37,7 +37,7 @@ pub struct Application {
     settings: UserSettings,
     icons: Icons,
     servers_provider: Arc<ServersProvider>,
-    servers: Vec<(Server, SourceId)>,
+    servers: Vec<Server>,
     states: StatesStack,
     launcher: ExecutableLauncher,
     theme: Theme,
@@ -59,17 +59,17 @@ impl Application {
     }
 
     /// Returns the servers filtered by text.
-    fn servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
+    fn servers_iter(&self) -> impl Iterator<Item = &Server> {
         self.servers
             .iter()
-            .filter(|(server, _source_id)| self.filter_server_by_text(server))
+            .filter(|server| self.filter_server_by_text(server))
     }
 
     /// Returns the favorites servers, filtered by text.
-    fn favorite_servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
+    fn favorite_servers_iter(&self) -> impl Iterator<Item = &Server> {
         self.servers
             .iter()
-            .filter(move |(server, _id)| self.filter_favorite_server(server))
+            .filter(move |server| self.filter_favorite_server(server))
     }
 
     fn filter_server_by_text(&self, server: &Server) -> bool {
@@ -77,7 +77,7 @@ impl Application {
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.filter_servers_favorite(&server.name) && self.filter_server_by_text(server)
+        self.settings.filter_servers_favorite(&server) && self.filter_server_by_text(server)
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {
@@ -86,11 +86,11 @@ impl Application {
         }
     }
 
-    fn switch_favorite_server(&mut self, server_name: &str) {
-        self.settings.switch_favorite_server(server_name)
+    fn switch_favorite_server(&mut self, ip_port: &IpPort) {
+        self.settings.switch_favorite_server(ip_port)
     }
 
-    fn refresh_finished(&mut self, result: Result<Vec<(Server, SourceId)>, servers_provider::Error>) {
+    fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) {
         match result {
             Ok(servers) => {
                 self.servers = servers;
@@ -155,12 +155,10 @@ impl IcedApplication for Application {
         match message {
             Messages::ServersRefreshed(result) => self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
-            Messages::FilterChanged(text_filter) => {
-                self.settings.set_filter_servers_text(text_filter);
-            }
+            Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
-            Messages::FavoriteClicked(server_name) => self.switch_favorite_server(&server_name),
+            Messages::FavoriteClicked(server_ip_port) => self.switch_favorite_server(&server_ip_port),
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
