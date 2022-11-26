@@ -77,7 +77,7 @@ impl Application {
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.filter_servers_favorite(&server.name)
+        self.settings.filter_servers_favorite(&server.name) && self.filter_server_by_text(server)
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {

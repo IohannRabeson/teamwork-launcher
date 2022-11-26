@@ -14,9 +14,20 @@ pub fn settings_view<'a>(settings: &'a UserSettings) -> Element<'a, Messages> {
         field(
             "Game executable path:",
             text_input("Game executable path", &settings.game_executable_path(), |text| {
-                let new_settings = settings.clone();
+                let mut new_settings = settings.clone();
 
                 new_settings.set_game_executable_path::<&str>(&text);
+
+                Messages::ModifySettings(new_settings)
+            })
+            .into()
+        ),
+        field(
+            "Teamwork.tf API key:",
+            text_input("Key", &settings.teamwork_api_key(), |text| {
+                let mut new_settings = settings.clone();
+
+                new_settings.set_teamwork_api_key::<&str>(&text);
 
                 Messages::ModifySettings(new_settings)
             })

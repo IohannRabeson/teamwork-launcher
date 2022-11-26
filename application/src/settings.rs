@@ -26,10 +26,14 @@ pub enum Error {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct InnerUserSettings {
+    #[serde(default)]
     pub favorites: BTreeSet<String>,
-    #[serde(rename = "filter_text")]
+    #[serde(rename = "filter_text", default)]
     pub servers_filter_text: String,
+    #[serde(default)]
     pub game_executable_path: String,
+    #[serde(default)]
+    pub teamwork_api_key: String,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug)]
@@ -73,11 +77,24 @@ impl Default for InnerUserSettings {
             game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
             #[cfg(not(target_os = "windows"))]
             game_executable_path: Default::default(),
+            teamwork_api_key: Default::default(),
         }
     }
 }
 
 impl UserSettings {
+    pub fn set_teamwork_api_key<S: AsRef<str>>(&mut self, api_key: S) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.teamwork_api_key = api_key.as_ref().to_string();
+    }
+
+    pub fn teamwork_api_key(&self) -> String {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.teamwork_api_key.clone()
+    }
+
     pub fn set_filter_servers_text<S: AsRef<str>>(&mut self, text: S) {
         let mut inner = self.storage.try_write().unwrap();
 
@@ -107,7 +124,7 @@ impl UserSettings {
         inner.favorites.contains(name.as_ref())
     }
 
-    pub fn set_game_executable_path<S: AsRef<str>>(&self, path: S) {
+    pub fn set_game_executable_path<S: AsRef<str>>(&mut self, path: S) {
         let mut inner = self.storage.try_write().unwrap();
 
         inner.game_executable_path = path.as_ref().to_string();

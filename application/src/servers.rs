@@ -2,10 +2,14 @@ use {async_trait::async_trait, log::debug, std::time::Instant};
 
 use crate::{settings::UserSettings, skial_source::SkialSource, teamwork_source::TeamworkSource};
 
-#[derive(Default)]
 pub struct ServersProvider {
-    skial_source: SkialSource,
-    teamwork_source: TeamworkSource,
+    sources: Vec<Box<dyn Source>>,
+}
+
+impl Default for ServersProvider {
+    fn default() -> Self {
+        Self { sources: vec![Box::new(SkialSource::default()), Box::new(TeamworkSource::default())] }
+    }
 }
 
 /// Store information about a server.
@@ -61,21 +65,15 @@ impl ServersProvider {
         let started = Instant::now();
         let mut servers = Vec::with_capacity(16);
 
-        servers.extend(
-            self.skial_source
-                .get_servers_infos(&settings)
-                .await?
-                .into_iter()
-                .map(|info| (info, SourceId(1usize))),
-        );
-
-        servers.extend(
-            self.teamwork_source
-                .get_servers_infos(&settings)
-                .await?
-                .into_iter()
-                .map(|info| (info, SourceId(2usize))),
-        );
+        for (index, source) in self.sources.iter().enumerate() {
+            servers.extend(
+                source
+                    .get_servers_infos(&settings)
+                    .await?
+                    .into_iter()
+                    .map(|info| (info, SourceId(index))),
+            );
+        }
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
         Ok(servers)
