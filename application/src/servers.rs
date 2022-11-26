@@ -1,10 +1,6 @@
-use std::{time::Instant, sync::{Arc}};
-use async_rwlock::RwLock;
-use async_trait::async_trait;
+use {async_trait::async_trait, log::debug, std::time::Instant};
 
-use crate::{settings::UserSettings, teamwork_source::TeamworkSource};
-
-use {crate::skial_source::SkialSource, log::debug};
+use crate::{settings::UserSettings, skial_source::SkialSource, teamwork_source::TeamworkSource};
 
 #[derive(Default)]
 pub struct ServersProvider {
@@ -61,8 +57,7 @@ pub enum Error {
 }
 
 impl ServersProvider {
-    pub async fn refresh(&self, settings: &Arc<RwLock<UserSettings>>) -> Result<Vec<(Server, SourceId)>, Error> {
-        let settings = settings.read().await;
+    pub async fn refresh(&self, settings: &UserSettings) -> Result<Vec<(Server, SourceId)>, Error> {
         let started = Instant::now();
         let mut servers = Vec::with_capacity(16);
 

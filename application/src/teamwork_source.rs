@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 
-use crate::{servers::{Source, Server, GetServersInfosError}, settings::UserSettings};
+use crate::{
+    servers::{GetServersInfosError, Server, Source},
+    settings::UserSettings,
+};
 
 #[derive(Default)]
 pub struct TeamworkSource;

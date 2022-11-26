@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use async_rwlock::RwLock;
 use iced::{widget::container, Length};
 
 use {
@@ -20,20 +17,18 @@ use {
 pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
     servers_iterator: I,
     icons: &Icons,
-    settings: Arc<RwLock<UserSettings>>,
+    settings: &UserSettings,
     edit_favorites: bool,
 ) -> Element<'a, Messages> {
-    let settings = settings.try_read().unwrap();
-
     column![
-        servers_filter_view(&settings.filter, icons),
+        servers_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         scrollable(
             servers_iterator
                 .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, (server, _source_id)| {
                     column.push(server_view(
                         server,
-                        settings.favorites.contains(&server.name),
+                        settings.filter_servers_favorite(&server.name),
                         icons,
                         edit_favorites,
                     ))

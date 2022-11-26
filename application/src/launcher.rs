@@ -1,4 +1,4 @@
-use std::{error::Error, ffi::OsStr};
+use std::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct LaunchParams {
@@ -17,7 +17,7 @@ pub struct LaunchError {
 trait Launcher {
     fn launch_game(
         &self,
-        executable_path: &OsStr,
+        executable_path: &str,
         params: &LaunchParams,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError>;
@@ -29,7 +29,7 @@ struct GameLauncher;
 impl Launcher for GameLauncher {
     fn launch_game(
         &self,
-        executable_path: &OsStr,
+        executable_path: &str,
         params: &LaunchParams,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError> {
@@ -39,7 +39,7 @@ impl Launcher for GameLauncher {
             .args(arguments.iter().map(|arg| arg.format_to_string(params)))
             .output()
             .map_err(|error| LaunchError {
-                message: format!("Cannot start executable '{0}'", executable_path.to_string_lossy()),
+                message: format!("Cannot start executable '{0}'", executable_path),
                 origin: Some(Box::new(error)),
                 params: params.clone(),
             })?;
@@ -54,7 +54,7 @@ struct DebugLauncher;
 impl Launcher for DebugLauncher {
     fn launch_game(
         &self,
-        executable_path: &OsStr,
+        executable_path: &str,
         params: &LaunchParams,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError> {
@@ -108,7 +108,7 @@ impl ExecutableLauncher {
         }
     }
 
-    pub fn launch(&self, executable_path: &OsStr, params: &LaunchParams) -> Result<(), LaunchError> {
+    pub fn launch(&self, executable_path: &str, params: &LaunchParams) -> Result<(), LaunchError> {
         self.launcher.launch_game(executable_path, params, &self.arguments)
     }
 }
