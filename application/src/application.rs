@@ -1,9 +1,11 @@
-use std::sync::Arc;
+use std::sync::{Arc};
 
 use iced::{
     widget::{column, vertical_space},
     Application as IcedApplication, Command, Element, Length, Theme,
 };
+
+use async_rwlock::RwLock;
 
 use crate::{
     icons::Icons,
@@ -34,7 +36,7 @@ pub enum Messages {
 }
 
 pub struct Application {
-    settings: UserSettings,
+    settings: Arc<RwLock<UserSettings>>,
     icons: Icons,
     servers_provider: Arc<ServersProvider>,
     servers: Vec<(Server, SourceId)>,
@@ -50,7 +52,11 @@ impl Application {
         self.states.push(States::Reloading);
         self.servers.clear();
 
-        Command::perform(async move { servers_provider.refresh().await }, Messages::ServersRefreshed)
+        let settings = self.settings.clone();
+
+        Command::perform(async move { 
+            servers_provider.refresh(&settings).await 
+        }, Messages::ServersRefreshed)
     }
 
     /// Returns the servers filtered by text.
@@ -68,7 +74,8 @@ impl Application {
     }
 
     fn filter_server_by_text(&self, server: &Server) -> bool {
-        let text_filter = self.settings.filter.trim().to_lowercase();
+        let settings = self.settings.read();
+        let text_filter = self.settings.try_read().unwrap().filter.trim().to_lowercase();
 
         if text_filter.is_empty() {
             return true;
@@ -78,19 +85,21 @@ impl Application {
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.favorites.contains(&server.name)
+        self.settings.try_read().unwrap().favorites.contains(&server.name)
     }
 
     fn launch_executable(&mut self, params: &LaunchParams) {
-        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path, params) {
+        if let Err(error) = self.launcher.launch(&self.settings.try_read().unwrap().game_executable_path, params) {
             self.states.push(States::Error { message: error.message });
         }
     }
 
     fn switch_favorite_server(&mut self, server_name: &str) {
-        match self.settings.favorites.contains(server_name) {
-            true => self.settings.favorites.remove(server_name),
-            false => self.settings.favorites.insert(server_name.to_string()),
+        let mut favorites = &mut self.settings.try_write().unwrap().favorites;
+
+        match favorites.contains(server_name) {
+            true => favorites.remove(server_name),
+            false => favorites.insert(server_name.to_string()),
         };
     }
 
@@ -124,7 +133,7 @@ impl Application {
 }
 
 pub struct Flags {
-    pub settings: UserSettings,
+    pub settings: Arc<RwLock<UserSettings>>,
     pub launcher: ExecutableLauncher,
 }
 
@@ -159,14 +168,22 @@ impl IcedApplication for Application {
         match message {
             Messages::ServersRefreshed(result) => self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
-            Messages::FilterChanged(text_filter) => self.settings.filter = text_filter,
+            Messages::FilterChanged(text_filter) => {
+                let mut self_settings = self.settings.try_write().unwrap();
+
+                self_settings.filter = text_filter;
+            },
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_name) => self.switch_favorite_server(&server_name),
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
-            Messages::ModifySettings(settings) => self.settings = settings,
+            Messages::ModifySettings(settings) => {
+                let mut self_settings = self.settings.try_write().unwrap();
+
+                *self_settings = settings;
+            },
         }
 
         Command::none()
@@ -174,9 +191,9 @@ impl IcedApplication for Application {
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         self.normal_view(match self.states.current() {
-            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false),
-            States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings),
-            States::Settings => settings_view(&self.settings),
+            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, self.settings.clone(), false),
+            States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, self.settings.clone()),
+            States::Settings => settings_view(self.settings.clone()),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
         })
@@ -189,6 +206,6 @@ impl IcedApplication for Application {
 
 impl Drop for Application {
     fn drop(&mut self) {
-        UserSettings::save_settings(&self.settings).expect("Write settings");
+        UserSettings::save_settings(&self.settings.try_read().unwrap()).expect("Write settings");
     }
 }

@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use async_rwlock::RwLock;
 use iced::{widget::container, Length};
 
 use {
@@ -17,9 +20,11 @@ use {
 pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
     servers_iterator: I,
     icons: &Icons,
-    settings: &UserSettings,
+    settings: Arc<RwLock<UserSettings>>,
     edit_favorites: bool,
 ) -> Element<'a, Messages> {
+    let settings = settings.try_read().unwrap();
+
     column![
         servers_filter_view(&settings.filter, icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),

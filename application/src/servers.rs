@@ -1,12 +1,15 @@
-use std::time::Instant;
-
+use std::{time::Instant, sync::{Arc}};
+use async_rwlock::RwLock;
 use async_trait::async_trait;
+
+use crate::{settings::UserSettings, teamwork_source::TeamworkSource};
 
 use {crate::skial_source::SkialSource, log::debug};
 
 #[derive(Default)]
 pub struct ServersProvider {
     skial_source: SkialSource,
+    teamwork_source: TeamworkSource,
 }
 
 /// Store information about a server.
@@ -41,7 +44,7 @@ pub struct SourceId(usize);
 #[async_trait]
 pub trait Source: Send + Sync + 'static {
     fn display_name(&self) -> String;
-    async fn get_servers_infos(&self) -> Result<Vec<Server>, GetServersInfosError>;
+    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError>;
 }
 
 #[derive(Debug, thiserror::Error, Clone)]
@@ -58,16 +61,25 @@ pub enum Error {
 }
 
 impl ServersProvider {
-    pub async fn refresh(&self) -> Result<Vec<(Server, SourceId)>, Error> {
+    pub async fn refresh(&self, settings: &Arc<RwLock<UserSettings>>) -> Result<Vec<(Server, SourceId)>, Error> {
+        let settings = settings.read().await;
         let started = Instant::now();
         let mut servers = Vec::with_capacity(16);
 
         servers.extend(
             self.skial_source
-                .get_servers_infos()
+                .get_servers_infos(&settings)
                 .await?
                 .into_iter()
                 .map(|info| (info, SourceId(1usize))),
+        );
+
+        servers.extend(
+            self.teamwork_source
+                .get_servers_infos(&settings)
+                .await?
+                .into_iter()
+                .map(|info| (info, SourceId(2usize))),
         );
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());

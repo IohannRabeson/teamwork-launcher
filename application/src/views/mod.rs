@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use async_rwlock::RwLock;
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{column, text},
@@ -40,7 +43,7 @@ impl From<&Server> for LaunchParams {
 pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
     servers_iterator: I,
     icons: &Icons,
-    settings: &UserSettings,
+    settings: Arc<RwLock<UserSettings>>,
 ) -> Element<'a, Messages> {
     servers_view(servers_iterator, icons, settings, true)
 }

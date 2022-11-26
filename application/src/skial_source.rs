@@ -8,7 +8,7 @@ use {
     std::net::Ipv4Addr,
 };
 
-use crate::servers::{GetServersInfosError, Server, Source};
+use crate::{servers::{GetServersInfosError, Server, Source}, settings::UserSettings};
 
 #[derive(Default)]
 pub struct SkialSource;
@@ -21,7 +21,7 @@ impl Source for SkialSource {
         "Skial".to_string()
     }
 
-    async fn get_servers_infos(&self) -> Result<Vec<Server>, GetServersInfosError> {
+    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
         let html = reqwest::get(SKIAL_URL)
             .await
             .map_err(|e| GetServersInfosError {

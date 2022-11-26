@@ -16,7 +16,11 @@ mod setup;
 mod skial_source;
 mod states;
 mod views;
+mod teamwork_source;
 
+use std::sync::Arc;
+
+use async_rwlock::RwLock;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -34,7 +38,7 @@ fn main() -> anyhow::Result<()> {
     debug!("CLI parameters: {:?}", cli_params);
 
     Application::run(Settings::with_flags(Flags {
-        settings: load_user_settings(),
+        settings: Arc::new(RwLock::new(load_user_settings())),
         launcher: ExecutableLauncher::new(cli_params.testing_mode),
     }))?;
 
