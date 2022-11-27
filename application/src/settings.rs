@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::models::{Server, IpPort};
+use crate::models::{IpPort, Server};
 
 use {
     async_rwlock::RwLock,
@@ -143,7 +143,6 @@ impl UserSettings {
 
         inner.game_executable_path.clone()
     }
-
 
     fn file_settings_path(create_directory: bool) -> Option<PathBuf> {
         let mut path = platform_dirs::AppDirs::new("tf2-launcher".into(), false)

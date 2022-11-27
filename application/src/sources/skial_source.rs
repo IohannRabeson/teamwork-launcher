@@ -9,8 +9,9 @@ use {
 };
 
 use crate::{
+    models::Server,
     servers_provider::{GetServersInfosError, Source},
-    settings::UserSettings, models::Server,
+    settings::UserSettings,
 };
 
 #[derive(Default)]

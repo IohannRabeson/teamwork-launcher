@@ -5,7 +5,9 @@ mod parsing;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("No Teamwork.tf API key. To request an API key, connect to teamwork.tf then go to https://teamwork.tf/settings")]
+    #[error(
+        "No Teamwork.tf API key. To request an API key, connect to teamwork.tf then go to https://teamwork.tf/settings"
+    )]
     NoTeamworkApiKey,
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
@@ -65,12 +67,10 @@ impl Client {
 
     async fn query_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<models::Server>, Error> {
         if api_key.is_empty() {
-            return Err(Error::NoTeamworkApiKey)
+            return Err(Error::NoTeamworkApiKey);
         }
-        
-        let address = format!("{}/quickplay/{}/servers?key={}", TEAMWORK_TF_API, game_mode_id, api_key);
-        println!("GET '{}'", address);
 
+        let address = format!("{}/quickplay/{}/servers?key={}", TEAMWORK_TF_API, game_mode_id, api_key);
         let mut servers: Vec<Server> = reqwest::get(address)
             .await
             .map_err(Error::HttpRequest)?

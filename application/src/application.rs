@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::{Duration, Instant}};
 
 use iced::{
     widget::{column, vertical_space},
@@ -7,11 +7,12 @@ use iced::{
 
 use crate::{
     icons::Icons,
-    launcher::{ExecutableLauncher, LaunchParams},
+    launcher::ExecutableLauncher,
+    models::{IpPort, Server},
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
     states::{States, StatesStack},
-    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view}, models::{Server, IpPort},
+    ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
@@ -19,7 +20,9 @@ pub enum Messages {
     RefreshServers,
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     FilterChanged(String),
-    StartGame(LaunchParams),
+    StartGame(IpPort),
+    /// Message produced when the settings are modified and saved.
+    /// This message replace the current settings by the one passed as parameter.
     ModifySettings(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
@@ -41,16 +44,30 @@ pub struct Application {
     states: StatesStack,
     launcher: ExecutableLauncher,
     theme: Theme,
+    // I prevent to refresh too often.
+    refresh_throttle: Duration,
+    last_refresh: Option<Instant>,
 }
 
 impl Application {
     fn refresh_command(&mut self) -> Command<Messages> {
-        let servers_provider = self.servers_provider.clone();
+        // If we refreshed recently, do not refresh yet.
+        if let Some(last_refresh) = self.last_refresh {
+            if Instant::now() - last_refresh < self.refresh_throttle {
+                return Command::none()
+            }
+        }
+        self.last_refresh = Some(Instant::now());
+        
+        self.make_refresh_command()
+    }
 
+    fn make_refresh_command(&mut self) -> Command<Messages> {
         self.states.push(States::Reloading);
         self.servers.clear();
-
+        
         let settings = self.settings.clone();
+        let servers_provider = self.servers_provider.clone();
 
         Command::perform(
             async move { servers_provider.refresh(&settings).await },
@@ -60,16 +77,12 @@ impl Application {
 
     /// Returns the servers filtered by text.
     fn servers_iter(&self) -> impl Iterator<Item = &Server> {
-        self.servers
-            .iter()
-            .filter(|server| self.filter_server_by_text(server))
+        self.servers.iter().filter(|server| self.filter_server_by_text(server))
     }
 
     /// Returns the favorites servers, filtered by text.
     fn favorite_servers_iter(&self) -> impl Iterator<Item = &Server> {
-        self.servers
-            .iter()
-            .filter(move |server| self.filter_favorite_server(server))
+        self.servers.iter().filter(move |server| self.filter_favorite_server(server))
     }
 
     fn filter_server_by_text(&self, server: &Server) -> bool {
@@ -80,8 +93,8 @@ impl Application {
         self.settings.filter_servers_favorite(&server) && self.filter_server_by_text(server)
     }
 
-    fn launch_executable(&mut self, params: &LaunchParams) {
-        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), params) {
+    fn launch_executable(&mut self, ip_port: &IpPort) {
+        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
             self.states.push(States::Error { message: error.message });
         }
     }
@@ -141,6 +154,8 @@ impl IcedApplication for Application {
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
             servers: Vec::new(),
+            last_refresh: None,
+            refresh_throttle: Duration::from_secs(60),
         };
         let command = launcher.refresh_command();
 

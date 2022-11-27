@@ -1,24 +1,19 @@
 use std::error::Error;
-
-#[derive(Debug, Clone)]
-pub struct LaunchParams {
-    pub server_ip: std::net::Ipv4Addr,
-    pub server_port: u16,
-}
+use crate::models::IpPort;
 
 #[derive(thiserror::Error, Debug)]
 #[error("Failed to start executable: {message}")]
 pub struct LaunchError {
     pub message: String,
     pub origin: Option<Box<dyn Error>>,
-    pub params: LaunchParams,
+    pub params: IpPort,
 }
 
 trait Launcher {
     fn launch_game(
         &self,
         executable_path: &str,
-        params: &LaunchParams,
+        params: &IpPort,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError>;
 }
@@ -30,7 +25,7 @@ impl Launcher for GameLauncher {
     fn launch_game(
         &self,
         executable_path: &str,
-        params: &LaunchParams,
+        params: &IpPort,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError> {
         use std::process::Command;
@@ -55,7 +50,7 @@ impl Launcher for DebugLauncher {
     fn launch_game(
         &self,
         executable_path: &str,
-        params: &LaunchParams,
+        params: &IpPort,
         arguments: &[ExecutableArgument],
     ) -> Result<(), LaunchError> {
         println!("Debug launcher launch: {:?}", params);
@@ -73,10 +68,10 @@ enum ExecutableArgument {
 }
 
 impl ExecutableArgument {
-    pub fn format_to_string(&self, params: &LaunchParams) -> String {
+    pub fn format_to_string(&self, ip_port: &IpPort) -> String {
         match self {
             ExecutableArgument::Argument(argument) => argument.clone(),
-            ExecutableArgument::Server => format!("{}:{}", params.server_ip, params.server_port),
+            ExecutableArgument::Server => format!("{}:{}", ip_port.ip(), ip_port.port()),
         }
     }
 }
@@ -108,7 +103,7 @@ impl ExecutableLauncher {
         }
     }
 
-    pub fn launch(&self, executable_path: &str, params: &LaunchParams) -> Result<(), LaunchError> {
+    pub fn launch(&self, executable_path: &str, params: &IpPort) -> Result<(), LaunchError> {
         self.launcher.launch_game(executable_path, params, &self.arguments)
     }
 }

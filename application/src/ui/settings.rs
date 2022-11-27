@@ -8,7 +8,7 @@ use {
 
 use crate::settings::UserSettings;
 
-pub fn settings_view<'a>(settings: &'a UserSettings) -> Element<'a, Messages> {
+pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
     column![
         text("Settings").font(crate::fonts::TF2_SECONDARY).size(32),
         field(

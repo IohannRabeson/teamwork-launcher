@@ -4,17 +4,13 @@ use crate::models::Server;
 
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
-    crate::{
-        application::Messages,
-        icons::Icons,
-        settings::UserSettings,
-    },
+    crate::{application::Messages, icons::Icons, settings::UserSettings},
     iced::{
         widget::{column, horizontal_space, row, scrollable, text, text_input, vertical_space, Column, Row},
         Alignment, Element,
     },
+    itertools::Itertools,
 };
-use itertools::Itertools;
 
 pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
@@ -27,7 +23,7 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         scrollable(
             servers_iterator
-                .unique_by(|server|&server.ip_port)
+                .unique_by(|server| &server.ip_port)
                 .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
                     column.push(server_view(
                         server,
@@ -61,9 +57,8 @@ fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, ed
         row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.ip_port.clone())),]
     } else {
         row![
-            svg_button(icons.copy(), 28)
-                .on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
-            text_button("Play").on_press(Messages::StartGame(server.into())),
+            svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
+            text_button("Play").on_press(Messages::StartGame(server.ip_port.clone())),
         ]
     }
 }

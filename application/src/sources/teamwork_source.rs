@@ -3,8 +3,9 @@ use std::{str::FromStr, time::Duration};
 use {async_trait::async_trait, teamwork::Client as TeamworkClient};
 
 use crate::{
+    models::{IpPort, Server},
     servers_provider::{GetServersInfosError, Source},
-    settings::UserSettings, models::{Server, IpPort},
+    settings::UserSettings,
 };
 
 const GAMEMODE_IDS: &[&str] = &[

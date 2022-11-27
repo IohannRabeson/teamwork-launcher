@@ -1,21 +1,35 @@
 use std::net::Ipv4Addr;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// The unique key identifiying a server.
 #[derive(Debug, Hash, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct IpPort { ip: Ipv4Addr, port: u16 }
+pub struct IpPort {
+    ip: Ipv4Addr,
+    port: u16,
+}
 
 impl IpPort {
-    pub fn new(ip: Ipv4Addr, port: u16) -> Self { Self { ip, port } }
-    pub fn steam_connection_string(&self) -> String { format!("connect {}:{}", self.ip, self.port) }
-    pub fn ip(&self) -> &Ipv4Addr { &self.ip }
-    pub fn port(&self) -> u16 { self.port }
+    pub fn new(ip: Ipv4Addr, port: u16) -> Self {
+        Self { ip, port }
+    }
+    pub fn steam_connection_string(&self) -> String {
+        format!("connect {}:{}", self.ip, self.port)
+    }
+    pub fn ip(&self) -> &Ipv4Addr {
+        &self.ip
+    }
+    pub fn port(&self) -> u16 {
+        self.port
+    }
 }
 
 impl Default for IpPort {
     fn default() -> Self {
-        Self { ip: Ipv4Addr::UNSPECIFIED, port: Default::default() }
+        Self {
+            ip: Ipv4Addr::UNSPECIFIED,
+            port: Default::default(),
+        }
     }
 }
 

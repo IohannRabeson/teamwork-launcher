@@ -11,13 +11,13 @@ mod application;
 mod fonts;
 mod icons;
 mod launcher;
+mod models;
 mod servers_provider;
 mod settings;
 mod setup;
 mod sources;
 mod states;
-mod views;
-mod models;
+mod ui;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

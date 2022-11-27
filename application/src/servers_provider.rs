@@ -1,23 +1,13 @@
 use {async_trait::async_trait, log::debug, std::time::Instant};
 
 use crate::{
+    models::{Server, SourceId},
     settings::UserSettings,
-    sources::{SkialSource, TeamworkSource}, models::{Server, SourceId},
+    sources::{SkialSource, TeamworkSource},
 };
-pub struct ServersProvider {
-    sources: Vec<Box<dyn Source>>,
-}
-
-impl Default for ServersProvider {
-    fn default() -> Self {
-        Self {
-            sources: vec![Box::new(SkialSource::default()), Box::new(TeamworkSource::default())],
-        }
-    }
-}
 
 #[async_trait]
-pub trait Source: Send + Sync + 'static {
+pub trait Source: Send + Sync {
     fn display_name(&self) -> String;
     async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError>;
 }
@@ -35,22 +25,32 @@ pub enum Error {
     FailedToGetServerInfo(#[from] GetServersInfosError),
 }
 
+pub struct ServersProvider {
+    sources: Vec<Box<dyn Source>>,
+}
+
+impl Default for ServersProvider {
+    fn default() -> Self {
+        Self {
+            sources: vec![Box::new(SkialSource::default()), Box::new(TeamworkSource::default())],
+        }
+    }
+}
+
 impl ServersProvider {
     pub async fn refresh(&self, settings: &UserSettings) -> Result<Vec<Server>, Error> {
+        self.get_servers(settings).await
+    }
+
+    async fn get_servers(&self, settings: &UserSettings) -> Result<Vec<Server>, Error> {
         let started = Instant::now();
         let mut servers = Vec::with_capacity(16);
 
         for (index, source) in self.sources.iter().enumerate() {
-            servers.extend(
-                source
-                    .get_servers_infos(&settings)
-                    .await?
-                    .into_iter()
-                    .map(|mut info| {
-                        info.source = Some(SourceId(index));
-                        info
-                     }),
-            );
+            servers.extend(source.get_servers_infos(&settings).await?.into_iter().map(|mut info| {
+                info.source = Some(SourceId(index));
+                info
+            }));
         }
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
