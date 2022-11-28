@@ -1,6 +1,10 @@
-pub use models::{GameMode, Server};
-use {self::models::GameModes, serde::Deserialize};
+use std::fmt::Display;
 
+pub use models::{GameMode, Server};
+use reqwest::{IntoUrl, Url};
+use {self::models::GameModes, serde::Deserialize};
+use log::{error, trace};
+use serde::de::DeserializeOwned;
 mod parsing;
 
 #[derive(thiserror::Error, Debug)]
@@ -31,52 +35,51 @@ struct TeamworkErrorResponse {
 
 const TEAMWORK_TF_API: &str = "https://teamwork.tf/api/v1";
 
-impl Client {
-    pub async fn query_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
-        let address = format!("{}/quickplay?key={}", TEAMWORK_TF_API, api_key);
-        let response = reqwest::get(&address).await.map_err(Error::HttpRequest)?;
-        let raw_text = response.text().await?;
+/// An URL that does not leak your API key when you print it.
+/// Use UrlWithKey.make_url() to get the final URL.
+/// When displayed the API key is hidden.
+struct UrlWithKey {
+    url: String,
+    api_key: String,
+}
 
-        match serde_json::from_str::<GameModes>(&raw_text) {
-            Ok(modes) => {
-                let mut game_modes: Vec<GameMode> = Vec::new();
-
-                game_modes.extend(modes.official);
-                game_modes.extend(modes.community);
-
-                Ok(game_modes)
-            }
-            Err(_error) => {
-                let error: TeamworkErrorResponse = serde_json::from_str(&raw_text).map_err(Error::Json)?;
-
-                Err(Error::TeamworkError {
-                    address: address.clone(),
-                    error: error.message,
-                })
-            }
+impl UrlWithKey {
+    pub fn new(url: impl ToString, api_key: &str) -> UrlWithKey {
+        Self {
+            url: url.to_string(), api_key: api_key.to_string(),
         }
     }
 
-    fn filter_char(c: &char) -> bool {
-        c.is_alphanumeric() || c.is_ascii_punctuation() || c.is_ascii_punctuation() || c.is_ascii_whitespace()
+    fn make_url(&self) -> String {
+        format!("{}?key={}", self.url, self.api_key)
+    }
+}
+
+impl Display for UrlWithKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}?key=***", self.url)
+    }
+}
+
+impl Client {
+    pub async fn get_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
+        let url = UrlWithKey::new(format!("{}/quickplay", TEAMWORK_TF_API), api_key);
+        let modes: GameModes = self.get(&url).await?;
+        let mut game_modes: Vec<GameMode> = Vec::new();
+
+        game_modes.extend(modes.official);
+        game_modes.extend(modes.community);
+
+        Ok(game_modes)
     }
 
-    pub async fn get_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<models::Server>, Error> {
-        self.query_servers(api_key, game_mode_id).await
-    }
-
-    async fn query_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<models::Server>, Error> {
+    pub async fn get_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<Server>, Error> {
         if api_key.is_empty() {
             return Err(Error::NoTeamworkApiKey);
         }
 
-        let address = format!("{}/quickplay/{}/servers?key={}", TEAMWORK_TF_API, game_mode_id, api_key);
-        let mut servers: Vec<Server> = reqwest::get(address)
-            .await
-            .map_err(Error::HttpRequest)?
-            .json()
-            .await
-            .map_err(Error::HttpRequest)?;
+        let url = UrlWithKey::new(format!("{}/quickplay/{}/servers", TEAMWORK_TF_API, game_mode_id), api_key);
+        let mut servers: Vec<Server> = self.get(&url).await?;
 
         for server in &mut servers {
             server.name = server
@@ -89,6 +92,43 @@ impl Client {
         }
 
         Ok(servers.into_iter().filter(Server::is_valid).collect())
+    }
+
+    fn filter_char(c: &char) -> bool {
+        c.is_alphanumeric() || c.is_ascii_punctuation() || c.is_ascii_punctuation() || c.is_ascii_whitespace()
+    }
+
+    async fn get<'a, T: DeserializeOwned>(&self, url: &UrlWithKey) -> Result<T, Error> {
+        trace!("GET '{}'", url);
+        let raw_text = reqwest::get(url.make_url())
+            .await
+            .map_err(Error::HttpRequest)?
+            .text()
+            .await?;
+        
+        Self::try_parse_response::<T>(&raw_text, url)
+    }
+
+    /// Try to parse the value T from JSON.
+    /// In case of failure, try to parse the same text but assuming the JSON contains an error (TeamworkErrorResponse).
+    /// If this also fails, just return the original error as JSON error.
+    fn try_parse_response<'a, T: Deserialize<'a>>(text: &'a str, url: &UrlWithKey) -> Result<T, Error> {
+        match serde_json::from_str::<'a, T>(&text) {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                error!("Failed to parse JSON response from '{}'", url);
+
+                match serde_json::from_str::<TeamworkErrorResponse>(&text) {
+                    Ok(error) => {
+                        Err(Error::TeamworkError { address: url.to_string(), error: error.message.clone() })
+                    }
+                    Err(_) => {
+                        // Failed to parse the teamwork error, ignore this error and return the original trigger.
+                        Err(Error::Json(error))
+                    }
+                }
+            },
+        }
     }
 }
 
