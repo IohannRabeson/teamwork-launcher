@@ -1,4 +1,3 @@
-
 /// A stack of states.
 /// S is the type of the state stored.
 /// Is this component generic enough to be moved into a dedicated crate?

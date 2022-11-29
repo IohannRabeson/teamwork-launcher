@@ -5,10 +5,7 @@ use {
     },
     serde_with::serde_as,
     std::{
-        collections::{
-            btree_map::Entry::Occupied,
-            BTreeMap, BTreeSet,
-        },
+        collections::{btree_map::Entry::Occupied, BTreeMap, BTreeSet},
         fs::File,
         io::{Read, Write},
         path::{Path, PathBuf},

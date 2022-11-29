@@ -70,7 +70,7 @@ impl ServersProvider {
             .iter()
             .filter(|source| source_keys.contains(&source.unique_key()))
         {
-            add_servers(source, settings, &mut servers).await;
+            fetch_servers(source, settings, &mut servers).await;
         }
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
@@ -83,7 +83,7 @@ impl ServersProvider {
         let mut servers = Vec::with_capacity(16);
 
         for source in self.sources.iter() {
-            add_servers(source, settings, &mut servers).await;
+            fetch_servers(source, settings, &mut servers).await;
         }
 
         debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
@@ -92,7 +92,7 @@ impl ServersProvider {
     }
 }
 
-async fn add_servers(source: &Box<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
+async fn fetch_servers(source: &Box<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
     let source_key = source.unique_key();
     match source.get_servers_infos(&settings).await {
         Ok(new_servers) => servers.extend(new_servers.into_iter().map(|mut info| {
