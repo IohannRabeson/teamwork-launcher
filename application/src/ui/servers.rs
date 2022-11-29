@@ -56,7 +56,7 @@ fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
     container(
         column![
             text("No favorite servers!").font(fonts::TF2_SECONDARY).size(36),
-            text("You can edit the list of your favorite server by clicking on the star button on the top right of the window."),
+            text("You can edit the list of your favorite servers by clicking on the star button on the top right of the window."),
             button("Edit favorite servers").on_press(Messages::EditFavorites),
         ]
         .align_items(Alignment::Center)
