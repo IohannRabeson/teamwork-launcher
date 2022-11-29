@@ -12,6 +12,7 @@ mod fonts;
 mod icons;
 mod launcher;
 mod models;
+mod text_filter;
 mod servers_provider;
 mod settings;
 mod sources;

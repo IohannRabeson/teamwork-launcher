@@ -3,8 +3,7 @@ use iced::{
     Length,
 };
 
-use crate::models::Server;
-use crate::fonts;
+use crate::{fonts, models::Server};
 
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
@@ -25,7 +24,7 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     let servers: Vec<&Server> = servers_iterator.collect();
 
     if servers.is_empty() && !edit_favorites {
-        return no_favorite_servers_view()
+        return no_favorite_servers_view();
     }
 
     column![
