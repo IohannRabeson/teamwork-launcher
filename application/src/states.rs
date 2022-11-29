@@ -1,31 +1,26 @@
-#[derive(PartialEq, Eq)]
-pub enum States {
-    Normal,
-    Favorites,
-    Settings,
-    Reloading,
-    Error { message: String },
+
+/// A stack of states.
+/// S is the type of the state stored.
+/// Is this component generic enough to be moved into a dedicated crate?
+pub struct StatesStack<S> {
+    states: Vec<S>,
 }
 
-pub struct StatesStack {
-    states: Vec<States>,
-}
-
-impl StatesStack {
-    pub fn new(initial: States) -> Self {
+impl<S> StatesStack<S> {
+    pub fn new(initial: S) -> Self {
         Self { states: vec![initial] }
     }
 
-    pub fn current(&self) -> &States {
+    pub fn current(&self) -> &S {
         self.states.last().expect("states must never be empty")
     }
 
-    pub fn reset(&mut self, state: States) {
+    pub fn reset(&mut self, state: S) {
         self.states.clear();
         self.states.push(state);
     }
 
-    pub fn push(&mut self, state: States) {
+    pub fn push(&mut self, state: S) {
         self.states.push(state);
     }
 

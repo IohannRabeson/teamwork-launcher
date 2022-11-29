@@ -1,13 +1,12 @@
-use std::fmt::Display;
-
 pub use models::{GameMode, Server};
 use {
     self::models::GameModes,
     log::{error, trace},
-    reqwest::{IntoUrl, Url},
     serde::{de::DeserializeOwned, Deserialize},
+    url_with_key::UrlWithKey,
 };
 mod parsing;
+mod url_with_key;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -36,33 +35,6 @@ struct TeamworkErrorResponse {
 }
 
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
-
-/// An URL that does not leak your API key when you print it.
-/// Use UrlWithKey.make_url() to get the final URL.
-/// When displayed the API key is hidden.
-struct UrlWithKey {
-    url: String,
-    api_key: String,
-}
-
-impl UrlWithKey {
-    pub fn new(url: impl ToString, api_key: &str) -> UrlWithKey {
-        Self {
-            url: url.to_string(),
-            api_key: api_key.to_string(),
-        }
-    }
-
-    fn make_url(&self) -> String {
-        format!("{}?key={}", self.url, self.api_key)
-    }
-}
-
-impl Display for UrlWithKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}?key=***", self.url)
-    }
-}
 
 impl Client {
     pub async fn get_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
@@ -103,7 +75,7 @@ impl Client {
 
     async fn get<'a, T: DeserializeOwned>(&self, url: &UrlWithKey) -> Result<T, Error> {
         trace!("GET '{}'", url);
-        
+
         let raw_text = reqwest::get(url.make_url()).await.map_err(Error::HttpRequest)?.text().await?;
 
         Self::try_parse_response::<T>(&raw_text, url)
@@ -229,5 +201,19 @@ pub mod models {
         pub official: Vec<GameMode>,
         #[serde(rename = "gamemodes_community")]
         pub community: Vec<GameMode>,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_client_is_send_and_sync() {
+        fn assert_send<T: Send>() {}
+        fn assert_sync<T: Sync>() {}
+
+        assert_send::<Client>();
+        assert_sync::<Client>();
     }
 }

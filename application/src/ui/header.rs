@@ -1,6 +1,8 @@
+use crate::application::States;
+
 use {
     super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
-    crate::{application::Messages, icons::Icons, states::States},
+    crate::{application::Messages, icons::Icons},
     iced::{
         widget::{horizontal_space, row, text},
         Element,

@@ -19,18 +19,18 @@ fn hex_primary(input: &str) -> IResult<&str, u8> {
     map_res(take_while_m_n(2, 2, is_hex_digit), from_hex)(input)
 }
 
-pub fn hex_color(input: &str) -> IResult<&str, Color> {
+pub(crate) fn hex_color(input: &str) -> IResult<&str, Color> {
     let (input, (r, g, b)) = tuple((hex_primary, hex_primary, hex_primary))(input)?;
 
     Ok((input, Color { r, g, b }))
 }
 
-pub fn hex_color_prefix(input: &str) -> IResult<&str, Color> {
+pub(crate) fn hex_color_prefix(input: &str) -> IResult<&str, Color> {
     let (input, _) = tag("#")(input)?;
 
     hex_color(input)
 }
 
-pub fn compute_color_component(value: f32) -> u8 {
+pub(crate) fn compute_color_component(value: f32) -> u8 {
     (value * u8::MAX as f32) as u8
 }

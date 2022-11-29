@@ -1,14 +1,19 @@
-use std::{
-    collections::{BTreeMap, BTreeSet, btree_map::Entry::{Vacant, Occupied}},
-    fs::File,
-    io::{Read, Write},
-    path::{Path, PathBuf},
-    sync::Arc,
-};
-use serde_with::serde_as;
-use crate::{
-    models::{IpPort, Server},
-    sources::SourceKey,
+use {
+    crate::{
+        models::{IpPort, Server},
+        sources::SourceKey,
+    },
+    serde_with::serde_as,
+    std::{
+        collections::{
+            btree_map::Entry::Occupied,
+            BTreeMap, BTreeSet,
+        },
+        fs::File,
+        io::{Read, Write},
+        path::{Path, PathBuf},
+        sync::Arc,
+    },
 };
 
 use {

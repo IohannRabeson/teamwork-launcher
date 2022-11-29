@@ -1,7 +1,4 @@
-use std::{
-    collections::BTreeSet,
-    sync::Arc,
-};
+use std::{collections::BTreeSet, sync::Arc};
 
 use iced::{
     widget::{column, vertical_space},
@@ -15,7 +12,7 @@ use crate::{
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
     sources::SourceKey,
-    states::{States, StatesStack},
+    states::StatesStack,
     ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
@@ -41,12 +38,22 @@ pub enum Messages {
     Back,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum States {
+    Normal,
+    Favorites,
+    Settings,
+    Reloading,
+    Error { message: String },
+}
+
 pub struct Application {
     settings: UserSettings,
     icons: Icons,
     servers_provider: Arc<ServersProvider>,
     servers: Vec<Server>,
-    states: StatesStack,
+    /// The stack managing the states.
+    states: StatesStack<States>,
     launcher: ExecutableLauncher,
     theme: Theme,
 }
