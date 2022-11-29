@@ -1,3 +1,5 @@
+use crate::text_filter::TextFilter;
+
 use {
     crate::{
         models::{IpPort, Server},
@@ -38,8 +40,9 @@ struct InnerUserSettings {
     // write invalid JSON with an invalid key.
     #[serde_as(as = "Vec<(_, _)>")]
     pub favorites: BTreeMap<IpPort, Option<SourceKey>>,
-    #[serde(rename = "filter_text", default)]
-    pub servers_filter_text: String,
+    #[serde(default)]
+    pub servers_text_filter: TextFilter,
+
     #[serde(default)]
     pub game_executable_path: String,
     #[serde(default)]
@@ -82,7 +85,7 @@ impl Default for InnerUserSettings {
     fn default() -> Self {
         Self {
             favorites: Default::default(),
-            servers_filter_text: Default::default(),
+            servers_text_filter: Default::default(),
             #[cfg(target_os = "windows")]
             game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
             #[cfg(not(target_os = "windows"))]
@@ -108,24 +111,19 @@ impl UserSettings {
     pub fn set_filter_servers_text<S: AsRef<str>>(&mut self, text: S) {
         let mut inner = self.storage.try_write().unwrap();
 
-        inner.servers_filter_text = text.as_ref().to_string()
+        inner.servers_text_filter.set_text(text.as_ref());
     }
 
     pub fn servers_filter_text(&self) -> String {
         let inner = self.storage.try_read().unwrap();
 
-        inner.servers_filter_text.clone()
+        inner.servers_text_filter.text().to_string()
     }
 
     pub fn filter_servers_by_text<S: AsRef<str>>(&self, name: S) -> bool {
         let inner = self.storage.try_read().unwrap();
-        let text_filter = &inner.servers_filter_text.trim().to_lowercase();
 
-        if text_filter.is_empty() {
-            return true;
-        }
-
-        name.as_ref().to_lowercase().contains(text_filter)
+        inner.servers_text_filter.accept(&name.as_ref().to_lowercase())
     }
 
     pub fn filter_servers_favorite(&self, server: &Server) -> bool {

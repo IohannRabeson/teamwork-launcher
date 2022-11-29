@@ -16,6 +16,7 @@ mod servers_provider;
 mod settings;
 mod sources;
 mod states;
+mod text_filter;
 mod ui;
 
 #[derive(Parser, Debug)]

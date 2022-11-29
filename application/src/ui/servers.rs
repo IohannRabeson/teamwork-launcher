@@ -1,6 +1,9 @@
-use iced::{widget::container, Length};
+use iced::{
+    widget::{button, container},
+    Length,
+};
 
-use crate::models::Server;
+use crate::{fonts, models::Server};
 
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
@@ -18,11 +21,18 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     settings: &UserSettings,
     edit_favorites: bool,
 ) -> Element<'a, Messages> {
+    let servers: Vec<&Server> = servers_iterator.collect();
+
+    if servers.is_empty() && !edit_favorites {
+        return no_favorite_servers_view();
+    }
+
     column![
         servers_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         scrollable(
-            servers_iterator
+            servers
+                .into_iter()
                 .unique_by(|server| &server.ip_port)
                 .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
                     column.push(server_view(
@@ -38,6 +48,23 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
         .scrollbar_width(8)
         .scroller_width(8)
     ]
+    .into()
+}
+
+fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
+    container(
+        column![
+            text("No favorite servers!").font(fonts::TF2_SECONDARY).size(36),
+            text("You can edit the list of your favorite servers by clicking on the star button on the top right of the window."),
+            button("Edit favorite servers").on_press(Messages::EditFavorites),
+        ]
+        .align_items(Alignment::Center)
+        .spacing(12),
+    )
+    .width(Length::Fill)
+    .height(Length::Fill)
+    .center_x()
+    .center_y()
     .into()
 }
 
