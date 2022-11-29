@@ -57,6 +57,8 @@ struct IconsStorage {
     back: SvgHandle,
 }
 
+/// Load and color a SVG image.
+/// This hack to color the SVG will be properly fixed with https://github.com/iced-rs/iced/pull/1541.
 fn load_svg(bytes: &[u8], color: &Color, error_message: &str) -> SvgHandle {
     use xmltree::Element;
 
