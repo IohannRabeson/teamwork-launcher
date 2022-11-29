@@ -13,7 +13,7 @@ use crate::{
     settings::UserSettings,
     sources::SourceKey,
     states::StatesStack,
-    ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view}, text_filter::TextFilter,
+    ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]

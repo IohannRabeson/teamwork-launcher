@@ -1,5 +1,7 @@
-use nom::Finish;
-use serde::{Serialize, Deserialize};
+use {
+    nom::Finish,
+    serde::{Deserialize, Serialize},
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TextFilter {
@@ -15,7 +17,12 @@ pub struct TextFilter {
 
 impl TextFilter {
     pub fn new(text: &str) -> Self {
-        let mut filter = Self { terms: Default::default(), text: String::new(), ignore_case: true, ignore_accents: true };
+        let mut filter = Self {
+            terms: Default::default(),
+            text: String::new(),
+            ignore_case: true,
+            ignore_accents: true,
+        };
 
         filter.set_text(text);
 
@@ -41,7 +48,7 @@ impl TextFilter {
     pub fn accept(&self, text: &str) -> bool {
         let cleaned_input = self.clean_text(text);
 
-        self.terms.is_empty() || self.terms.iter().all(|term|cleaned_input.contains(&self.clean_text(term)))
+        self.terms.is_empty() || self.terms.iter().all(|term| cleaned_input.contains(&self.clean_text(term)))
     }
 
     fn clean_text(&self, text: &str) -> String {
@@ -83,17 +90,17 @@ mod tests {
         assert_eq!(expect_accept, text_filter.accept(input))
     }
 }
-    
+
 mod parser {
     use nom::{
         branch::alt,
         bytes::complete::is_not,
         character::complete::{char, multispace1},
+        combinator::complete,
         multi::separated_list0,
         sequence::{delimited, preceded},
         IResult,
     };
-    use nom::combinator::complete;
 
     fn parse_term(s: &str) -> IResult<&str, &str> {
         let parse_quoted = delimited(char('\"'), is_not("\""), char('\"'));
@@ -102,11 +109,10 @@ mod parser {
 
         alt((parse_quoted, parse_missing_quote, parse_word))(s)
     }
-    
+
     pub(crate) fn parse_terms(s: &str) -> IResult<&str, Vec<String>> {
-        complete(separated_list0(multispace1, parse_term))(s.trim()).map(|(remaining, terms)|{
-            (remaining, terms.iter().map(ToString::to_string).collect())
-        })
+        complete(separated_list0(multispace1, parse_term))(s.trim())
+            .map(|(remaining, terms)| (remaining, terms.iter().map(ToString::to_string).collect()))
     }
 
     #[cfg(test)]
