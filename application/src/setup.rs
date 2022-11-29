@@ -8,7 +8,5 @@ pub fn setup_logger() -> anyhow::Result<()> {
     #[cfg(debug_assertions)]
     let builder = builder.level_for("teamwork", log::LevelFilter::Trace);
 
-    Ok(builder
-        .chain(std::io::stdout())
-        .apply()?)
+    Ok(builder.chain(std::io::stdout()).apply()?)
 }

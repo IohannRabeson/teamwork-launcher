@@ -54,7 +54,8 @@ fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
 
 fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Row<'a, Messages> {
     if edit_favorites {
-        row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.ip_port.clone())),]
+        row![favorite_button(is_favorite, icons, 32)
+            .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),]
     } else {
         row![
             svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),

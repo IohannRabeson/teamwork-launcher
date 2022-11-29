@@ -14,6 +14,8 @@ use crate::{
     settings::UserSettings,
 };
 
+use super::SourceKey;
+
 #[derive(Default)]
 pub struct SkialSource;
 
@@ -23,6 +25,10 @@ const SKIAL_URL: &str = "https://www.skial.com/api/servers.php";
 impl Source for SkialSource {
     fn display_name(&self) -> String {
         "Skial".to_string()
+    }
+
+    fn unique_key(&self) -> SourceKey {
+        SourceKey::new("skial")
     }
 
     async fn get_servers_infos(&self, _settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {

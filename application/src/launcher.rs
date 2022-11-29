@@ -1,5 +1,4 @@
-use std::error::Error;
-use crate::models::IpPort;
+use {crate::models::IpPort, std::error::Error};
 
 #[derive(thiserror::Error, Debug)]
 #[error("Failed to start executable: {message}")]

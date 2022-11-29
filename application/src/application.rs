@@ -1,4 +1,7 @@
-use std::{sync::Arc, time::{Duration, Instant}};
+use std::{
+    collections::BTreeSet,
+    sync::Arc,
+};
 
 use iced::{
     widget::{column, vertical_space},
@@ -11,6 +14,7 @@ use crate::{
     models::{IpPort, Server},
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
+    sources::SourceKey,
     states::{States, StatesStack},
     ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
@@ -18,6 +22,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub enum Messages {
     RefreshServers,
+    RefreshFavoriteServers,
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     FilterChanged(String),
     StartGame(IpPort),
@@ -27,7 +32,7 @@ pub enum Messages {
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
-    FavoriteClicked(IpPort),
+    FavoriteClicked(IpPort, Option<SourceKey>),
     /// Show the page to edit the favorite servers.
     EditFavorites,
     /// Show the page to edit the application settings.
@@ -44,33 +49,31 @@ pub struct Application {
     states: StatesStack,
     launcher: ExecutableLauncher,
     theme: Theme,
-    // I prevent to refresh too often.
-    refresh_throttle: Duration,
-    last_refresh: Option<Instant>,
 }
 
 impl Application {
     fn refresh_command(&mut self) -> Command<Messages> {
-        // If we refreshed recently, do not refresh yet.
-        if let Some(last_refresh) = self.last_refresh {
-            if Instant::now() - last_refresh < self.refresh_throttle {
-                return Command::none()
-            }
-        }
-        self.last_refresh = Some(Instant::now());
-        
-        self.make_refresh_command()
+        self.make_refresh_command(None)
     }
 
-    fn make_refresh_command(&mut self) -> Command<Messages> {
+    fn refresh_favorites_command(&mut self) -> Command<Messages> {
+        self.make_refresh_command(Some(self.settings.favorite_source_keys()))
+    }
+
+    fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>) -> Command<Messages> {
         self.states.push(States::Reloading);
         self.servers.clear();
-        
+
         let settings = self.settings.clone();
         let servers_provider = self.servers_provider.clone();
 
         Command::perform(
-            async move { servers_provider.refresh(&settings).await },
+            async move {
+                match source_keys {
+                    Some(source_keys) => servers_provider.refresh_some(&settings, &source_keys).await,
+                    None => servers_provider.refresh(&settings).await,
+                }
+            },
             Messages::ServersRefreshed,
         )
     }
@@ -99,8 +102,8 @@ impl Application {
         }
     }
 
-    fn switch_favorite_server(&mut self, ip_port: &IpPort) {
-        self.settings.switch_favorite_server(ip_port)
+    fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
+        self.settings.switch_favorite_server(ip_port, source_key)
     }
 
     fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) {
@@ -146,7 +149,7 @@ impl IcedApplication for Application {
     fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
-        let mut launcher = Self {
+        let mut application = Self {
             icons: Icons::new(&theme),
             servers_provider,
             settings: flags.settings,
@@ -154,12 +157,14 @@ impl IcedApplication for Application {
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
             servers: Vec::new(),
-            last_refresh: None,
-            refresh_throttle: Duration::from_secs(60),
         };
-        let command = launcher.refresh_command();
 
-        (launcher, command)
+        let command = match application.settings.has_favorites() {
+            true => application.refresh_favorites_command(),
+            false => application.refresh_command(),
+        };
+
+        (application, command)
     }
 
     fn title(&self) -> String {
@@ -170,10 +175,11 @@ impl IcedApplication for Application {
         match message {
             Messages::ServersRefreshed(result) => self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
+            Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
             Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
-            Messages::FavoriteClicked(server_ip_port) => self.switch_favorite_server(&server_ip_port),
+            Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
@@ -202,6 +208,7 @@ impl IcedApplication for Application {
 
 impl Drop for Application {
     fn drop(&mut self) {
+        self.settings.update_favorites(self.servers.iter());
         UserSettings::save_settings(&self.settings).expect("Write settings");
     }
 }

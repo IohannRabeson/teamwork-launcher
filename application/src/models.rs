@@ -2,6 +2,8 @@ use std::net::Ipv4Addr;
 
 use serde::{Deserialize, Serialize};
 
+use crate::sources::SourceKey;
+
 /// The unique key identifiying a server.
 #[derive(Debug, Hash, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IpPort {
@@ -49,7 +51,7 @@ pub struct Server {
     pub current_players_count: u8,
     pub map: String,
     pub ip_port: IpPort,
-    pub source: Option<SourceId>,
+    pub source: Option<SourceKey>,
 }
 
 impl Default for Server {
@@ -64,6 +66,3 @@ impl Default for Server {
         }
     }
 }
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
-pub struct SourceId(pub usize);

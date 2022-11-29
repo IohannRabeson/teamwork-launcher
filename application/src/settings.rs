@@ -1,12 +1,15 @@
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet, btree_map::Entry::{Vacant, Occupied}},
     fs::File,
     io::{Read, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
-
-use crate::models::{IpPort, Server};
+use serde_with::serde_as;
+use crate::{
+    models::{IpPort, Server},
+    sources::SourceKey,
+};
 
 use {
     async_rwlock::RwLock,
@@ -22,10 +25,17 @@ pub enum Error {
     Io(#[from] Arc<std::io::Error>),
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct InnerUserSettings {
+    /// Favorites servers
+    /// This map store the IP and the port, with the source key. This allows to query only the source
+    /// for the favorites servers.
     #[serde(default)]
-    pub favorites: BTreeSet<IpPort>,
+    // It's needed to convert this BTreeMap to a Vec to avoid the error where serde_json try to
+    // write invalid JSON with an invalid key.
+    #[serde_as(as = "Vec<(_, _)>")]
+    pub favorites: BTreeMap<IpPort, Option<SourceKey>>,
     #[serde(rename = "filter_text", default)]
     pub servers_filter_text: String,
     #[serde(default)]
@@ -119,17 +129,40 @@ impl UserSettings {
     pub fn filter_servers_favorite(&self, server: &Server) -> bool {
         let inner = self.storage.try_read().unwrap();
 
-        inner.favorites.contains(&server.ip_port)
+        inner.favorites.contains_key(&server.ip_port)
     }
 
-    pub fn switch_favorite_server(&mut self, ip_port: &IpPort) {
+    pub fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
         let mut inner = self.storage.try_write().unwrap();
         let favorites = &mut inner.favorites;
 
-        match favorites.contains(ip_port) {
-            true => favorites.remove(ip_port),
-            false => favorites.insert(ip_port.clone()),
+        match favorites.contains_key(&ip_port) {
+            true => favorites.remove(&ip_port),
+            false => favorites.insert(ip_port, source_key),
         };
+    }
+
+    pub fn favorite_source_keys(&self) -> BTreeSet<SourceKey> {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.favorites.iter().filter_map(|(_, source)| source.clone()).collect()
+    }
+
+    pub fn has_favorites(&self) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        !inner.favorites.is_empty()
+    }
+
+    /// Update the information about the favorites servers.
+    pub fn update_favorites<'a>(&mut self, servers: impl Iterator<Item = &'a Server>) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        for server in servers {
+            if let Occupied(mut source) = inner.favorites.entry(server.ip_port.clone()) {
+                source.insert(server.source.clone());
+            }
+        }
     }
 
     pub fn set_game_executable_path<S: AsRef<str>>(&mut self, path: S) {
@@ -159,6 +192,7 @@ impl UserSettings {
         }
 
         path.push("settings.json");
+
         Some(path)
     }
 
@@ -197,6 +231,7 @@ impl UserSettings {
             // We can't get the directory path or we can't create the directory to store
             // the settings file. In this case we just give up silently.
             error!("Failed to get the file settings path");
+
             Ok(UserSettings::default())
         }
     }

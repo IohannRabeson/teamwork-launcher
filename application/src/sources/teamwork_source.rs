@@ -1,4 +1,4 @@
-use std::{str::FromStr, time::Duration};
+use std::str::FromStr;
 
 use {async_trait::async_trait, teamwork::Client as TeamworkClient};
 
@@ -8,25 +8,11 @@ use crate::{
     settings::UserSettings,
 };
 
-const GAMEMODE_IDS: &[&str] = &[
-    "payload",
-    "attack-defend",
-    "ctf",
-    "control-point",
-    "payload-race",
-    "cp-orange",
-];
+use super::SourceKey;
 
 pub struct TeamworkSource {
     client: TeamworkClient,
-}
-
-impl Default for TeamworkSource {
-    fn default() -> Self {
-        Self {
-            client: TeamworkClient::default(),
-        }
-    }
+    game_mode_id: String,
 }
 
 /// The rational is I do not want the entire application depends on the Teamwork.tf API.
@@ -48,14 +34,27 @@ impl From<teamwork::Server> for Server {
 }
 
 impl TeamworkSource {
-    async fn get_servers_info(
-        &self,
-        gamemode_id: &str,
-        client: &TeamworkClient,
-        settings: &UserSettings,
-    ) -> Result<Vec<Server>, GetServersInfosError> {
-        client
-            .get_servers(&settings.teamwork_api_key(), gamemode_id)
+    pub fn new(game_mode_id: &str) -> Self {
+        Self {
+            client: TeamworkClient::default(),
+            game_mode_id: game_mode_id.to_string(),
+        }
+    }
+}
+
+#[async_trait]
+impl Source for TeamworkSource {
+    fn display_name(&self) -> String {
+        format!("Teamwork.tf - {}", self.game_mode_id)
+    }
+
+    fn unique_key(&self) -> SourceKey {
+        SourceKey::new(format!("teamwork.tf.{}", self.game_mode_id))
+    }
+
+    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
+        self.client
+            .get_servers(&settings.teamwork_api_key(), &self.game_mode_id)
             .await
             .map(|servers: Vec<teamwork::Server>| -> Vec<Server> {
                 servers.into_iter().map(|server: teamwork::Server| server.into()).collect()
@@ -64,30 +63,5 @@ impl TeamworkSource {
                 source_name: self.display_name(),
                 message: format!("Failed to get servers data: {}", error),
             })
-    }
-}
-
-const PAUSE_BETWEEN_REQUESTS: Duration = Duration::from_secs(1);
-
-#[async_trait]
-impl Source for TeamworkSource {
-    fn display_name(&self) -> String {
-        "Teamwork.tf".into()
-    }
-
-    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
-        let mut servers = Vec::new();
-
-        for (index, gamemode_id) in GAMEMODE_IDS.iter().enumerate() {
-            servers.extend(self.get_servers_info(gamemode_id, &self.client, settings).await?);
-
-            // Cooldown between two requests to teamwork.tf.
-            // It seems the server does not like to be spammed and I have to space the requests.
-            if index + 1 < GAMEMODE_IDS.len() {
-                async_std::task::sleep(PAUSE_BETWEEN_REQUESTS).await;
-            }
-        }
-
-        Ok(servers)
     }
 }
