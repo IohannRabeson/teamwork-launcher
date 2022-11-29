@@ -76,9 +76,10 @@ impl Application {
 
         Command::perform(
             async move {
-                match source_keys {
-                    Some(source_keys) => servers_provider.refresh_some(&settings, &source_keys).await,
-                    None => servers_provider.refresh(&settings).await,
+                if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
+                    servers_provider.refresh(&settings).await
+                } else {
+                    servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
                 }
             },
             Messages::ServersRefreshed,
