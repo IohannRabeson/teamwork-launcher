@@ -8,7 +8,13 @@ use {
     std::net::Ipv4Addr,
 };
 
-use crate::servers::{GetServersInfosError, Server, Source};
+use crate::{
+    models::Server,
+    servers_provider::{GetServersInfosError, Source},
+    settings::UserSettings,
+};
+
+use super::SourceKey;
 
 #[derive(Default)]
 pub struct SkialSource;
@@ -21,7 +27,11 @@ impl Source for SkialSource {
         "Skial".to_string()
     }
 
-    async fn get_servers_infos(&self) -> Result<Vec<Server>, GetServersInfosError> {
+    fn unique_key(&self) -> SourceKey {
+        SourceKey::new("skial")
+    }
+
+    async fn get_servers_infos(&self, _settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
         let html = reqwest::get(SKIAL_URL)
             .await
             .map_err(|e| GetServersInfosError {
@@ -92,14 +102,13 @@ fn parse_server_infos(html: &str) -> Result<Vec<Server>, ParseServerInfoError> {
         let cells = tr_node.find(Name("td")).map(|n| n.text()).collect::<Vec<String>>();
         let mut server_info = Server::default();
         let address_and_port = &cells[address_column];
-        let (_, (address, port)) = parse_ip_and_port(address_and_port).unwrap();
+        let (_, ip_port) = parse_ip_and_port(address_and_port).unwrap();
 
         server_info.name = cells[name_column].clone();
         server_info.map = cells[map_column].clone();
         server_info.max_players_count = cells[slots_column].parse::<u8>().unwrap();
         server_info.current_players_count = cells[players_column].parse::<u8>().unwrap();
-        server_info.ip = address;
-        server_info.port = port;
+        server_info.ip_port = ip_port.into();
         infos.push(server_info);
     }
 

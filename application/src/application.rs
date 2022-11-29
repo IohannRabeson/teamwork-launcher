@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use iced::{
     widget::{column, vertical_space},
@@ -7,94 +7,113 @@ use iced::{
 
 use crate::{
     icons::Icons,
-    launcher::{ExecutableLauncher, LaunchParams},
-    servers::{self, Server, ServersProvider, SourceId},
+    launcher::ExecutableLauncher,
+    models::{IpPort, Server},
+    servers_provider::{self, ServersProvider},
     settings::UserSettings,
-    states::{States, StatesStack},
-    views::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
+    sources::SourceKey,
+    states::StatesStack,
+    ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
 };
 
 #[derive(Debug, Clone)]
 pub enum Messages {
     RefreshServers,
-    ServersRefreshed(Result<Vec<(Server, SourceId)>, servers::Error>),
+    RefreshFavoriteServers,
+    ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     FilterChanged(String),
-    StartGame(LaunchParams),
+    StartGame(IpPort),
+    /// Message produced when the settings are modified and saved.
+    /// This message replace the current settings by the one passed as parameter.
     ModifySettings(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
-    FavoriteClicked(String),
+    FavoriteClicked(IpPort, Option<SourceKey>),
     /// Show the page to edit the favorite servers.
     EditFavorites,
-    /// SHow the page to edit the application settings.
+    /// Show the page to edit the application settings.
     EditSettings,
     /// Pop the current state.
     Back,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum States {
+    Normal,
+    Favorites,
+    Settings,
+    Reloading,
+    Error { message: String },
 }
 
 pub struct Application {
     settings: UserSettings,
     icons: Icons,
     servers_provider: Arc<ServersProvider>,
-    servers: Vec<(Server, SourceId)>,
-    states: StatesStack,
+    servers: Vec<Server>,
+    /// The stack managing the states.
+    states: StatesStack<States>,
     launcher: ExecutableLauncher,
     theme: Theme,
 }
 
 impl Application {
     fn refresh_command(&mut self) -> Command<Messages> {
-        let servers_provider = self.servers_provider.clone();
+        self.make_refresh_command(None)
+    }
 
+    fn refresh_favorites_command(&mut self) -> Command<Messages> {
+        self.make_refresh_command(Some(self.settings.favorite_source_keys()))
+    }
+
+    fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>) -> Command<Messages> {
         self.states.push(States::Reloading);
         self.servers.clear();
 
-        Command::perform(async move { servers_provider.refresh().await }, Messages::ServersRefreshed)
+        let settings = self.settings.clone();
+        let servers_provider = self.servers_provider.clone();
+
+        Command::perform(
+            async move {
+                match source_keys {
+                    Some(source_keys) => servers_provider.refresh_some(&settings, &source_keys).await,
+                    None => servers_provider.refresh(&settings).await,
+                }
+            },
+            Messages::ServersRefreshed,
+        )
     }
 
     /// Returns the servers filtered by text.
-    fn servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
-        self.servers
-            .iter()
-            .filter(|(server, _source_id)| self.filter_server_by_text(server))
+    fn servers_iter(&self) -> impl Iterator<Item = &Server> {
+        self.servers.iter().filter(|server| self.filter_server_by_text(server))
     }
 
     /// Returns the favorites servers, filtered by text.
-    fn favorite_servers_iter(&self) -> impl Iterator<Item = &(Server, SourceId)> {
-        self.servers
-            .iter()
-            .filter(move |(server, _id)| self.filter_favorite_server(server))
+    fn favorite_servers_iter(&self) -> impl Iterator<Item = &Server> {
+        self.servers.iter().filter(move |server| self.filter_favorite_server(server))
     }
 
     fn filter_server_by_text(&self, server: &Server) -> bool {
-        let text_filter = self.settings.filter.trim().to_lowercase();
-
-        if text_filter.is_empty() {
-            return true;
-        }
-
-        server.name.as_str().to_lowercase().contains(&text_filter)
+        self.settings.filter_servers_by_text(&server.name)
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.favorites.contains(&server.name)
+        self.settings.filter_servers_favorite(&server) && self.filter_server_by_text(server)
     }
 
-    fn launch_executable(&mut self, params: &LaunchParams) {
-        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path, params) {
+    fn launch_executable(&mut self, ip_port: &IpPort) {
+        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
             self.states.push(States::Error { message: error.message });
         }
     }
 
-    fn switch_favorite_server(&mut self, server_name: &str) {
-        match self.settings.favorites.contains(server_name) {
-            true => self.settings.favorites.remove(server_name),
-            false => self.settings.favorites.insert(server_name.to_string()),
-        };
+    fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
+        self.settings.switch_favorite_server(ip_port, source_key)
     }
 
-    fn refresh_finished(&mut self, result: Result<Vec<(Server, SourceId)>, servers::Error>) {
+    fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) {
         match result {
             Ok(servers) => {
                 self.servers = servers;
@@ -137,7 +156,7 @@ impl IcedApplication for Application {
     fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
-        let mut launcher = Self {
+        let mut application = Self {
             icons: Icons::new(&theme),
             servers_provider,
             settings: flags.settings,
@@ -146,9 +165,13 @@ impl IcedApplication for Application {
             theme: Theme::Dark,
             servers: Vec::new(),
         };
-        let command = launcher.refresh_command();
 
-        (launcher, command)
+        let command = match application.settings.has_favorites() {
+            true => application.refresh_favorites_command(),
+            false => application.refresh_command(),
+        };
+
+        (application, command)
     }
 
     fn title(&self) -> String {
@@ -159,14 +182,17 @@ impl IcedApplication for Application {
         match message {
             Messages::ServersRefreshed(result) => self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
-            Messages::FilterChanged(text_filter) => self.settings.filter = text_filter,
+            Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
+            Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
-            Messages::FavoriteClicked(server_name) => self.switch_favorite_server(&server_name),
+            Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
-            Messages::ModifySettings(settings) => self.settings = settings,
+            Messages::ModifySettings(settings) => {
+                self.settings = settings;
+            }
         }
 
         Command::none()
@@ -189,6 +215,7 @@ impl IcedApplication for Application {
 
 impl Drop for Application {
     fn drop(&mut self) {
+        self.settings.update_favorites(self.servers.iter());
         UserSettings::save_settings(&self.settings).expect("Write settings");
     }
 }

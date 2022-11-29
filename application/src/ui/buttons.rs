@@ -1,5 +1,5 @@
 use {
-    crate::{icons::Icons, views::SvgHandle},
+    crate::{icons::Icons, ui::SvgHandle},
     iced::alignment::Vertical,
 };
 

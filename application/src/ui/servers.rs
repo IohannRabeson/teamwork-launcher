@@ -1,34 +1,33 @@
 use iced::{widget::container, Length};
 
+use crate::models::Server;
+
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
-    crate::{
-        application::Messages,
-        icons::Icons,
-        servers::{Server, SourceId},
-        settings::UserSettings,
-    },
+    crate::{application::Messages, icons::Icons, settings::UserSettings},
     iced::{
         widget::{column, horizontal_space, row, scrollable, text, text_input, vertical_space, Column, Row},
         Alignment, Element,
     },
+    itertools::Itertools,
 };
 
-pub fn servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     icons: &Icons,
     settings: &UserSettings,
     edit_favorites: bool,
 ) -> Element<'a, Messages> {
     column![
-        servers_filter_view(&settings.filter, icons),
+        servers_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         scrollable(
             servers_iterator
-                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, (server, _source_id)| {
+                .unique_by(|server| &server.ip_port)
+                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
                     column.push(server_view(
                         server,
-                        settings.favorites.contains(&server.name),
+                        settings.filter_servers_favorite(&server),
                         icons,
                         edit_favorites,
                     ))
@@ -55,12 +54,12 @@ fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
 
 fn server_view_buttons<'a>(server: &Server, is_favorite: bool, icons: &Icons, edit_favorites: bool) -> Row<'a, Messages> {
     if edit_favorites {
-        row![favorite_button(is_favorite, icons, 32).on_press(Messages::FavoriteClicked(server.name.clone())),]
+        row![favorite_button(is_favorite, icons, 32)
+            .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),]
     } else {
         row![
-            svg_button(icons.copy(), 28)
-                .on_press(Messages::CopyToClipboard(format!("connect {}:{}", server.ip, server.port))),
-            text_button("Play").on_press(Messages::StartGame(server.into())),
+            svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
+            text_button("Play").on_press(Messages::StartGame(server.ip_port.clone())),
         ]
     }
 }

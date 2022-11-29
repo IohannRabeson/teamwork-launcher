@@ -1,3 +1,3 @@
 [workspace]
-members = ["application"]
+members = ["application", "teamwork"]
 resolver = "2"

@@ -8,8 +8,7 @@ use crate::{
     application::Messages,
     fonts,
     icons::{Icons, SvgHandle},
-    launcher::LaunchParams,
-    servers::{Server, SourceId},
+    models::Server,
     settings::UserSettings,
 };
 
@@ -28,16 +27,7 @@ mod settings;
 const VISUAL_SPACING_SMALL: u16 = 4;
 const BIG_BUTTON_SIZE: u16 = 36;
 
-impl From<&Server> for LaunchParams {
-    fn from(server: &Server) -> Self {
-        Self {
-            server_ip: server.ip,
-            server_port: server.port,
-        }
-    }
-}
-
-pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a (Server, SourceId)>>(
+pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     icons: &Icons,
     settings: &UserSettings,

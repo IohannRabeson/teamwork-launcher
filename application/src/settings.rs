@@ -1,15 +1,22 @@
-use std::{
-    collections::BTreeSet,
-    ffi::OsString,
-    fs::File,
-    io::{Read, Write},
-    path::{Path, PathBuf},
-    sync::Arc,
+use {
+    crate::{
+        models::{IpPort, Server},
+        sources::SourceKey,
+    },
+    serde_with::serde_as,
+    std::{
+        collections::{btree_map::Entry::Occupied, BTreeMap, BTreeSet},
+        fs::File,
+        io::{Read, Write},
+        path::{Path, PathBuf},
+        sync::Arc,
+    },
 };
 
 use {
+    async_rwlock::RwLock,
     log::{error, info},
-    serde::{Deserialize, Serialize},
+    serde::{Deserialize, Deserializer, Serialize, Serializer},
 };
 
 #[derive(thiserror::Error, Debug)]
@@ -20,27 +27,158 @@ pub enum Error {
     Io(#[from] Arc<std::io::Error>),
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct UserSettings {
-    pub favorites: BTreeSet<String>,
-    pub filter: String,
-    pub game_executable_path: OsString,
+struct InnerUserSettings {
+    /// Favorites servers
+    /// This map store the IP and the port, with the source key. This allows to query only the source
+    /// for the favorites servers.
+    #[serde(default)]
+    // It's needed to convert this BTreeMap to a Vec to avoid the error where serde_json try to
+    // write invalid JSON with an invalid key.
+    #[serde_as(as = "Vec<(_, _)>")]
+    pub favorites: BTreeMap<IpPort, Option<SourceKey>>,
+    #[serde(rename = "filter_text", default)]
+    pub servers_filter_text: String,
+    #[serde(default)]
+    pub game_executable_path: String,
+    #[serde(default)]
+    pub teamwork_api_key: String,
 }
 
-impl Default for UserSettings {
+#[derive(Default, Serialize, Deserialize, Debug)]
+#[serde(transparent)]
+pub struct UserSettings {
+    #[serde(serialize_with = "rwlock_serde_serialize")]
+    #[serde(deserialize_with = "rwlock_serde_deserialize")]
+    storage: RwLock<InnerUserSettings>,
+}
+
+impl Clone for UserSettings {
+    fn clone(&self) -> Self {
+        let original_inner = self.storage.try_read().unwrap();
+
+        Self {
+            storage: RwLock::new(original_inner.clone()),
+        }
+    }
+}
+
+fn rwlock_serde_serialize<S>(val: &RwLock<InnerUserSettings>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    InnerUserSettings::serialize(&val.try_read().expect("rwlock_serde lock for read"), s)
+}
+
+fn rwlock_serde_deserialize<'de, D>(d: D) -> Result<RwLock<InnerUserSettings>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(RwLock::new(InnerUserSettings::deserialize(d)?))
+}
+
+impl Default for InnerUserSettings {
     fn default() -> Self {
         Self {
             favorites: Default::default(),
-            filter: Default::default(),
+            servers_filter_text: Default::default(),
             #[cfg(target_os = "windows")]
             game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
             #[cfg(not(target_os = "windows"))]
             game_executable_path: Default::default(),
+            teamwork_api_key: Default::default(),
         }
     }
 }
 
 impl UserSettings {
+    pub fn set_teamwork_api_key<S: AsRef<str>>(&mut self, api_key: S) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.teamwork_api_key = api_key.as_ref().to_string();
+    }
+
+    pub fn teamwork_api_key(&self) -> String {
+        let inner = self.storage.try_write().unwrap();
+
+        inner.teamwork_api_key.clone()
+    }
+
+    pub fn set_filter_servers_text<S: AsRef<str>>(&mut self, text: S) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.servers_filter_text = text.as_ref().to_string()
+    }
+
+    pub fn servers_filter_text(&self) -> String {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.servers_filter_text.clone()
+    }
+
+    pub fn filter_servers_by_text<S: AsRef<str>>(&self, name: S) -> bool {
+        let inner = self.storage.try_read().unwrap();
+        let text_filter = &inner.servers_filter_text.trim().to_lowercase();
+
+        if text_filter.is_empty() {
+            return true;
+        }
+
+        name.as_ref().to_lowercase().contains(text_filter)
+    }
+
+    pub fn filter_servers_favorite(&self, server: &Server) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.favorites.contains_key(&server.ip_port)
+    }
+
+    pub fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
+        let mut inner = self.storage.try_write().unwrap();
+        let favorites = &mut inner.favorites;
+
+        match favorites.contains_key(&ip_port) {
+            true => favorites.remove(&ip_port),
+            false => favorites.insert(ip_port, source_key),
+        };
+    }
+
+    pub fn favorite_source_keys(&self) -> BTreeSet<SourceKey> {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.favorites.iter().filter_map(|(_, source)| source.clone()).collect()
+    }
+
+    pub fn has_favorites(&self) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        !inner.favorites.is_empty()
+    }
+
+    /// Update the information about the favorites servers.
+    pub fn update_favorites<'a>(&mut self, servers: impl Iterator<Item = &'a Server>) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        for server in servers {
+            if let Occupied(mut source) = inner.favorites.entry(server.ip_port.clone()) {
+                source.insert(server.source.clone());
+            }
+        }
+    }
+
+    pub fn set_game_executable_path<S: AsRef<str>>(&mut self, path: S) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.game_executable_path = path.as_ref().to_string();
+    }
+
+    pub fn game_executable_path(&self) -> String {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.game_executable_path.clone()
+    }
+
     fn file_settings_path(create_directory: bool) -> Option<PathBuf> {
         let mut path = platform_dirs::AppDirs::new("tf2-launcher".into(), false)
             .map(|dirs| dirs.config_dir)
@@ -56,17 +194,18 @@ impl UserSettings {
         }
 
         path.push("settings.json");
+
         Some(path)
     }
 
     pub fn save_settings(settings: &UserSettings) -> Result<(), Error> {
-        let json = serde_json::to_string(settings).map_err(|e| Error::Json(Arc::new(e)))?;
+        let json = serde_json::to_string(&settings).map_err(|e| Error::Json(Arc::new(e)))?;
         if let Some(settings_file_path) = Self::file_settings_path(true) {
             info!("Write settings '{}'", settings_file_path.to_string_lossy());
 
             let mut file = File::create(settings_file_path).map_err(|e| Error::Io(Arc::new(e)))?;
 
-            file.write_all(json.as_bytes()).map_err(|e| Error::Io(Arc::new(e)))
+            return file.write_all(json.as_bytes()).map_err(|e| Error::Io(Arc::new(e)));
         } else {
             error!("Failed to get the file settings path");
             // We can't get the directory path or we can't create the directory to store
@@ -94,6 +233,7 @@ impl UserSettings {
             // We can't get the directory path or we can't create the directory to store
             // the settings file. In this case we just give up silently.
             error!("Failed to get the file settings path");
+
             Ok(UserSettings::default())
         }
     }
