@@ -18,7 +18,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                 new_settings.set_game_executable_path::<&str>(&text);
 
-                Messages::ModifySettings(new_settings)
+                Messages::SettingsChanged(new_settings)
             })
             .into()
         ),
@@ -29,7 +29,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                 new_settings.set_teamwork_api_key::<&str>(&text);
 
-                Messages::ModifySettings(new_settings)
+                Messages::SettingsChanged(new_settings)
             })
             .into()
         )

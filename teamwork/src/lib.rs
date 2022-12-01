@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 pub use models::{GameMode, Server};
 use {
     self::models::GameModes,
@@ -25,8 +27,20 @@ pub enum Error {
 }
 
 /// Notice the client is Send + Sync and it must stay as is.
-#[derive(Default)]
-pub struct Client;
+pub struct Client {
+    reqwest: reqwest::Client,
+}
+
+impl Default for Client {
+    fn default() -> Self {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .expect("build reqwest client");
+
+        Self { reqwest: client }
+    }
+}
 
 #[derive(Deserialize)]
 struct TeamworkErrorResponse {
@@ -76,7 +90,14 @@ impl Client {
     async fn get<'a, T: DeserializeOwned>(&self, url: &UrlWithKey) -> Result<T, Error> {
         trace!("GET '{}'", url);
 
-        let raw_text = reqwest::get(url.make_url()).await.map_err(Error::HttpRequest)?.text().await?;
+        let raw_text = self
+            .reqwest
+            .get(url.make_url())
+            .send()
+            .await
+            .map_err(Error::HttpRequest)?
+            .text()
+            .await?;
 
         Self::try_parse_response::<T>(&raw_text, url)
     }

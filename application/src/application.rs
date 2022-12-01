@@ -13,7 +13,10 @@ use crate::{
     settings::UserSettings,
     sources::SourceKey,
     states::StatesStack,
-    ui::{edit_favorite_servers_view, error_view, header_view, refresh_view, servers_view, settings_view},
+    ui::{
+        error_view, header_view, no_favorite_servers_view, refresh_view, servers_view, servers_view_edit_favorites,
+        settings_view,
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -25,7 +28,7 @@ pub enum Messages {
     StartGame(IpPort),
     /// Message produced when the settings are modified and saved.
     /// This message replace the current settings by the one passed as parameter.
-    ModifySettings(UserSettings),
+    SettingsChanged(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
     /// The server is identified by its name.
@@ -185,28 +188,29 @@ impl IcedApplication for Application {
             Messages::RefreshServers => return self.refresh_command(),
             Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
             Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
+            Messages::SettingsChanged(settings) => self.settings = settings,
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
-            Messages::ModifySettings(settings) => {
-                self.settings = settings;
-            }
         }
 
         Command::none()
     }
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
-        self.normal_view(match self.states.current() {
-            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings, false),
-            States::Favorites => edit_favorite_servers_view(self.servers_iter(), &self.icons, &self.settings),
+        let content = match self.states.current() {
+            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
+            States::Favorites if self.servers.is_empty() => no_favorite_servers_view(),
+            States::Favorites => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
             States::Settings => settings_view(&self.settings),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
-        })
+        };
+
+        self.normal_view(content)
     }
 
     fn theme(&self) -> Theme {

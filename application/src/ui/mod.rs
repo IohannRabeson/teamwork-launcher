@@ -4,18 +4,12 @@ use iced::{
     Element, Length,
 };
 
-use crate::{
-    application::Messages,
-    fonts,
-    icons::{Icons, SvgHandle},
-    models::Server,
-    settings::UserSettings,
-};
+use crate::{application::Messages, fonts, icons::SvgHandle};
 
 pub use {
     self::buttons::{favorite_button, svg_button, text_button},
     header::header_view,
-    servers::servers_view,
+    servers::{no_favorite_servers_view, servers_view, servers_view_edit_favorites},
     settings::settings_view,
 };
 
@@ -26,14 +20,6 @@ mod settings;
 
 const VISUAL_SPACING_SMALL: u16 = 4;
 const BIG_BUTTON_SIZE: u16 = 36;
-
-pub fn edit_favorite_servers_view<'a, I: Iterator<Item = &'a Server>>(
-    servers_iterator: I,
-    icons: &Icons,
-    settings: &UserSettings,
-) -> Element<'a, Messages> {
-    servers_view(servers_iterator, icons, settings, true)
-}
 
 pub fn refresh_view<'a>() -> Element<'a, Messages> {
     text("Reloading...")
