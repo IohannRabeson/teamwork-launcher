@@ -1,3 +1,6 @@
+// Prevent a console to pop on Windows
+#![windows_subsystem = "windows"]
+
 use {
     application::{Application, Flags},
     clap::Parser,

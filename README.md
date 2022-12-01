@@ -19,6 +19,5 @@ https://wiki.teamfortress.com/wiki/WebAPI
 - [ ] Get timeout with retry in case of failure
 whenever I get the information. But be carefull as querying Teamwork.tf too often might cause issues.
 
-
 - [ ] Cancel reload? Progresive loading: instead of waiting for the whole reload process I could update the list of servers
 - [ ] Display progression while reloading?

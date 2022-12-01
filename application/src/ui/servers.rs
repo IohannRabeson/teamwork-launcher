@@ -1,16 +1,9 @@
-use iced::{
-    widget::{button, container},
-    Length,
-};
-
-use crate::{fonts, models::Server};
-
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
-    crate::{application::Messages, icons::Icons, settings::UserSettings},
+    crate::{application::Messages, fonts, icons::Icons, models::Server, settings::UserSettings},
     iced::{
-        widget::{column, horizontal_space, row, scrollable, text, text_input, vertical_space, Column, Row},
-        Alignment, Element,
+        widget::{button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},
+        Alignment, Element, Length,
     },
     itertools::Itertools,
 };
@@ -106,7 +99,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
             text(format!("Map: {}", server.map))
         ],
         horizontal_space(Length::Fill),
-        row![favorite_button(is_favorite, icons, 32)
+        row![favorite_button(is_favorite, icons, BIG_FONT_SIZE)
             .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),]
         .align_items(Alignment::End)
         .spacing(VISUAL_SPACING_SMALL)
