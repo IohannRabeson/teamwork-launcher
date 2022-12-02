@@ -25,6 +25,7 @@ impl From<teamwork::Server> for Server {
         Server {
             name: server.name,
             map: server.map_name,
+            map_thumbnail: None,
             current_players_count: server.players,
             max_players_count: server.max_players,
             ip_port: IpPort::new(std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"), server.port),

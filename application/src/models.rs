@@ -1,6 +1,9 @@
 use std::net::Ipv4Addr;
 
-use serde::{Deserialize, Serialize};
+use {
+    iced::widget::image,
+    serde::{Deserialize, Serialize},
+};
 
 use crate::sources::SourceKey;
 
@@ -50,6 +53,7 @@ pub struct Server {
     pub max_players_count: u8,
     pub current_players_count: u8,
     pub map: String,
+    pub map_thumbnail: Option<image::Handle>,
     pub ip_port: IpPort,
     pub source: Option<SourceKey>,
 }
@@ -61,6 +65,7 @@ impl Default for Server {
             max_players_count: Default::default(),
             current_players_count: Default::default(),
             map: Default::default(),
+            map_thumbnail: None,
             ip_port: IpPort::default(),
             source: None,
         }

@@ -1,20 +1,19 @@
-use std::time::Duration;
-
 pub use models::{GameMode, Server};
 use {
     self::models::GameModes,
+    async_mutex::Mutex,
     log::{error, trace},
     serde::{de::DeserializeOwned, Deserialize},
+    std::{collections::BTreeMap, sync::Arc, time::Duration},
     url_with_key::UrlWithKey,
 };
+
 mod parsing;
 mod url_with_key;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error(
-        "No Teamwork.tf API key. To request an API key, connect to teamwork.tf then go to https://teamwork.tf/settings"
-    )]
+    #[error("No Teamwork.tf API key. To request an API key, login to teamwork.tf then go to https://teamwork.tf/settings")]
     NoTeamworkApiKey,
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
@@ -26,19 +25,24 @@ pub enum Error {
     TeamworkError { address: String, error: String },
 }
 
+#[derive(Clone)]
 /// Notice the client is Send + Sync and it must stay as is.
 pub struct Client {
     reqwest: reqwest::Client,
+    thumbnail_urls_cache: Arc<Mutex<BTreeMap<String, String>>>,
 }
 
 impl Default for Client {
     fn default() -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
-            .build()
+            .build()    
             .expect("build reqwest client");
 
-        Self { reqwest: client }
+        Self {
+            reqwest: client,
+            thumbnail_urls_cache: Arc::new(Mutex::new(BTreeMap::new())),
+        }
     }
 }
 
@@ -48,9 +52,51 @@ struct TeamworkErrorResponse {
     pub message: String,
 }
 
+#[derive(Deserialize)]
+struct ThumbnailResponse {
+    #[serde(rename = "thumbnail")]
+    pub url: String,
+}
+
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
+const TEAMWORK_TF_MAP_THUMBNAIL_API: &str = "https://teamwork.tf/api/v1/map-stats/mapthumbnail";
 
 impl Client {
+    /// Get the thumbnail for a map.
+    pub async fn get_map_thumbnail<I: Send + Sync, F: Fn(Vec<u8>) -> I>(
+        &self,
+        api_key: &str,
+        map_name: &str,
+        convert_to_image: F,
+    ) -> Result<I, Error>
+    {
+        if api_key.is_empty() {
+            return Err(Error::NoTeamworkApiKey);
+        }
+
+        let image_url = self.get_map_thumbnail_url(api_key, map_name).await?;
+        let bytes = self.reqwest.get(image_url).send().await?.bytes().await?;
+
+        Ok(convert_to_image(bytes.as_ref().to_vec()))
+    }
+
+    pub async fn get_map_thumbnail_url(&self, api_key: &str, map_name: &str) -> Result<String, Error> {
+        if api_key.is_empty() {
+            return Err(Error::NoTeamworkApiKey);
+        }
+        let map_name = map_name.to_string();
+        let image_url = match self.thumbnail_urls_cache.lock().await.get(&map_name) {
+            Some(thumbnail_url) => thumbnail_url.clone(),
+            None => {
+                let query_url = UrlWithKey::new(format!("{}/{}", TEAMWORK_TF_MAP_THUMBNAIL_API, map_name), api_key);
+
+                self.get::<ThumbnailResponse>(&query_url).await?.url
+            }
+        };
+
+        Ok(image_url)
+    }
+
     pub async fn get_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
         let url = UrlWithKey::new(TEAMWORK_TF_QUICKPLAY_API, api_key);
         let modes: GameModes = self.get(&url).await?;
@@ -87,7 +133,7 @@ impl Client {
         c.is_alphanumeric() || c.is_ascii_punctuation() || c.is_ascii_punctuation() || c.is_ascii_whitespace()
     }
 
-    async fn get<'a, T: DeserializeOwned>(&self, url: &UrlWithKey) -> Result<T, Error> {
+    async fn get<'a, T: DeserializeOwned + Send + Sync + Sized>(&self, url: &UrlWithKey) -> Result<T, Error> {
         trace!("GET '{}'", url);
 
         let raw_text = self

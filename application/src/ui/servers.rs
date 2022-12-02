@@ -2,7 +2,9 @@ use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
     crate::{application::Messages, fonts, icons::Icons, models::Server, settings::UserSettings},
     iced::{
-        widget::{button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},
+        widget::{
+            button, column, container, horizontal_space, image, row, scrollable, text, text_input, vertical_space, Column,
+        },
         Alignment, Element, Length,
     },
     itertools::Itertools,
@@ -90,6 +92,8 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
+        image_thumbnail(server, icons),
+        horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
             text(format!(
@@ -108,10 +112,26 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
     .into()
 }
 
+fn image_thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+    container(
+        image::viewer(server.map_thumbnail.as_ref().unwrap_or(&icons.no_image()).clone())
+            .width(Length::Units(200))
+            .height(Length::Units(100))
+            .scale_step(0.0),
+    )
+    .width(Length::Units(200))
+    .height(Length::Units(100))
+    .center_x()
+    .center_y()
+    .into()
+}
+
 fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
+        image_thumbnail(server, icons),
+        horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
             text(format!(
