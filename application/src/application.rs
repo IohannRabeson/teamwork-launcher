@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, sync::Arc, cmp::Ordering};
+use std::{cmp::Ordering, collections::BTreeSet, sync::Arc};
 
 use {
     iced::{
@@ -97,15 +97,19 @@ impl Application {
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
                 };
 
-                servers.map(|mut servers|{
+                servers.map(|mut servers| {
                     // Put favorites servers first
                     servers.sort_by(|left, right| {
                         let left = settings.filter_servers_favorite(left);
                         let right = settings.filter_servers_favorite(right);
 
-                        if left == right { Ordering::Equal }
-                        else if left { Ordering::Less }
-                        else  { Ordering::Greater }
+                        if left == right {
+                            Ordering::Equal
+                        } else if left {
+                            Ordering::Less
+                        } else {
+                            Ordering::Greater
+                        }
                     });
                     servers
                 })

@@ -3,7 +3,7 @@ use {
     serde::{Deserialize, Serialize},
 };
 /// Text filter
-/// 
+///
 /// This filter accepts multiple terms and search for text containing all the terms.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TextFilter {
