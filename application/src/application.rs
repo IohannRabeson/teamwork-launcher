@@ -259,8 +259,8 @@ impl IcedApplication for Application {
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         let content = match self.states.current() {
+            States::Normal if self.servers.is_empty() => no_favorite_servers_view(),
             States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
-            States::Favorites if self.servers.is_empty() => no_favorite_servers_view(),
             States::Favorites => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
             States::Settings => settings_view(&self.settings),
             States::Reloading => refresh_view(),
