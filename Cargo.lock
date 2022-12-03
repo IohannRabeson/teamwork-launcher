@@ -3625,6 +3625,8 @@ dependencies = [
 name = "teamwork"
 version = "0.1.0"
 dependencies = [
+ "async-mutex",
+ "async-rwlock",
  "log",
  "nom",
  "reqwest",

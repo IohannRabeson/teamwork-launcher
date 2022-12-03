@@ -1,14 +1,18 @@
-use std::{collections::BTreeSet, sync::Arc};
+use std::{cmp::Ordering, collections::BTreeSet, sync::Arc};
 
-use iced::{
-    widget::{column, vertical_space},
-    Application as IcedApplication, Command, Element, Length, Theme,
+use {
+    iced::{
+        widget::{column, image, vertical_space},
+        Application as IcedApplication, Command, Element, Length, Theme,
+    },
+    itertools::Itertools,
+    log::error,
 };
 
 use crate::{
     icons::Icons,
     launcher::ExecutableLauncher,
-    models::{IpPort, Server},
+    models::{IpPort, Server, Thumbnail},
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
     sources::SourceKey,
@@ -24,6 +28,7 @@ pub enum Messages {
     RefreshServers,
     RefreshFavoriteServers,
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
+    MapThumbnailReady(String, Thumbnail),
     FilterChanged(String),
     StartGame(IpPort),
     /// Message produced when the settings are modified and saved.
@@ -53,6 +58,7 @@ pub enum States {
 pub struct Application {
     settings: UserSettings,
     icons: Icons,
+    teamwork_client: teamwork::Client,
     servers_provider: Arc<ServersProvider>,
     servers: Vec<Server>,
     /// The stack managing the states.
@@ -62,6 +68,12 @@ pub struct Application {
 }
 
 impl Application {
+    fn map_thumbnail_ready(&mut self, map_name: &str, thumbnail: Thumbnail) {
+        for server in &mut self.servers.iter_mut().filter(|server| server.map == map_name) {
+            server.map_thumbnail = thumbnail.clone();
+        }
+    }
+
     fn refresh_command(&mut self) -> Command<Messages> {
         self.make_refresh_command(None)
     }
@@ -79,11 +91,28 @@ impl Application {
 
         Command::perform(
             async move {
-                if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
+                let servers = if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
                     servers_provider.refresh(&settings).await
                 } else {
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
-                }
+                };
+
+                servers.map(|mut servers| {
+                    // Put favorites servers first
+                    servers.sort_by(|left, right| {
+                        let left = settings.filter_servers_favorite(left);
+                        let right = settings.filter_servers_favorite(right);
+
+                        if left == right {
+                            Ordering::Equal
+                        } else if left {
+                            Ordering::Less
+                        } else {
+                            Ordering::Greater
+                        }
+                    });
+                    servers
+                })
             },
             Messages::ServersRefreshed,
         )
@@ -117,11 +146,35 @@ impl Application {
         self.settings.switch_favorite_server(ip_port, source_key)
     }
 
-    fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) {
+    fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) -> Command<Messages> {
         match result {
             Ok(servers) => {
                 self.servers = servers;
                 self.states.pop();
+
+                return Command::batch(self.servers.iter().unique_by(|server| &server.map).map(
+                    |server| -> Command<Messages> {
+                        let client = self.teamwork_client.clone();
+                        let map_name = server.map.clone();
+                        let api_key = self.settings.teamwork_api_key().clone();
+                        let thumbnail_ready_key = server.map.clone();
+
+                        Command::perform(
+                            async move {
+                                client
+                                    .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
+                                    .await
+                            },
+                            |result| match result {
+                                Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::Ready(image)),
+                                Err(error) => {
+                                    error!("Error while fetching thumbnail for map '{}': {}", thumbnail_ready_key, error);
+                                    Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::None)
+                                }
+                            },
+                        )
+                    },
+                ));
             }
             Err(error) => {
                 self.states.reset(States::Normal);
@@ -130,6 +183,8 @@ impl Application {
                 });
             }
         };
+
+        Command::none()
     }
 
     /// Display a content with a title and a header.
@@ -168,6 +223,7 @@ impl IcedApplication for Application {
             states: StatesStack::new(States::Normal),
             theme: Theme::Dark,
             servers: Vec::new(),
+            teamwork_client: teamwork::Client::default(),
         };
 
         let command = match application.settings.has_favorites() {
@@ -179,12 +235,12 @@ impl IcedApplication for Application {
     }
 
     fn title(&self) -> String {
-        "TF2 launcher".to_string()
+        "Teamwork Launcher".to_string()
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Messages::ServersRefreshed(result) => self.refresh_finished(result),
+            Messages::ServersRefreshed(result) => return self.refresh_finished(result),
             Messages::RefreshServers => return self.refresh_command(),
             Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
             Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
@@ -195,6 +251,7 @@ impl IcedApplication for Application {
             Messages::EditFavorites => self.states.push(States::Favorites),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
+            Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
         }
 
         Command::none()

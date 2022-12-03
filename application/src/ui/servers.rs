@@ -76,20 +76,26 @@ pub fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
 }
 
 fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
-    row![
-        text_input("Filter servers", text, Messages::FilterChanged),
-        svg_button(icons.clear(), 28).on_press(Messages::FilterChanged(String::new())),
-    ]
-    .align_items(iced::Alignment::Center)
-    .spacing(VISUAL_SPACING_SMALL)
-    .padding([0, VISUAL_SPACING_SMALL])
-    .into()
+    let mut button = svg_button(icons.clear(), 28);
+
+    // Enable the clear button only if the field contains text.
+    if !text.is_empty() {
+        button = button.on_press(Messages::FilterChanged(String::new()));
+    }
+
+    row![text_input("Filter servers", text, Messages::FilterChanged), button,]
+        .align_items(iced::Alignment::Center)
+        .spacing(VISUAL_SPACING_SMALL)
+        .padding([0, VISUAL_SPACING_SMALL])
+        .into()
 }
 
 fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Icons) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
+        widgets::thumbnail(server, icons),
+        horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
             text(format!(
@@ -112,6 +118,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
+        widgets::thumbnail(server, icons),
+        horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
             text(format!(
@@ -130,4 +138,43 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     ])
     .padding(6)
     .into()
+}
+
+mod widgets {
+    use iced::{
+        widget::{container, image, text},
+        Element, Length,
+    };
+
+    use crate::{
+        application::Messages,
+        icons::Icons,
+        models::{Server, Thumbnail},
+    };
+
+    fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
+        image::viewer(image)
+            .width(Length::Units(200))
+            .height(Length::Units(100))
+            .scale_step(0.0)
+            .into()
+    }
+
+    // TODO: make a proper widget I guess?
+    fn image_thumbnail_content<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+        match &server.map_thumbnail {
+            Thumbnail::Ready(image) => image_thumbnail_viewer(image.clone()),
+            Thumbnail::Loading => return text("Loading").into(),
+            Thumbnail::None => image_thumbnail_viewer(icons.no_image()),
+        }
+    }
+
+    pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+        container(image_thumbnail_content(server, icons))
+            .width(Length::Units(200))
+            .height(Length::Units(100))
+            .center_x()
+            .center_y()
+            .into()
+    }
 }

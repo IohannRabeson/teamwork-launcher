@@ -1,7 +1,10 @@
 use std::rc::Rc;
 
-pub use iced::widget::svg::Handle as SvgHandle;
-use iced::{Color, Theme};
+pub use iced::widget::{image::Handle as ImageHandle, svg::Handle as SvgHandle};
+use {
+    iced::{Color, Theme},
+    nom::AsBytes,
+};
 
 pub struct Icons {
     storage: Rc<IconsStorage>,
@@ -20,6 +23,7 @@ impl Icons {
                 refresh: load_svg(include_bytes!("refresh.svg"), light_color, "refresh.svg"),
                 settings: load_svg(include_bytes!("settings.svg"), light_color, "settings.svg"),
                 back: load_svg(include_bytes!("back.svg"), light_color, "back.svg"),
+                no_image: ImageHandle::from_memory(include_bytes!("no-image.png").as_bytes()),
             }),
         }
     }
@@ -45,6 +49,9 @@ impl Icons {
     pub fn back(&self) -> SvgHandle {
         self.storage.back.clone()
     }
+    pub fn no_image(&self) -> ImageHandle {
+        self.storage.no_image.clone()
+    }
 }
 
 struct IconsStorage {
@@ -55,6 +62,7 @@ struct IconsStorage {
     refresh: SvgHandle,
     settings: SvgHandle,
     back: SvgHandle,
+    no_image: ImageHandle,
 }
 
 /// Load and color a SVG image.
