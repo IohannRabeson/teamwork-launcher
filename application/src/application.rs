@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, sync::Arc};
+use std::{collections::BTreeSet, sync::Arc, cmp::Ordering};
 
 use {
     iced::{
@@ -91,11 +91,24 @@ impl Application {
 
         Command::perform(
             async move {
-                if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
+                let servers = if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
                     servers_provider.refresh(&settings).await
                 } else {
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
-                }
+                };
+
+                servers.map(|mut servers|{
+                    // Put favorites servers first
+                    servers.sort_by(|left, right| {
+                        let left = settings.filter_servers_favorite(left);
+                        let right = settings.filter_servers_favorite(right);
+
+                        if left == right { Ordering::Equal }
+                        else if left { Ordering::Less }
+                        else  { Ordering::Greater }
+                    });
+                    servers
+                })
             },
             Messages::ServersRefreshed,
         )
