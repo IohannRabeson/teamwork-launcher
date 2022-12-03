@@ -3,7 +3,7 @@ use {
     crate::{application::Messages, fonts, icons::Icons, models::Server, settings::UserSettings},
     iced::{
         widget::{
-            button, column, container, horizontal_space, image, row, scrollable, text, text_input, vertical_space, Column,
+            button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column,
         },
         Alignment, Element, Length,
     },
@@ -92,7 +92,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
-        image_thumbnail(server, icons),
+        widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
@@ -112,25 +112,11 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
     .into()
 }
 
-fn image_thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-    container(
-        image::viewer(server.map_thumbnail.as_ref().unwrap_or(&icons.no_image()).clone())
-            .width(Length::Units(200))
-            .height(Length::Units(100))
-            .scale_step(0.0),
-    )
-    .width(Length::Units(200))
-    .height(Length::Units(100))
-    .center_x()
-    .center_y()
-    .into()
-}
-
 fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
     container(row![
-        image_thumbnail(server, icons),
+        widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
@@ -150,4 +136,38 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     ])
     .padding(6)
     .into()
+}
+
+mod widgets {
+    use iced::{widget::{container, image, text}, Element, Length};
+
+    use crate::{models::{Thumbnail, Server}, icons::Icons, application::Messages};
+
+    fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
+        image::viewer(image)
+                .width(Length::Units(200))
+                .height(Length::Units(100))
+                .scale_step(0.0)
+                .into()
+    }
+    
+    // TODO: make a proper widget I guess?
+    fn image_thumbnail_content<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+        match &server.map_thumbnail {
+            Thumbnail::Ready(image) => image_thumbnail_viewer(image.clone()),
+            Thumbnail::Loading => return text("Loading").into(),
+            Thumbnail::None => image_thumbnail_viewer(icons.no_image()),
+        }
+    }
+    
+    pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+        container(
+            image_thumbnail_content(server, icons)
+        )
+        .width(Length::Units(200))
+        .height(Length::Units(100))
+        .center_x()
+        .center_y()
+        .into()
+    }
 }

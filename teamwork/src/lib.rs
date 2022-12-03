@@ -26,7 +26,7 @@ pub enum Error {
 }
 
 #[derive(Clone)]
-/// Notice the client is Send + Sync and it must stay as is.
+/// Notice the client is Send + Sync and it must stay as is (a unit test checks that).
 pub struct Client {
     reqwest: reqwest::Client,
     thumbnail_urls_cache: Arc<Mutex<BTreeMap<String, String>>>,
@@ -36,7 +36,7 @@ impl Default for Client {
     fn default() -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
-            .build()    
+            .build()
             .expect("build reqwest client");
 
         Self {
@@ -68,8 +68,7 @@ impl Client {
         api_key: &str,
         map_name: &str,
         convert_to_image: F,
-    ) -> Result<I, Error>
-    {
+    ) -> Result<I, Error> {
         if api_key.is_empty() {
             return Err(Error::NoTeamworkApiKey);
         }
@@ -154,17 +153,15 @@ impl Client {
     fn try_parse_response<'a, T: Deserialize<'a>>(text: &'a str, url: &UrlWithKey) -> Result<T, Error> {
         match serde_json::from_str::<'a, T>(&text) {
             Ok(value) => Ok(value),
-            Err(error) => {
-                error!("Failed to parse JSON response from '{}'", url);
-
+            Err(json_error) => {
                 match serde_json::from_str::<TeamworkErrorResponse>(&text) {
                     Ok(error) => Err(Error::TeamworkError {
                         address: url.to_string(),
                         error: error.message.clone(),
                     }),
-                    Err(_) => {
-                        // Failed to parse the teamwork error, ignore this error and return the original trigger.
-                        Err(Error::Json(error))
+                    Err(_error) => {
+                        // Failed to parse the teamwork error, ignore the last error and return the original json error.
+                        Err(Error::Json(json_error))
                     }
                 }
             }

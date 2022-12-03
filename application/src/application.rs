@@ -12,7 +12,7 @@ use {
 use crate::{
     icons::Icons,
     launcher::ExecutableLauncher,
-    models::{IpPort, Server},
+    models::{IpPort, Server, Thumbnail},
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
     sources::SourceKey,
@@ -28,7 +28,7 @@ pub enum Messages {
     RefreshServers,
     RefreshFavoriteServers,
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
-    MapThumbnailReady(String, image::Handle),
+    MapThumbnailReady(String, Thumbnail),
     FilterChanged(String),
     StartGame(IpPort),
     /// Message produced when the settings are modified and saved.
@@ -44,8 +44,6 @@ pub enum Messages {
     EditSettings,
     /// Pop the current state.
     Back,
-    ///
-    DoNothing,
 }
 
 #[derive(PartialEq, Eq)]
@@ -70,9 +68,9 @@ pub struct Application {
 }
 
 impl Application {
-    fn map_thumbnail_ready(&mut self, map_name: &str, image: image::Handle) {
+    fn map_thumbnail_ready(&mut self, map_name: &str, thumbnail: Thumbnail) {
         for server in &mut self.servers.iter_mut().filter(|server| server.map == map_name) {
-            server.map_thumbnail = Some(image.clone());
+            server.map_thumbnail = thumbnail.clone();
         }
     }
 
@@ -151,10 +149,10 @@ impl Application {
                                     .await
                             },
                             |result| match result {
-                                Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, image),
+                                Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::Ready(image)),
                                 Err(error) => {
                                     error!("Error while fetching thumbnail for map '{}': {}", thumbnail_ready_key, error);
-                                    Messages::DoNothing
+                                    Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::None)
                                 }
                             },
                         )
@@ -220,7 +218,7 @@ impl IcedApplication for Application {
     }
 
     fn title(&self) -> String {
-        "TF2 launcher".to_string()
+        "Teamwork Launcher".to_string()
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -237,7 +235,6 @@ impl IcedApplication for Application {
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
             Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
-            Messages::DoNothing => (),
         }
 
         Command::none()
