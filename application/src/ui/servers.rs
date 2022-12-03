@@ -78,9 +78,16 @@ pub fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
 }
 
 fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
+    let mut button = svg_button(icons.clear(), 28);
+
+    // Enable the clear button only if the field contains text.
+    if !text.is_empty() {
+        button = button.on_press(Messages::FilterChanged(String::new()));
+    }
+
     row![
         text_input("Filter servers", text, Messages::FilterChanged),
-        svg_button(icons.clear(), 28).on_press(Messages::FilterChanged(String::new())),
+        button,
     ]
     .align_items(iced::Alignment::Center)
     .spacing(VISUAL_SPACING_SMALL)
