@@ -35,13 +35,16 @@ pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
 
-const GAMEMODE_IDS: [&str; 6] = [
+const GAMEMODE_IDS: [&str; 9] = [
     "payload",
     "attack-defend",
     "ctf",
     "control-point",
     "payload-race",
     "cp-orange",
+    "koth",
+    "medieval-mode",
+    "mvm"
 ];
 
 impl Default for ServersProvider {
