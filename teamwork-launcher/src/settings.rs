@@ -47,6 +47,8 @@ struct InnerUserSettings {
     pub game_executable_path: String,
     #[serde(default)]
     pub teamwork_api_key: String,
+    #[serde(default)]
+    pub auto_refresh_favorite: bool,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug)]
@@ -91,6 +93,7 @@ impl Default for InnerUserSettings {
             #[cfg(not(target_os = "windows"))]
             game_executable_path: Default::default(),
             teamwork_api_key: Default::default(),
+            auto_refresh_favorite: true,
         }
     }
 }
@@ -175,6 +178,18 @@ impl UserSettings {
         let inner = self.storage.try_read().unwrap();
 
         inner.game_executable_path.clone()
+    }
+
+    pub fn auto_refresh_favorite(&self) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.auto_refresh_favorite
+    }
+
+    pub fn set_auto_refresh_favorite(&mut self, value: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.auto_refresh_favorite = value;
     }
 
     fn file_settings_path(create_directory: bool) -> Option<PathBuf> {

@@ -9,6 +9,8 @@ use {
     log::error,
 };
 
+use {enum_as_inner::EnumAsInner, iced::Subscription};
+
 use crate::{
     icons::Icons,
     launcher::ExecutableLauncher,
@@ -46,7 +48,7 @@ pub enum Messages {
     Back,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, EnumAsInner)]
 pub enum States {
     Normal,
     Favorites,
@@ -108,7 +110,7 @@ impl Application {
                 } else {
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
                 };
-                
+
                 // By default servers are sorted by name
                 servers.map(|mut servers| {
                     servers.sort_by(|left, right| left.name.cmp(&right.name));
@@ -263,6 +265,15 @@ impl IcedApplication for Application {
         }
 
         Command::none()
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        if self.states.current().is_normal() && self.settings.auto_refresh_favorite() {
+            // Each 5 minutes refresh the favorites servers
+            return iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers);
+        }
+
+        Subscription::none()
     }
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
