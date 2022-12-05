@@ -44,7 +44,7 @@ const GAMEMODE_IDS: [&str; 9] = [
     "cp-orange",
     "koth",
     "medieval-mode",
-    "mvm"
+    "mvm",
 ];
 
 impl Default for ServersProvider {

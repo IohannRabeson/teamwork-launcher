@@ -82,6 +82,18 @@ impl Application {
         self.make_refresh_command(Some(self.settings.favorite_source_keys()))
     }
 
+    fn sort_servers_by_favorites<'r, 's>(left: &'r Server, right: &'s Server, settings: &UserSettings) -> Ordering {
+        let left = settings.filter_servers_favorite(left);
+        let right = settings.filter_servers_favorite(right);
+
+        if left == right {
+            Ordering::Equal
+        } else if left {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
     fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>) -> Command<Messages> {
         self.states.push(States::Reloading);
         self.servers.clear();
@@ -96,21 +108,10 @@ impl Application {
                 } else {
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
                 };
-
+                
+                // By default servers are sorted by name
                 servers.map(|mut servers| {
-                    // Put favorites servers first
-                    servers.sort_by(|left, right| {
-                        let left = settings.filter_servers_favorite(left);
-                        let right = settings.filter_servers_favorite(right);
-
-                        if left == right {
-                            Ordering::Equal
-                        } else if left {
-                            Ordering::Less
-                        } else {
-                            Ordering::Greater
-                        }
-                    });
+                    servers.sort_by(|left, right| left.name.cmp(&right.name));
                     servers
                 })
             },
@@ -146,35 +147,42 @@ impl Application {
         self.settings.switch_favorite_server(ip_port, source_key)
     }
 
+    fn make_map_thumbnail_command(&self, server: &Server) -> Command<Messages> {
+        let client = self.teamwork_client.clone();
+        let map_name = server.map.clone();
+        let api_key = self.settings.teamwork_api_key().clone();
+        let thumbnail_ready_key = server.map.clone();
+
+        Command::perform(
+            async move {
+                client
+                    .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
+                    .await
+            },
+            |result| match result {
+                Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::Ready(image)),
+                Err(error) => {
+                    error!("Error while fetching thumbnail for map '{}': {}", thumbnail_ready_key, error);
+                    Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::None)
+                }
+            },
+        )
+    }
+
     fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) -> Command<Messages> {
         match result {
             Ok(servers) => {
                 self.servers = servers;
                 self.states.pop();
 
-                return Command::batch(self.servers.iter().unique_by(|server| &server.map).map(
-                    |server| -> Command<Messages> {
-                        let client = self.teamwork_client.clone();
-                        let map_name = server.map.clone();
-                        let api_key = self.settings.teamwork_api_key().clone();
-                        let thumbnail_ready_key = server.map.clone();
-
-                        Command::perform(
-                            async move {
-                                client
-                                    .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
-                                    .await
-                            },
-                            |result| match result {
-                                Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::Ready(image)),
-                                Err(error) => {
-                                    error!("Error while fetching thumbnail for map '{}': {}", thumbnail_ready_key, error);
-                                    Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::None)
-                                }
-                            },
-                        )
-                    },
-                ));
+                return Command::batch(
+                    self.servers
+                        .iter()
+                        // Sort the servers favorites first to ensure the first servers visible have their thumbnail first.
+                        .sorted_by(|left, right| Self::sort_servers_by_favorites(left, right, &self.settings))
+                        .unique_by(|server| &server.map)
+                        .map(|server| self.make_map_thumbnail_command(server)),
+                );
             }
             Err(error) => {
                 self.states.reset(States::Normal);
