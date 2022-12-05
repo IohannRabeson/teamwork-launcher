@@ -31,6 +31,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                 Messages::SettingsChanged(new_settings)
             })
+            .password()
             .into()
         )
     ]
