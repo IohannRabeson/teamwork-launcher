@@ -1,0 +1,3 @@
+[submodule "teamwork-launcher/src/icons/flag-icons"]
+	path = teamwork-launcher/src/icons/flag-icons
+	url = git@github.com:lipis/flag-icons.git

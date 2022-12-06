@@ -103,7 +103,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                 server.current_players_count, server.max_players_count
             )),
             text(format!("Map: {}", server.map)),
-            widgets::region(server),
+            widgets::region(server, icons),
         ],
         horizontal_space(Length::Fill),
         row![favorite_button(is_favorite, icons, BIG_FONT_SIZE)
@@ -128,7 +128,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
                 server.current_players_count, server.max_players_count
             )),
             text(format!("Map: {}", server.map)),
-            widgets::region(server),
+            widgets::region(server, icons),
         ],
         horizontal_space(Length::Fill),
         row![
@@ -144,7 +144,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
 mod widgets {
     use iced::{
-        widget::{container, image, text},
+        widget::{container, image, row, svg, text},
         Element, Length,
     };
 
@@ -153,6 +153,7 @@ mod widgets {
         icons::Icons,
         models::{Server, Thumbnail},
         promised_value::PromisedValue,
+        ui::VISUAL_SPACING_SMALL,
     };
 
     fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
@@ -181,12 +182,22 @@ mod widgets {
             .into()
     }
 
-    pub fn region<'a>(server: &Server) -> Element<'a, Messages> {
+    pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.country {
-            PromisedValue::Ready(region) => text(format!("Region: {}", region)),
-            PromisedValue::Loading => text("Region: loading..."),
-            PromisedValue::None => text("Region: unknown"),
+            PromisedValue::Ready(country) => match icons.flag(&country.code()) {
+                Some(flag) => row![text("Region:"), country_icon(flag)].into(),
+                None => text(format!("Region: {}", country)).into(),
+            },
+            PromisedValue::Loading => text("Region: loading...").into(),
+            PromisedValue::None => text("Region: unknown").into(),
         }
-        .into()
+    }
+
+    fn country_icon<'a>(icon: svg::Handle) -> Element<'a, Messages> {
+        const ICON_SIZE: Length = Length::Units(16);
+
+        container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
+            .padding(VISUAL_SPACING_SMALL)
+            .into()
     }
 }
