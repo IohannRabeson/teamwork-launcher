@@ -1,4 +1,4 @@
-use std::{fmt::Display, net::Ipv4Addr};
+use std::{fmt::Display, net::Ipv4Addr, str::FromStr};
 
 use {
     iced::widget::image,
@@ -77,16 +77,31 @@ impl Default for Server {
 }
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord)]
-pub struct Country(String);
+pub struct Country {
+    code: String,
+}
 
 impl Country {
-    pub fn new(country_name: &impl ToString) -> Self {
-        Self(country_name.to_string())
+    pub fn new(code: &impl ToString) -> Self {
+        Self {
+            code: code.to_string()
+        }
+    }
+
+    pub fn code(&self) -> &str {
+        &self.code
+    }
+
+    pub fn name(&self) -> String {
+        match iso_country::Country::from_str(&self.code) {
+            Ok(country) => country.name().to_string(),
+            Err(_error) => self.code.clone(),
+        }
     }
 }
 
 impl Display for Country {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.name())
     }
 }
