@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::BTreeSet, sync::Arc};
+use std::{cmp::Ordering, collections::BTreeSet, net::Ipv4Addr, sync::Arc};
 
 use {
     iced::{
@@ -11,10 +11,13 @@ use {
 
 use {enum_as_inner::EnumAsInner, iced::Subscription};
 
+use log::info;
+
 use crate::{
+    geolocation::IpGeolocationService,
     icons::Icons,
     launcher::ExecutableLauncher,
-    models::{IpPort, Server, Thumbnail},
+    models::{Country, IpPort, Server, Thumbnail},
     servers_provider::{self, ServersProvider},
     settings::UserSettings,
     sources::SourceKey,
@@ -31,6 +34,7 @@ pub enum Messages {
     RefreshFavoriteServers,
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     MapThumbnailReady(String, Thumbnail),
+    CountryForIpReady(Ipv4Addr, Option<Country>),
     FilterChanged(String),
     StartGame(IpPort),
     /// Message produced when the settings are modified and saved.
@@ -67,9 +71,16 @@ pub struct Application {
     states: StatesStack<States>,
     launcher: ExecutableLauncher,
     theme: Theme,
+    ip_geoloc_service: IpGeolocationService,
 }
 
 impl Application {
+    fn country_for_ip_ready(&mut self, ip: Ipv4Addr, country: Option<Country>) {
+        for server in &mut self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
+            server.country = country.clone().into();
+        }
+    }
+
     fn map_thumbnail_ready(&mut self, map_name: &str, thumbnail: Thumbnail) {
         for server in &mut self.servers.iter_mut().filter(|server| server.map == map_name) {
             server.map_thumbnail = thumbnail.clone();
@@ -171,20 +182,50 @@ impl Application {
         )
     }
 
+    fn make_geolocalize_ip_command(&self, ip: Ipv4Addr) -> Command<Messages> {
+        let geolocalization_service = self.ip_geoloc_service.clone();
+
+        Command::perform(
+            async move {
+                match geolocalization_service.locate(ip).await {
+                    Ok(country) => Some(country),
+                    Err(error) => {
+                        error!("{}", error);
+                        None
+                    }
+                }
+            },
+            move |country| Messages::CountryForIpReady(ip, country),
+        )
+    }
+
     fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) -> Command<Messages> {
         match result {
             Ok(servers) => {
                 self.servers = servers;
                 self.states.pop();
 
-                return Command::batch(
-                    self.servers
-                        .iter()
-                        // Sort the servers favorites first to ensure the first servers visible have their thumbnail first.
-                        .sorted_by(|left, right| Self::sort_servers_by_favorites(left, right, &self.settings))
-                        .unique_by(|server| &server.map)
-                        .map(|server| self.make_map_thumbnail_command(server)),
-                );
+                info!("Fetched {} servers", self.servers.len());
+
+                let servers_favorites_first: Vec<&Server> = self
+                    .servers
+                    .iter()
+                    // Sort the servers favorites first to ensure the first servers visible have their thumbnail first.
+                    .sorted_by(|left, right| Self::sort_servers_by_favorites(left, right, &self.settings))
+                    .collect();
+                let thumbnail_commands = servers_favorites_first
+                    .iter()
+                    // Sort the servers favorites first to ensure the first servers visible have their thumbnail first.
+                    .unique_by(|server| &server.map)
+                    .map(|server| self.make_map_thumbnail_command(server));
+                let ip_geoloc_commands = servers_favorites_first
+                    .iter()
+                    .map(|server| server.ip_port.ip())
+                    .unique()
+                    .cloned()
+                    .map(|ip| self.make_geolocalize_ip_command(ip));
+
+                return Command::batch(thumbnail_commands.chain(ip_geoloc_commands));
             }
             Err(error) => {
                 self.states.reset(States::Normal);
@@ -234,6 +275,7 @@ impl IcedApplication for Application {
             theme: Theme::Dark,
             servers: Vec::new(),
             teamwork_client: teamwork::Client::default(),
+            ip_geoloc_service: IpGeolocationService::default(),
         };
 
         let command = match application.settings.has_favorites() {
@@ -262,6 +304,7 @@ impl IcedApplication for Application {
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
             Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
+            Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
         }
 
         Command::none()

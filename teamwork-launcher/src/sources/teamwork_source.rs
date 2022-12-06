@@ -4,6 +4,7 @@ use {async_trait::async_trait, teamwork::Client as TeamworkClient};
 
 use crate::{
     models::{IpPort, Server, Thumbnail},
+    promised_value::PromisedValue,
     servers_provider::{GetServersInfosError, Source},
     settings::UserSettings,
 };
@@ -30,6 +31,7 @@ impl From<teamwork::Server> for Server {
             max_players_count: server.max_players,
             ip_port: IpPort::new(std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"), server.port),
             source: None,
+            country: PromisedValue::Loading,
         }
     }
 }

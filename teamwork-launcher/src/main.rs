@@ -12,9 +12,11 @@ use {
 
 mod application;
 mod fonts;
+mod geolocation;
 mod icons;
 mod launcher;
 mod models;
+mod promised_value;
 mod servers_provider;
 mod settings;
 mod sources;
