@@ -83,9 +83,7 @@ pub struct Country {
 
 impl Country {
     pub fn new(code: &impl ToString) -> Self {
-        Self {
-            code: code.to_string()
-        }
+        Self { code: code.to_string() }
     }
 
     pub fn code(&self) -> &str {

@@ -144,7 +144,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
 mod widgets {
     use iced::{
-        widget::{container, image, text, row, svg},
+        widget::{container, image, row, svg, text},
         Element, Length,
     };
 
@@ -152,7 +152,8 @@ mod widgets {
         application::Messages,
         icons::Icons,
         models::{Server, Thumbnail},
-        promised_value::PromisedValue, ui::VISUAL_SPACING_SMALL,
+        promised_value::PromisedValue,
+        ui::VISUAL_SPACING_SMALL,
     };
 
     fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
@@ -183,11 +184,9 @@ mod widgets {
 
     pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.country {
-            PromisedValue::Ready(country) => {
-                match icons.flag(&country.code()) {
-                    Some(flag) => row![text("Region:"), country_icon(flag)].into(),
-                    None => text(format!("Region: {}", country)).into(),
-                }
+            PromisedValue::Ready(country) => match icons.flag(&country.code()) {
+                Some(flag) => row![text("Region:"), country_icon(flag)].into(),
+                None => text(format!("Region: {}", country)).into(),
             },
             PromisedValue::Loading => text("Region: loading...").into(),
             PromisedValue::None => text("Region: unknown").into(),
@@ -197,6 +196,8 @@ mod widgets {
     fn country_icon<'a>(icon: svg::Handle) -> Element<'a, Messages> {
         const ICON_SIZE: Length = Length::Units(16);
 
-        container(svg(icon).width(ICON_SIZE).height(ICON_SIZE)).padding(VISUAL_SPACING_SMALL).into()
+        container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
+            .padding(VISUAL_SPACING_SMALL)
+            .into()
     }
 }
