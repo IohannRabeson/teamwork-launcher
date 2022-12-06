@@ -34,5 +34,3 @@ itertools = "0.10.5"
 test-case = "2.2.2"
 unidecode = "0.3.0"
 enum-as-inner = "0.5.1"
-
-

@@ -102,7 +102,8 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                 "Players: {} / {}",
                 server.current_players_count, server.max_players_count
             )),
-            text(format!("Map: {}", server.map))
+            text(format!("Map: {}", server.map)),
+            widgets::region(server),
         ],
         horizontal_space(Length::Fill),
         row![favorite_button(is_favorite, icons, BIG_FONT_SIZE)
@@ -126,7 +127,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
                 "Players: {} / {}",
                 server.current_players_count, server.max_players_count
             )),
-            text(format!("Map: {}", server.map))
+            text(format!("Map: {}", server.map)),
+            widgets::region(server),
         ],
         horizontal_space(Length::Fill),
         row![
@@ -150,6 +152,7 @@ mod widgets {
         application::Messages,
         icons::Icons,
         models::{Server, Thumbnail},
+        promised_value::PromisedValue,
     };
 
     fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
@@ -176,5 +179,14 @@ mod widgets {
             .center_x()
             .center_y()
             .into()
+    }
+
+    pub fn region<'a>(server: &Server) -> Element<'a, Messages> {
+        match &server.country {
+            PromisedValue::Ready(region) => text(format!("Region: {}", region)),
+            PromisedValue::Loading => text("Region: loading..."),
+            PromisedValue::None => text("Region: unknown"),
+        }
+        .into()
     }
 }

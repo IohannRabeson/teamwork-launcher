@@ -1,11 +1,11 @@
-use std::net::Ipv4Addr;
+use std::{fmt::Display, net::Ipv4Addr};
 
 use {
     iced::widget::image,
     serde::{Deserialize, Serialize},
 };
 
-use crate::sources::SourceKey;
+use crate::{promised_value::PromisedValue, sources::SourceKey};
 
 /// The unique key identifiying a server.
 #[derive(Debug, Hash, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -44,12 +44,7 @@ impl From<(Ipv4Addr, u16)> for IpPort {
     }
 }
 
-#[derive(Debug, Hash, Clone)]
-pub enum Thumbnail {
-    Ready(image::Handle),
-    Loading,
-    None,
-}
+pub type Thumbnail = PromisedValue<image::Handle>;
 
 /// Store information about a server.
 ///
@@ -60,9 +55,10 @@ pub struct Server {
     pub max_players_count: u8,
     pub current_players_count: u8,
     pub map: String,
-    pub map_thumbnail: Thumbnail,
+    pub map_thumbnail: PromisedValue<image::Handle>,
     pub ip_port: IpPort,
     pub source: Option<SourceKey>,
+    pub country: PromisedValue<Country>,
 }
 
 impl Default for Server {
@@ -72,9 +68,25 @@ impl Default for Server {
             max_players_count: Default::default(),
             current_players_count: Default::default(),
             map: Default::default(),
-            map_thumbnail: Thumbnail::None,
+            map_thumbnail: PromisedValue::None,
             ip_port: IpPort::default(),
             source: None,
+            country: PromisedValue::None,
         }
+    }
+}
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub struct Country(String);
+
+impl Country {
+    pub fn new(country_name: &impl ToString) -> Self {
+        Self(country_name.to_string())
+    }
+}
+
+impl Display for Country {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }

@@ -1,7 +1,7 @@
 use {
     crate::application::Messages,
     iced::{
-        widget::{column, text, text_input, vertical_space, checkbox},
+        widget::{checkbox, column, text, text_input, vertical_space},
         Element, Length,
     },
 };
@@ -37,12 +37,14 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
         field(
             "Auto refresh favorite servers:",
             checkbox("Auto refresh", settings.auto_refresh_favorite(), |checked| {
-            let mut new_settings = settings.clone();
+                let mut new_settings = settings.clone();
 
-            new_settings.set_auto_refresh_favorite(checked);
+                new_settings.set_auto_refresh_favorite(checked);
 
-            Messages::SettingsChanged(new_settings)
-        }).into()),
+                Messages::SettingsChanged(new_settings)
+            })
+            .into()
+        ),
     ]
     .padding(12)
     .spacing(4)
