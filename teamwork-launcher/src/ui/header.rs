@@ -17,7 +17,7 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
     let title_widget = title_widget(title);
 
     match state {
-        States::Normal => {
+        States::ShowServers => {
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),
@@ -26,7 +26,7 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
                 svg_button(icons.favorite_border(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
             ]
         }
-        States::Favorites => {
+        States::EditFavoriteServers => {
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),

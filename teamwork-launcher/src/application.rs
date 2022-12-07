@@ -54,8 +54,8 @@ pub enum Messages {
 
 #[derive(PartialEq, Eq, EnumAsInner)]
 pub enum States {
-    Normal,
-    Favorites,
+    ShowServers,
+    EditFavoriteServers,
     Settings,
     Reloading,
     Error { message: String },
@@ -228,7 +228,7 @@ impl Application {
                 return Command::batch(thumbnail_commands.chain(ip_geoloc_commands));
             }
             Err(error) => {
-                self.states.reset(States::Normal);
+                self.states.reset(States::ShowServers);
                 self.states.push(States::Error {
                     message: error.to_string(),
                 });
@@ -271,7 +271,7 @@ impl IcedApplication for Application {
             servers_provider,
             settings: flags.settings,
             launcher: flags.launcher,
-            states: StatesStack::new(States::Normal),
+            states: StatesStack::new(States::ShowServers),
             theme: Theme::Dark,
             servers: Vec::new(),
             teamwork_client: teamwork::Client::default(),
@@ -300,7 +300,7 @@ impl IcedApplication for Application {
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
-            Messages::EditFavorites => self.states.push(States::Favorites),
+            Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
             Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
@@ -321,9 +321,9 @@ impl IcedApplication for Application {
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         let content = match self.states.current() {
-            States::Normal if self.servers.is_empty() => no_favorite_servers_view(),
-            States::Normal => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
-            States::Favorites => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
+            States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
+            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
+            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
             States::Settings => settings_view(&self.settings),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
