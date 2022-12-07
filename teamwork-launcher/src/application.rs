@@ -88,11 +88,11 @@ impl Application {
     }
 
     fn refresh_command(&mut self) -> Command<Messages> {
-        self.make_refresh_command(None)
+        self.make_refresh_command(None, true)
     }
 
     fn refresh_favorites_command(&mut self) -> Command<Messages> {
-        self.make_refresh_command(Some(self.settings.favorite_source_keys()))
+        self.make_refresh_command(Some(self.settings.favorite_source_keys()), false)
     }
 
     fn sort_servers_by_favorites<'r, 's>(left: &'r Server, right: &'s Server, settings: &UserSettings) -> Ordering {
@@ -107,9 +107,10 @@ impl Application {
             Ordering::Greater
         }
     }
-    fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>) -> Command<Messages> {
+    fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>, clear: bool) -> Command<Messages> {
         self.states.push(States::Reloading);
-        self.servers.clear();
+
+        if clear { self.servers.clear(); }
 
         let settings = self.settings.clone();
         let servers_provider = self.servers_provider.clone();
