@@ -32,6 +32,7 @@ impl From<teamwork::Server> for Server {
             ip_port: IpPort::new(std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"), server.port),
             source: None,
             country: PromisedValue::Loading,
+            ping: PromisedValue::Loading,
         }
     }
 }

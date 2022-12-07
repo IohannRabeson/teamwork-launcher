@@ -16,6 +16,7 @@ mod geolocation;
 mod icons;
 mod launcher;
 mod models;
+mod ping_service;
 mod promised_value;
 mod servers_provider;
 mod settings;

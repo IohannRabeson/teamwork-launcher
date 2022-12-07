@@ -1,31 +1,30 @@
-use std::{cmp::Ordering, collections::BTreeSet, net::Ipv4Addr, sync::Arc};
+use std::time::Duration;
+
+use crate::ping_service::PingService;
 
 use {
+    crate::{
+        geolocation::IpGeolocationService,
+        icons::Icons,
+        launcher::ExecutableLauncher,
+        models::{Country, IpPort, Server, Thumbnail},
+        servers_provider::{self, ServersProvider},
+        settings::UserSettings,
+        sources::SourceKey,
+        states::StatesStack,
+        ui::{
+            error_view, header_view, no_favorite_servers_view, refresh_view, servers_view, servers_view_edit_favorites,
+            settings_view,
+        },
+    },
+    enum_as_inner::EnumAsInner,
     iced::{
         widget::{column, image, vertical_space},
-        Application as IcedApplication, Command, Element, Length, Theme,
+        Application as IcedApplication, Command, Element, Length, Subscription, Theme,
     },
     itertools::Itertools,
-    log::error,
-};
-
-use {enum_as_inner::EnumAsInner, iced::Subscription};
-
-use log::info;
-
-use crate::{
-    geolocation::IpGeolocationService,
-    icons::Icons,
-    launcher::ExecutableLauncher,
-    models::{Country, IpPort, Server, Thumbnail},
-    servers_provider::{self, ServersProvider},
-    settings::UserSettings,
-    sources::SourceKey,
-    states::StatesStack,
-    ui::{
-        error_view, header_view, no_favorite_servers_view, refresh_view, servers_view, servers_view_edit_favorites,
-        settings_view,
-    },
+    log::{error, info},
+    std::{cmp::Ordering, collections::BTreeSet, net::Ipv4Addr, sync::Arc},
 };
 
 #[derive(Debug, Clone)]
@@ -35,6 +34,7 @@ pub enum Messages {
     ServersRefreshed(Result<Vec<Server>, servers_provider::Error>),
     MapThumbnailReady(String, Thumbnail),
     CountryForIpReady(Ipv4Addr, Option<Country>),
+    PingReady(Ipv4Addr, Option<Duration>),
     FilterChanged(String),
     StartGame(IpPort),
     /// Message produced when the settings are modified and saved.
@@ -72,9 +72,16 @@ pub struct Application {
     launcher: ExecutableLauncher,
     theme: Theme,
     ip_geoloc_service: IpGeolocationService,
+    ping_service: PingService,
 }
 
 impl Application {
+    fn ping_ready(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
+        for server in &mut self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
+            server.ping = duration.into();
+        }
+    }
+
     fn country_for_ip_ready(&mut self, ip: Ipv4Addr, country: Option<Country>) {
         for server in &mut self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = country.clone().into();
@@ -200,6 +207,21 @@ impl Application {
         )
     }
 
+    fn make_ping_ip_command(&self, ip: &Ipv4Addr) -> Command<Messages> {
+        let ping_service = self.ping_service.clone();
+        let ip = ip.clone();
+
+        Command::perform(
+            async move {
+                match ping_service.ping(&ip).await {
+                    Ok(country) => Some(country),
+                    Err(()) => { None },
+                }
+            },
+            move |duration| Messages::PingReady(ip.clone(), duration),
+        )
+    }
+
     fn refresh_finished(&mut self, result: Result<Vec<Server>, servers_provider::Error>) -> Command<Messages> {
         match result {
             Ok(servers) => {
@@ -225,8 +247,10 @@ impl Application {
                     .unique()
                     .cloned()
                     .map(|ip| self.make_geolocalize_ip_command(ip));
+                let ip_ping_commands = self.servers.iter().map(|server|server.ip_port.ip()).unique()
+                    .map(|ip|self.make_ping_ip_command(ip));
 
-                return Command::batch(thumbnail_commands.chain(ip_geoloc_commands));
+                return Command::batch(thumbnail_commands.chain(ip_geoloc_commands).chain(ip_ping_commands));
             }
             Err(error) => {
                 self.states.reset(States::ShowServers);
@@ -277,6 +301,7 @@ impl IcedApplication for Application {
             servers: Vec::new(),
             teamwork_client: teamwork::Client::default(),
             ip_geoloc_service: IpGeolocationService::default(),
+            ping_service: PingService::default(),
         };
 
         let command = match application.settings.has_favorites() {
@@ -306,6 +331,7 @@ impl IcedApplication for Application {
             Messages::Back => self.states.pop(),
             Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
             Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
+            Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
         }
 
         Command::none()

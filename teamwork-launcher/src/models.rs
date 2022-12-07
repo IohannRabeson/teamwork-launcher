@@ -1,4 +1,4 @@
-use std::{fmt::Display, net::Ipv4Addr, str::FromStr};
+use std::{fmt::Display, net::Ipv4Addr, str::FromStr, time::Duration};
 
 use {
     iced::widget::image,
@@ -59,6 +59,7 @@ pub struct Server {
     pub ip_port: IpPort,
     pub source: Option<SourceKey>,
     pub country: PromisedValue<Country>,
+    pub ping: PromisedValue<Duration>,
 }
 
 impl Default for Server {
@@ -72,6 +73,7 @@ impl Default for Server {
             ip_port: IpPort::default(),
             source: None,
             country: PromisedValue::None,
+            ping: PromisedValue::None,
         }
     }
 }

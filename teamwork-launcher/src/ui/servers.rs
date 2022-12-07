@@ -104,6 +104,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
             )),
             text(format!("Map: {}", server.map)),
             widgets::region(server, icons),
+            widgets::ping(server),
         ],
         horizontal_space(Length::Fill),
         row![favorite_button(is_favorite, icons, BIG_FONT_SIZE)
@@ -129,6 +130,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
             )),
             text(format!("Map: {}", server.map)),
             widgets::region(server, icons),
+            widgets::ping(server),
         ],
         horizontal_space(Length::Fill),
         row![
@@ -199,5 +201,13 @@ mod widgets {
         container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
             .padding(VISUAL_SPACING_SMALL)
             .into()
+    }
+
+    pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
+        match &server.ping {
+            PromisedValue::Ready(duration) => text(format!("Ping: {} ms", duration.as_millis())),
+            PromisedValue::Loading => text("Ping: loading..."),
+            PromisedValue::None => text("Ping: timeout"),
+        }.into()
     }
 }
