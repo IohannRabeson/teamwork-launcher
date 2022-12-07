@@ -311,7 +311,7 @@ impl IcedApplication for Application {
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
-        if self.states.current().is_normal() && self.settings.auto_refresh_favorite() {
+        if self.states.current().is_show_servers() && self.settings.auto_refresh_favorite() {
             // Each 5 minutes refresh the favorites servers
             return iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers);
         }
