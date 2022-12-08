@@ -151,12 +151,6 @@ impl UserSettings {
         inner.favorites.iter().filter_map(|(_, source)| source.clone()).collect()
     }
 
-    pub fn has_favorites(&self) -> bool {
-        let inner = self.storage.try_read().unwrap();
-
-        !inner.favorites.is_empty()
-    }
-
     /// Update the information about the favorites servers.
     pub fn update_favorites<'a>(&mut self, servers: impl Iterator<Item = &'a Server>) {
         let mut inner = self.storage.try_write().unwrap();
