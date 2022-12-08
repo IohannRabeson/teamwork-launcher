@@ -2,7 +2,7 @@
 name = "teamwork-launcher"
 version = "0.1.0"
 edition = "2021"
-
+#bui
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -36,4 +36,4 @@ unidecode = "0.3.0"
 enum-as-inner = "0.5.1"
 include_dir = "0.7.3"
 iso_country = "0.1.4"
-surge-ping = { git = "https://github.com/kolapapa/surge-ping" }
+surge-ping = "0.7.3"
