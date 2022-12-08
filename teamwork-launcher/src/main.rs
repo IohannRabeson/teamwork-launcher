@@ -73,6 +73,15 @@ mod setup {
             .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
             .chain(
                 fern::Dispatch::new()
+                    .format(|out, message, record| {
+                        out.finish(format_args!(
+                            "[{}][{}][{}] {}",
+                            record.level(),
+                            record.target(),
+                            chrono::Local::now().format("%H:%M:%S"),
+                            message,
+                        ))
+                    })
                     .level(log::LevelFilter::Warn)
                     .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
                     .chain(fern::log_file(format!("{}.log", APPLICATION_NAME))?)
