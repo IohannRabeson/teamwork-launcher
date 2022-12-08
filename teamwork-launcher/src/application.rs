@@ -325,7 +325,7 @@ impl Application {
             async move {
                 match ping_service.ping(&ip).await {
                     Ok(country) => Some(country),
-                    Err(()) => { None },
+                    Err(_error) => { None },
                 }
             },
             move |duration| Messages::PingReady(ip.clone(), duration),
