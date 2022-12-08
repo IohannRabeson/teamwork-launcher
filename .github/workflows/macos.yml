@@ -22,5 +22,9 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
-    - name: Run integration test
-      run: cargo run -- --integration-test
+#    Currently disabled on OSX
+#    When running on the Github Action runner, the application crashes with this error:
+#    Error: the application graphics context could not be created
+#    Not sure Iced has a software renderer.
+#    - name: Run integration test
+#      run: cargo run -- --integration-test
