@@ -70,7 +70,22 @@ mod setup {
     pub fn setup_logger() -> anyhow::Result<()> {
         let builder = fern::Dispatch::new()
             .level(log::LevelFilter::Error)
-            .level_for(APPLICATION_NAME, log::LevelFilter::Trace);
+            .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
+            .chain(
+                fern::Dispatch::new()
+                    .format(|out, message, record| {
+                        out.finish(format_args!(
+                            "[{}][{}][{}] {}",
+                            record.level(),
+                            record.target(),
+                            chrono::Local::now().format("%H:%M:%S"),
+                            message,
+                        ))
+                    })
+                    .level(log::LevelFilter::Warn)
+                    .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
+                    .chain(fern::log_file(format!("{}.log", APPLICATION_NAME))?)
+            );
 
         #[cfg(debug_assertions)]
         let builder = builder.level_for("teamwork", log::LevelFilter::Trace);
