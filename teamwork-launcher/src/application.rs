@@ -1,6 +1,6 @@
-use std::time::Duration;
+use std::{time::Duration, iter};
 
-use crate::ping_service::PingService;
+use crate::{ping_service::PingService, CliParameters};
 
 use {
     crate::{
@@ -50,6 +50,14 @@ pub enum Messages {
     EditSettings,
     /// Pop the current state.
     Back,
+    /// Pop all the state then quit the application.
+    Quit,
+}
+
+pub struct Flags {
+    pub cli_params: CliParameters,
+    pub settings: UserSettings,
+    pub launcher: ExecutableLauncher,
 }
 
 #[derive(PartialEq, Eq, EnumAsInner)]
@@ -73,6 +81,108 @@ pub struct Application {
     theme: Theme,
     ip_geoloc_service: IpGeolocationService,
     ping_service: PingService,
+    should_exit: bool,
+}
+
+impl Drop for Application {
+    fn drop(&mut self) {
+        self.settings.update_favorites(self.servers.iter());
+        UserSettings::save_settings(&self.settings).expect("Write settings");
+    }
+}
+
+impl IcedApplication for Application {
+    type Executor = iced::executor::Default;
+    type Message = Messages;
+    type Flags = Flags;
+    type Theme = Theme;
+
+    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+        let theme = Theme::default();
+        let servers_provider = Arc::new(ServersProvider::default());
+        let mut application = Self {
+            should_exit: false,
+            icons: Icons::new(&theme),
+            servers_provider,
+            settings: flags.settings,
+            launcher: flags.launcher,
+            states: StatesStack::new(States::ShowServers),
+            theme: Theme::Dark,
+            servers: Vec::new(),
+            teamwork_client: teamwork::Client::default(),
+            ip_geoloc_service: IpGeolocationService::default(),
+            ping_service: PingService::default(),
+        };
+
+        let mut command = match application.settings.has_favorites() {
+            true => application.refresh_favorites_command(),
+            false => application.refresh_command(),
+        };
+
+        if flags.cli_params.integration_test {
+            command = Command::batch(iter::once(command).chain(iter::once(Command::perform(async {
+                async_std::task::sleep(Duration::from_secs(5)).await
+            }, |_| Messages::Quit))));
+        }
+
+        (application, command)
+    }
+
+    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        match message {
+            Messages::ServersRefreshed(result) => return self.refresh_finished(result),
+            Messages::RefreshServers => return self.refresh_command(),
+            Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
+            Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
+            Messages::SettingsChanged(settings) => self.settings = settings,
+            Messages::StartGame(params) => self.launch_executable(&params),
+            Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
+            Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
+            Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
+            Messages::EditSettings => self.states.push(States::Settings),
+            Messages::Back => self.states.pop(),
+            Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
+            Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
+            Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
+            Messages::Quit => self.should_exit = true,
+        }
+
+        Command::none()
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        if self.states.current().is_show_servers() && self.settings.auto_refresh_favorite() {
+            // Each 5 minutes refresh the favorites servers
+            return iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers);
+        }
+
+        Subscription::none()
+    }
+
+    fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
+        let content = match self.states.current() {
+            States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
+            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
+            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
+            States::Settings => settings_view(&self.settings),
+            States::Reloading => refresh_view(),
+            States::Error { message } => error_view(message),
+        };
+
+        self.normal_view(content)
+    }
+
+    fn title(&self) -> String {
+        "Teamwork Launcher".to_string()
+    }
+    
+    fn should_exit(&self) -> bool {
+        self.should_exit
+    }
+
+    fn theme(&self) -> Theme {
+        self.theme.clone()
+    }
 }
 
 impl Application {
@@ -277,96 +387,3 @@ impl Application {
     }
 }
 
-pub struct Flags {
-    pub settings: UserSettings,
-    pub launcher: ExecutableLauncher,
-}
-
-impl IcedApplication for Application {
-    type Executor = iced::executor::Default;
-    type Message = Messages;
-    type Flags = Flags;
-    type Theme = Theme;
-
-    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let theme = Theme::default();
-        let servers_provider = Arc::new(ServersProvider::default());
-        let mut application = Self {
-            icons: Icons::new(&theme),
-            servers_provider,
-            settings: flags.settings,
-            launcher: flags.launcher,
-            states: StatesStack::new(States::ShowServers),
-            theme: Theme::Dark,
-            servers: Vec::new(),
-            teamwork_client: teamwork::Client::default(),
-            ip_geoloc_service: IpGeolocationService::default(),
-            ping_service: PingService::default(),
-        };
-
-        let command = match application.settings.has_favorites() {
-            true => application.refresh_favorites_command(),
-            false => application.refresh_command(),
-        };
-
-        (application, command)
-    }
-
-    fn title(&self) -> String {
-        "Teamwork Launcher".to_string()
-    }
-
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        match message {
-            Messages::ServersRefreshed(result) => return self.refresh_finished(result),
-            Messages::RefreshServers => return self.refresh_command(),
-            Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
-            Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
-            Messages::SettingsChanged(settings) => self.settings = settings,
-            Messages::StartGame(params) => self.launch_executable(&params),
-            Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
-            Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
-            Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
-            Messages::EditSettings => self.states.push(States::Settings),
-            Messages::Back => self.states.pop(),
-            Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
-            Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
-            Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
-        }
-
-        Command::none()
-    }
-
-    fn subscription(&self) -> Subscription<Self::Message> {
-        if self.states.current().is_show_servers() && self.settings.auto_refresh_favorite() {
-            // Each 5 minutes refresh the favorites servers
-            return iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers);
-        }
-
-        Subscription::none()
-    }
-
-    fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
-        let content = match self.states.current() {
-            States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
-            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
-            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
-            States::Settings => settings_view(&self.settings),
-            States::Reloading => refresh_view(),
-            States::Error { message } => error_view(message),
-        };
-
-        self.normal_view(content)
-    }
-
-    fn theme(&self) -> Theme {
-        self.theme.clone()
-    }
-}
-
-impl Drop for Application {
-    fn drop(&mut self) {
-        self.settings.update_favorites(self.servers.iter());
-        UserSettings::save_settings(&self.settings).expect("Write settings");
-    }
-}

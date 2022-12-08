@@ -87,7 +87,7 @@ pub struct ExecutableLauncher {
 }
 
 impl ExecutableLauncher {
-    pub fn new(testing: bool) -> Self {
+    pub fn new(enable_debug_mode: bool) -> Self {
         Self {
             arguments: vec![
                 "-applaunch".into(),
@@ -95,7 +95,7 @@ impl ExecutableLauncher {
                 "+connect".into(),
                 ExecutableArgument::Server,
             ],
-            launcher: match testing {
+            launcher: match enable_debug_mode {
                 true => Box::new(DebugLauncher::default()),
                 false => Box::new(GameLauncher::default()),
             },
