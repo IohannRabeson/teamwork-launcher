@@ -1,3 +1,5 @@
+use crate::promised_value::PromisedValue;
+
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
     crate::{application::Messages, fonts, icons::Icons, models::Server, settings::UserSettings},
@@ -119,17 +121,26 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
 fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     const BIG_FONT_SIZE: u16 = 32;
 
+    let server_name_row = match &server.country {
+        PromisedValue::Ready(country) => row![
+            container(widgets::country_icon(icons, country))
+                .height(Length::Units(BIG_FONT_SIZE))
+                .center_y(),
+            text(&server.name).size(BIG_FONT_SIZE)
+        ],
+        _ => row![text(&server.name).size(BIG_FONT_SIZE)],
+    };
+
     container(row![
         widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
-            text(&server.name).size(BIG_FONT_SIZE),
+            server_name_row,
             text(format!(
                 "Players: {} / {}",
                 server.current_players_count, server.max_players_count
             )),
             text(format!("Map: {}", server.map)),
-            widgets::region(server, icons),
             widgets::ping(server),
         ],
         horizontal_space(Length::Fill),
@@ -146,14 +157,14 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
 mod widgets {
     use iced::{
-        widget::{container, image, row, svg, text},
+        widget::{container, image, svg, text, row},
         Element, Length,
     };
 
     use crate::{
         application::Messages,
         icons::Icons,
-        models::{Server, Thumbnail},
+        models::{Country, Server, Thumbnail},
         promised_value::PromisedValue,
         ui::VISUAL_SPACING_SMALL,
     };
@@ -186,21 +197,20 @@ mod widgets {
 
     pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.country {
-            PromisedValue::Ready(country) => match icons.flag(&country.code()) {
-                Some(flag) => row![text("Region:"), country_icon(flag)].into(),
-                None => text(format!("Region: {}", country)).into(),
-            },
+            PromisedValue::Ready(country) => row![text(format!("Region: {}", country)), country_icon(icons, country)].into(),
             PromisedValue::Loading => text("Region: loading...").into(),
             PromisedValue::None => text("Region: unknown").into(),
         }
     }
 
-    fn country_icon<'a>(icon: svg::Handle) -> Element<'a, Messages> {
+    pub fn country_icon<'a>(icons: &Icons, country: &Country) -> Element<'a, Messages> {
         const ICON_SIZE: Length = Length::Units(16);
-
-        container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
-            .padding(VISUAL_SPACING_SMALL)
-            .into()
+        match icons.flag(&country.code()) {
+            Some(icon) => container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
+                .padding(VISUAL_SPACING_SMALL)
+                .into(),
+            None => text(format!("Region: {} ({})", country, country.code())).into(),
+        }
     }
 
     pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
