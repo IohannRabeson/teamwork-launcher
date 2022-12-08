@@ -1,4 +1,4 @@
-use std::{time::Duration, iter};
+use std::{iter, time::Duration};
 
 use crate::{ping_service::PingService, CliParameters};
 
@@ -120,9 +120,10 @@ impl IcedApplication for Application {
         };
 
         if flags.cli_params.integration_test {
-            command = Command::batch(iter::once(command).chain(iter::once(Command::perform(async {
-                async_std::task::sleep(Duration::from_secs(5)).await
-            }, |_| Messages::Quit))));
+            command = Command::batch(iter::once(command).chain(iter::once(Command::perform(
+                async { async_std::task::sleep(Duration::from_secs(5)).await },
+                |_| Messages::Quit,
+            ))));
         }
 
         (application, command)
@@ -175,7 +176,7 @@ impl IcedApplication for Application {
     fn title(&self) -> String {
         "Teamwork Launcher".to_string()
     }
-    
+
     fn should_exit(&self) -> bool {
         self.should_exit
     }
@@ -227,7 +228,9 @@ impl Application {
     fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>, clear: bool) -> Command<Messages> {
         self.states.push(States::Reloading);
 
-        if clear { self.servers.clear(); }
+        if clear {
+            self.servers.clear();
+        }
 
         let settings = self.settings.clone();
         let servers_provider = self.servers_provider.clone();
@@ -325,7 +328,7 @@ impl Application {
             async move {
                 match ping_service.ping(&ip).await {
                     Ok(country) => Some(country),
-                    Err(_error) => { None },
+                    Err(_error) => None,
                 }
             },
             move |duration| Messages::PingReady(ip.clone(), duration),
@@ -348,7 +351,6 @@ impl Application {
                     .collect();
                 let thumbnail_commands = servers_favorites_first
                     .iter()
-                    // Sort the servers favorites first to ensure the first servers visible have their thumbnail first.
                     .unique_by(|server| &server.map)
                     .map(|server| self.make_map_thumbnail_command(server));
                 let ip_geoloc_commands = servers_favorites_first
@@ -357,8 +359,12 @@ impl Application {
                     .unique()
                     .cloned()
                     .map(|ip| self.make_geolocalize_ip_command(ip));
-                let ip_ping_commands = self.servers.iter().map(|server|server.ip_port.ip()).unique()
-                    .map(|ip|self.make_ping_ip_command(ip));
+                let ip_ping_commands = self
+                    .servers
+                    .iter()
+                    .map(|server| server.ip_port.ip())
+                    .unique()
+                    .map(|ip| self.make_ping_ip_command(ip));
 
                 return Command::batch(thumbnail_commands.chain(ip_geoloc_commands).chain(ip_ping_commands));
             }
@@ -386,4 +392,3 @@ impl Application {
         .into()
     }
 }
-

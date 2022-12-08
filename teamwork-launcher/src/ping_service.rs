@@ -1,7 +1,11 @@
-use std::{net::{Ipv4Addr, IpAddr}, time::Duration};
-use log::debug;
-use surge_ping::{Client, Config, PingIdentifier, PingSequence, IcmpPacket};
-use log::error;
+use {
+    log::{debug, error},
+    std::{
+        net::{IpAddr, Ipv4Addr},
+        time::Duration,
+    },
+    surge_ping::{Client, Config, IcmpPacket, PingIdentifier, PingSequence},
+};
 
 #[derive(Clone)]
 pub struct PingService {
@@ -24,14 +28,10 @@ impl PingService {
             let mut pinger = client.pinger(IpAddr::from(*ip), PingIdentifier(111)).await;
 
             pinger.timeout(Duration::from_secs(1));
-            
+
             match pinger.ping(PingSequence(0), &PAYLOAD).await {
-                Ok((IcmpPacket::V4(_reply), dur)) => {
-                    Ok(dur)
-                }
-                Ok((IcmpPacket::V6(_reply), dur)) => {
-                    Ok(dur)
-                }
+                Ok((IcmpPacket::V4(_reply), dur)) => Ok(dur),
+                Ok((IcmpPacket::V6(_reply), dur)) => Ok(dur),
                 Err(e) => {
                     debug!("Ping service error: {}", e);
                     Err(Error::Timeout)
@@ -51,7 +51,7 @@ impl Default for PingService {
             Err(error) => {
                 error!("Failed to create ping service: {}", error);
                 None
-            },
+            }
         };
 
         Self { client }

@@ -208,6 +208,7 @@ mod widgets {
             PromisedValue::Ready(duration) => text(format!("Ping: {} ms", duration.as_millis())),
             PromisedValue::Loading => text("Ping: loading..."),
             PromisedValue::None => text("Ping: timeout"),
-        }.into()
+        }
+        .into()
     }
 }
