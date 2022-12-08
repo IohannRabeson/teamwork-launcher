@@ -82,9 +82,9 @@ mod setup {
                             message,
                         ))
                     })
-                    .level(log::LevelFilter::Warn)
+                    .level(log::LevelFilter::Info)
                     .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
-                    .chain(fern::log_file(format!("{}.log", APPLICATION_NAME))?)
+                    .chain(fern::log_file(format!("{}.log", APPLICATION_NAME))?),
             );
 
         #[cfg(debug_assertions)]
