@@ -14,7 +14,7 @@ https://lospec.com/palette-list/team-fortress-2-official
 https://wiki.teamfortress.com/wiki/WebAPI
 
 ## Todo
-- [ ] Images for each server according to the map played
+- [x] Images for each server according to the map played
 
 - [ ] Get timeout with retry in case of failure
 whenever I get the information. But be carefull as querying Teamwork.tf too often might cause issues.
