@@ -27,9 +27,12 @@ mod ui;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct CliParameters {
-    #[arg(short, long)]
-    testing_mode: bool,
+pub struct CliParameters {
+    /// This flag enable the integration test. In this mode
+    /// the application starts normally (servers are refreshed and pinged as usual) then the application quits after
+    /// an hardcoded amount of time (5 secondes).
+    #[arg(long)]
+    pub integration_test: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -37,13 +40,14 @@ fn main() -> anyhow::Result<()> {
 
     setup::setup_logger()?;
 
-    if cli_params.testing_mode {
-        warn!("Testing mode enabled!");
+    if cli_params.integration_test {
+        warn!("Integration test mode enabled!");
     }
 
     Application::run(Settings::with_flags(Flags {
+        cli_params,
         settings: load_user_settings(),
-        launcher: ExecutableLauncher::new(cli_params.testing_mode),
+        launcher: ExecutableLauncher::new(false),
     }))?;
 
     Ok(())
