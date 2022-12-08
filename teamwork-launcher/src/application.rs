@@ -114,12 +114,10 @@ impl IcedApplication for Application {
             ping_service: PingService::default(),
         };
 
-        let mut command = match application.settings.has_favorites() {
-            true => application.refresh_favorites_command(),
-            false => application.refresh_command(),
-        };
+        let mut command = application.refresh_command();
 
         if flags.cli_params.integration_test {
+            // The integration test is basic, it runs the application for 5 seconds.
             command = Command::batch(iter::once(command).chain(iter::once(Command::perform(
                 async { async_std::task::sleep(Duration::from_secs(5)).await },
                 |_| Messages::Quit,
@@ -226,9 +224,8 @@ impl Application {
         }
     }
     fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>, clear: bool) -> Command<Messages> {
-        self.states.push(States::Reloading);
-
         if clear {
+            self.states.push(States::Reloading);
             self.servers.clear();
         }
 
@@ -339,7 +336,10 @@ impl Application {
         match result {
             Ok(servers) => {
                 self.servers = servers;
-                self.states.pop();
+
+                if self.states.current().is_reloading() {
+                    self.states.pop();
+                }
 
                 info!("Fetched {} servers", self.servers.len());
 
