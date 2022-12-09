@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Announce {
     pub title: String,
     pub message: String,
@@ -25,8 +26,12 @@ impl Default for AnnounceQueue {
 }
 
 impl AnnounceQueue {
+    /// Enqueue a new announce on the display queue.
+    /// The announce is only added if it not already present in the queue.
     pub fn push(&mut self, announce: Announce) {
-        self.queue.push_front(announce)
+        if !self.queue.contains(&announce) {
+            self.queue.push_front(announce);
+        }
     }
 
     pub fn pop(&mut self) {

@@ -59,6 +59,7 @@ pub enum Messages {
     Back,
     /// Pop all the state then quit the application.
     Quit,
+    
     /// Discard the current announce
     DiscardCurrentAnnounce,
 }
@@ -148,6 +149,12 @@ impl IcedApplication for Application {
             application.announces.push(Announce::new(
                 "No Teamwork.tf API key",
                 "This application needs a Teamwork.tf API key to fetch all the information.\nTo get an API key, please login in teamwork.tf then go to https://teamwork.tf/settings."));
+        }
+
+        if !application.ping_service.is_enabled() {
+            application.announces.push(Announce::new(
+                "Ping service requires permission",
+                "This application needs to be run elevated to be able to query the ping."));
         }
 
         (application, command)
