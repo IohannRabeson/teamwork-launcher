@@ -100,19 +100,27 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             text(&server.name).size(BIG_FONT_SIZE),
-            text(format!(
-                "Players: {} / {}",
-                server.current_players_count, server.max_players_count
-            )),
-            text(format!("Map: {}", server.map)),
-            widgets::region(server, icons),
-            widgets::ping(server),
+            row![
+                column![
+                    text(format!(
+                        "Players: {} / {}",
+                        server.current_players_count, server.max_players_count
+                    )),
+                    text(format!("Map: {}", server.map)),
+                    widgets::region(server, icons),
+                ]
+                .spacing(VISUAL_SPACING_SMALL),
+                column![
+                    favorite_button(is_favorite, icons, BIG_FONT_SIZE)
+                        .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
+                    widgets::ping(server)
+                ]
+                .spacing(VISUAL_SPACING_SMALL)
+                .width(Length::Fill)
+                .align_items(Alignment::End),
+            ]
         ],
         horizontal_space(Length::Fill),
-        row![favorite_button(is_favorite, icons, BIG_FONT_SIZE)
-            .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),]
-        .align_items(Alignment::End)
-        .spacing(VISUAL_SPACING_SMALL)
     ])
     .padding(6)
     .into()
@@ -123,9 +131,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            container(widgets::country_icon(icons, country))
-                .height(Length::Units(BIG_FONT_SIZE))
-                .center_y(),
+            container(widgets::country_icon(icons, country, 20)).padding([3, 2, 0, 0]),
             text(&server.name).size(BIG_FONT_SIZE)
         ],
         _ => row![text(&server.name).size(BIG_FONT_SIZE)],
@@ -133,7 +139,6 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
     container(row![
         widgets::thumbnail(server, icons),
-        horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
             server_name_row,
             text(format!(
@@ -142,7 +147,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
             )),
             text(format!("Map: {}", server.map)),
             widgets::ping(server),
-        ],
+        ]
+        .spacing(VISUAL_SPACING_SMALL),
         horizontal_space(Length::Fill),
         row![
             svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
@@ -157,7 +163,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
 mod widgets {
     use iced::{
-        widget::{container, image, svg, text, row},
+        widget::{container, image, row, svg, text},
         Element, Length,
     };
 
@@ -169,15 +175,17 @@ mod widgets {
         ui::VISUAL_SPACING_SMALL,
     };
 
+    const THUMBNAIL_WIDTH: u16 = 250;
+    const THUMBNAIL_HEIGHT: u16 = 125;
+
     fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
         image::viewer(image)
-            .width(Length::Units(200))
-            .height(Length::Units(100))
+            .width(Length::Units(THUMBNAIL_WIDTH))
+            .height(Length::Units(THUMBNAIL_HEIGHT))
             .scale_step(0.0)
             .into()
     }
 
-    // TODO: make a proper widget I guess?
     fn image_thumbnail_content<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.map_thumbnail {
             Thumbnail::Ready(image) => image_thumbnail_viewer(image.clone()),
@@ -188,8 +196,8 @@ mod widgets {
 
     pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         container(image_thumbnail_content(server, icons))
-            .width(Length::Units(200))
-            .height(Length::Units(100))
+            .width(Length::Units(THUMBNAIL_WIDTH))
+            .height(Length::Units(THUMBNAIL_HEIGHT))
             .center_x()
             .center_y()
             .into()
@@ -197,16 +205,15 @@ mod widgets {
 
     pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.country {
-            PromisedValue::Ready(country) => row![text(format!("Region: {}", country)), country_icon(icons, country)].into(),
+            PromisedValue::Ready(country) => row![text(format!("Region: {}", country)), country_icon(icons, country, 18)].into(),
             PromisedValue::Loading => text("Region: loading...").into(),
             PromisedValue::None => text("Region: unknown").into(),
         }
     }
 
-    pub fn country_icon<'a>(icons: &Icons, country: &Country) -> Element<'a, Messages> {
-        const ICON_SIZE: Length = Length::Units(16);
+    pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16) -> Element<'a, Messages> {
         match icons.flag(&country.code()) {
-            Some(icon) => container(svg(icon).width(ICON_SIZE).height(ICON_SIZE))
+            Some(icon) => container(svg(icon).width(Length::Units(size)).height(Length::Units(size)))
                 .padding(VISUAL_SPACING_SMALL)
                 .into(),
             None => text(format!("Region: {} ({})", country, country.code())).into(),
