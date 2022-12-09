@@ -10,6 +10,7 @@ use {
     settings::UserSettings,
 };
 
+mod announces;
 mod application;
 mod fonts;
 mod geolocation;
