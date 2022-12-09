@@ -6,7 +6,7 @@ use {
     clap::Parser,
     iced::{Application as IcedApplication, Settings},
     launcher::ExecutableLauncher,
-    log::{error, warn},
+    log::{error, info, warn},
     settings::UserSettings,
 };
 
@@ -25,6 +25,8 @@ mod states;
 mod text_filter;
 mod ui;
 
+const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct CliParameters {
@@ -38,6 +40,7 @@ pub struct CliParameters {
 fn main() -> anyhow::Result<()> {
     let cli_params = CliParameters::parse();
 
+    directories::create_if_needed();
     setup::setup_logger()?;
 
     if cli_params.integration_test {
@@ -53,6 +56,48 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+mod directories {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    pub fn create_if_needed() {
+        let application_directory_path = get_path();
+
+        if !application_directory_path.exists() {
+            info!("Create directory '{}'", application_directory_path.to_string_lossy());
+
+            if let Err(error) = std::fs::create_dir_all(&application_directory_path) {
+                error!(
+                    "Unable to create application directory '{}': {}",
+                    application_directory_path.to_string_lossy(),
+                    error
+                );
+            }
+        }
+    }
+
+    pub fn get_path() -> PathBuf {
+        platform_dirs::AppDirs::new(APPLICATION_NAME.into(), false)
+            .map(|dirs| dirs.config_dir)
+            .expect("config directory path")
+    }
+
+    pub fn get_log_output_file_path() -> PathBuf {
+        let mut log_output_path = directories::get_path();
+
+        log_output_path.push(format!("{}.log", APPLICATION_NAME));
+        log_output_path.into()
+    }
+
+    pub fn get_settings_file_path() -> PathBuf {
+        let mut settings_file_path = directories::get_path();
+
+        settings_file_path.push(format!("user_settings.json"));
+        settings_file_path.into()
+    }
+}
+
 fn load_user_settings() -> UserSettings {
     let settings = match UserSettings::load_settings() {
         Ok(settings) => settings,
@@ -65,12 +110,18 @@ fn load_user_settings() -> UserSettings {
 }
 
 mod setup {
-    const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
+    use std::{
+        fs::{File, OpenOptions},
+        path::Path,
+    };
+
+    use crate::{directories::get_log_output_file_path, APPLICATION_NAME};
 
     pub fn setup_logger() -> anyhow::Result<()> {
         let builder = fern::Dispatch::new()
             .level(log::LevelFilter::Error)
             .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
+            .level_for("teamwork", log::LevelFilter::Trace)
             .chain(
                 fern::Dispatch::new()
                     .format(|out, message, record| {
@@ -82,14 +133,15 @@ mod setup {
                             message,
                         ))
                     })
-                    .level(log::LevelFilter::Info)
-                    .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
-                    .chain(fern::log_file(format!("{}.log", APPLICATION_NAME))?),
+                    .level(log::LevelFilter::Trace)
+                    .chain(open_log_file(get_log_output_file_path())?)
+                    .chain(std::io::stdout()),
             );
 
-        #[cfg(debug_assertions)]
-        let builder = builder.level_for("teamwork", log::LevelFilter::Trace);
+        Ok(builder.apply()?)
+    }
 
-        Ok(builder.chain(std::io::stdout()).apply()?)
+    fn open_log_file(path: impl AsRef<Path>) -> std::io::Result<File> {
+        OpenOptions::new().write(true).create(true).append(false).open(path.as_ref())
     }
 }

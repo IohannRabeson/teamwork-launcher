@@ -157,7 +157,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
 mod widgets {
     use iced::{
-        widget::{container, image, svg, text, row},
+        widget::{container, image, row, svg, text},
         Element, Length,
     };
 

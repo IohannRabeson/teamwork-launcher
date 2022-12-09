@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 mod teamwork_source;
 
-pub use {teamwork_source::TeamworkSource};
+pub use teamwork_source::TeamworkSource;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct SourceKey(String);

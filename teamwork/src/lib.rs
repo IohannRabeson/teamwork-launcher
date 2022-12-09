@@ -160,6 +160,8 @@ impl Client {
                         error: error.message.clone(),
                     }),
                     Err(_error) => {
+                        trace!("Failed to parse JSON: {}", text);
+
                         // Failed to parse the teamwork error, ignore the last error and return the original json error.
                         Err(Error::Json(json_error))
                     }
