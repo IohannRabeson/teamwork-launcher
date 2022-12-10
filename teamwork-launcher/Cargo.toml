@@ -30,7 +30,7 @@ clap = { version = "4.0", features = ["derive"] }
 itertools = "0.10.5"
 test-case = "2.2.2"
 unidecode = "0.3.0"
-enum-as-inner = "0.5.1"
+enum-as-inner = "0.5"
 include_dir = "0.7.3"
 iso_country = "0.1.4"
 surge-ping = "0.7.3"

@@ -3298,6 +3298,7 @@ name = "teamwork"
 version = "0.1.0"
 dependencies = [
  "async-mutex",
+ "enum-as-inner",
  "log",
  "nom",
  "reqwest",

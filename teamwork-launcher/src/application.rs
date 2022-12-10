@@ -257,6 +257,7 @@ impl Application {
             Ordering::Greater
         }
     }
+
     fn make_refresh_command(&mut self, source_keys: Option<BTreeSet<SourceKey>>, clear: bool) -> Command<Messages> {
         if clear {
             self.states.push(States::Reloading);
@@ -320,9 +321,28 @@ impl Application {
 
         Command::perform(
             async move {
-                client
-                    .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
-                    .await
+                const MAX_RETRIES: usize = 3;
+                let mut counter: usize = 0;
+
+                loop {
+                    let result = client
+                        .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
+                        .await;
+
+                    counter = counter + 1;
+
+                    if result.is_ok() || counter >= MAX_RETRIES {
+                        return result
+                    }
+
+                    if let Err(error) = result.as_ref() {
+                        if error.as_http_request().is_none() && error.as_teamwork_error().is_none() {
+                            return result
+                        }
+                        info!("Retrying to get thumbnail after a pause: {}", counter);
+                        async_std::task::sleep(Duration::from_millis(500)).await
+                    }
+                }
             },
             |result| match result {
                 Ok(image) => Messages::MapThumbnailReady(thumbnail_ready_key, Thumbnail::Ready(image)),
