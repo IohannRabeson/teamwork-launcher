@@ -205,7 +205,9 @@ mod widgets {
 
     pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         match &server.country {
-            PromisedValue::Ready(country) => row![text(format!("Region: {}", country)), country_icon(icons, country, 18)].into(),
+            PromisedValue::Ready(country) => {
+                row![text(format!("Region: {}", country)), country_icon(icons, country, 18)].into()
+            }
             PromisedValue::Loading => text("Region: loading...").into(),
             PromisedValue::None => text("Region: unknown").into(),
         }

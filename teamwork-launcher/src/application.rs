@@ -1,6 +1,12 @@
-use std::{iter, time::Duration};
-
-use crate::{ping_service::PingService, CliParameters};
+use {
+    crate::{
+        announces::{Announce, AnnounceQueue},
+        ping_service::PingService,
+        ui::announce_view,
+        CliParameters,
+    },
+    std::{iter, time::Duration},
+};
 
 use {
     crate::{
@@ -44,6 +50,7 @@ pub enum Messages {
     CopyToClipboard(String),
     /// The server is identified by its name.
     FavoriteClicked(IpPort, Option<SourceKey>),
+
     /// Show the page to edit the favorite servers.
     EditFavorites,
     /// Show the page to edit the application settings.
@@ -52,6 +59,9 @@ pub enum Messages {
     Back,
     /// Pop all the state then quit the application.
     Quit,
+    
+    /// Discard the current announce
+    DiscardCurrentAnnounce,
 }
 
 pub struct Flags {
@@ -72,13 +82,18 @@ pub enum States {
 pub struct Application {
     settings: UserSettings,
     icons: Icons,
-    teamwork_client: teamwork::Client,
-    servers_provider: Arc<ServersProvider>,
     servers: Vec<Server>,
     /// The stack managing the states.
     states: StatesStack<States>,
-    launcher: ExecutableLauncher,
+    /// The queue of announces.
+    /// The user have to click on each announce, once an announce is closed
+    /// the next one appears.
+    announces: AnnounceQueue,
     theme: Theme,
+
+    launcher: ExecutableLauncher,
+    teamwork_client: teamwork::Client,
+    servers_provider: Arc<ServersProvider>,
     ip_geoloc_service: IpGeolocationService,
     ping_service: PingService,
     should_exit: bool,
@@ -112,6 +127,7 @@ impl IcedApplication for Application {
             teamwork_client: teamwork::Client::default(),
             ip_geoloc_service: IpGeolocationService::default(),
             ping_service: PingService::default(),
+            announces: AnnounceQueue::default(),
         };
 
         let mut command = application.refresh_command();
@@ -122,6 +138,23 @@ impl IcedApplication for Application {
                 async { async_std::task::sleep(Duration::from_secs(5)).await },
                 |_| Messages::Quit,
             ))));
+
+            application.announces.push(Announce::new(
+                "Integration test mode",
+                "The application run in integration test mode. The application will close itself after 5 seconds",
+            ));
+        }
+
+        if application.settings.teamwork_api_key().trim().is_empty() {
+            application.announces.push(Announce::new(
+                "No Teamwork.tf API key",
+                "This application needs a Teamwork.tf API key to fetch all the information.\nTo get an API key, please login in teamwork.tf then go to https://teamwork.tf/settings."));
+        }
+
+        if !application.ping_service.is_enabled() {
+            application.announces.push(Announce::new(
+                "Ping service requires permission",
+                "This application needs to be run elevated to be able to query the ping."));
         }
 
         (application, command)
@@ -144,6 +177,7 @@ impl IcedApplication for Application {
             Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
             Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
             Messages::Quit => self.should_exit = true,
+            Messages::DiscardCurrentAnnounce => self.announces.pop(),
         }
 
         Command::none()
@@ -381,14 +415,18 @@ impl Application {
 
     /// Display a content with a title and a header.
     fn normal_view<'a>(&self, content: Element<'a, Messages>) -> Element<'a, Messages> {
-        column![
-            header_view(&self.title(), &self.icons, self.states.current()),
-            vertical_space(Length::Units(4)),
-            content,
-            // Elements after the content might be invisible if it is tall enough.
-            // There are no grid layout yet (see https://github.com/iced-rs/iced/issues/34).
-        ]
-        .padding(12)
-        .into()
+        let mut main_column = column![header_view(&self.title(), &self.icons, self.states.current())];
+
+        if let Some(announce) = self.announces.current() {
+            main_column = main_column
+                .push(vertical_space(Length::Units(4)))
+                .push(announce_view(&self.icons, announce));
+        }
+
+        main_column
+            .push(vertical_space(Length::Units(4)))
+            .push(content)
+            .padding(12)
+            .into()
     }
 }
