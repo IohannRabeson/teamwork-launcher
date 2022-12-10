@@ -340,7 +340,7 @@ impl Application {
                             return result
                         }
                         info!("Retrying to get thumbnail after a pause: {}", counter);
-                        async_std::task::sleep(Duration::from_millis(500)).await
+                        async_std::task::sleep(Duration::from_millis(1000)).await
                     }
                 }
             },

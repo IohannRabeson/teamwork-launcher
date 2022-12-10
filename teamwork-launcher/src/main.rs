@@ -121,7 +121,7 @@ mod setup {
     pub fn setup_logger() -> anyhow::Result<()> {
         let builder = fern::Dispatch::new()
             .level(log::LevelFilter::Error)
-            .level_for(APPLICATION_NAME, log::LevelFilter::Trace)
+            .level_for("teamwork-launcher", log::LevelFilter::Trace)
             .level_for("teamwork", log::LevelFilter::Trace)
             .chain(
                 fern::Dispatch::new()
