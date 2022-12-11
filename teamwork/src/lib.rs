@@ -11,7 +11,7 @@ use {
 mod parsing;
 mod url_with_key;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, enum_as_inner::EnumAsInner)]
 pub enum Error {
     #[error("No Teamwork.tf API key. To request an API key, login to teamwork.tf then go to https://teamwork.tf/settings")]
     NoTeamworkApiKey,
