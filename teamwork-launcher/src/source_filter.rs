@@ -32,7 +32,7 @@ impl SourceFilter {
     }
 
     pub fn set_available_sources(&mut self, all_source_keys: impl Iterator<Item = (String, SourceKey)>) {
-        use std::collections::btree_map::Entry::{Vacant, Occupied};
+        use std::collections::btree_map::Entry::{Occupied, Vacant};
 
         for (init_name, init_key) in all_source_keys {
             match self.sources.entry(init_key) {
@@ -44,7 +44,7 @@ impl SourceFilter {
                 }
                 Occupied(mut entry) => {
                     entry.get_mut().name = init_name;
-                },
+                }
             }
         }
     }

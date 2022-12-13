@@ -1,12 +1,15 @@
-use std::str::FromStr;
-use {async_trait::async_trait, teamwork::Client as TeamworkClient};
-use crate::{
-    models::{IpPort, Server, Thumbnail},
-    promised_value::PromisedValue,
-    servers_provider::{GetServersInfosError, Source},
-    settings::UserSettings,
+use {
+    super::SourceKey,
+    crate::{
+        models::{IpPort, Server, Thumbnail},
+        promised_value::PromisedValue,
+        servers_provider::{GetServersInfosError, Source},
+        settings::UserSettings,
+    },
+    async_trait::async_trait,
+    std::str::FromStr,
+    teamwork::Client as TeamworkClient,
 };
-use super::SourceKey;
 
 pub struct TeamworkSource {
     client: TeamworkClient,

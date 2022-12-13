@@ -117,7 +117,7 @@ mod setup {
         path::Path,
     };
 
-    use crate::{directories::get_log_output_file_path, APPLICATION_NAME};
+    use crate::directories::get_log_output_file_path;
 
     pub fn setup_logger() -> anyhow::Result<()> {
         let builder = fern::Dispatch::new()
