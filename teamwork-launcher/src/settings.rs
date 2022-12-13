@@ -1,4 +1,4 @@
-use crate::{directories, text_filter::TextFilter};
+use crate::{directories, source_filter::SourceFilter, text_filter::TextFilter};
 
 use {
     crate::{
@@ -42,7 +42,8 @@ struct InnerUserSettings {
     pub favorites: BTreeMap<IpPort, Option<SourceKey>>,
     #[serde(default)]
     pub servers_text_filter: TextFilter,
-
+    #[serde(default)]
+    pub servers_source_filter: SourceFilter,
     #[serde(default)]
     pub game_executable_path: String,
     #[serde(default)]
@@ -88,6 +89,7 @@ impl Default for InnerUserSettings {
         Self {
             favorites: Default::default(),
             servers_text_filter: Default::default(),
+            servers_source_filter: Default::default(),
             #[cfg(target_os = "windows")]
             game_executable_path: r"C:\Program Files (x86)\Steam\Steam.exe".into(),
             #[cfg(not(target_os = "windows"))]
@@ -99,6 +101,28 @@ impl Default for InnerUserSettings {
 }
 
 impl UserSettings {
+    pub fn set_available_sources(&mut self, all_source_keys: impl Iterator<Item = (String, SourceKey)>) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.servers_source_filter.set_available_sources(all_source_keys);
+    }
+
+    pub fn check_source_filter(&mut self, key: &SourceKey, checked: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.servers_source_filter.check_source(key, checked);
+    }
+
+    pub fn source_filter(&self) -> Vec<(String, SourceKey, bool)> {
+        let inner = self.storage.try_read().unwrap();
+
+        inner
+            .servers_source_filter
+            .sources()
+            .map(|(name, key, checked)| (name, key.clone(), checked))
+            .collect()
+    }
+
     pub fn set_teamwork_api_key<S: AsRef<str>>(&mut self, api_key: S) {
         let mut inner = self.storage.try_write().unwrap();
 
@@ -123,10 +147,10 @@ impl UserSettings {
         inner.servers_text_filter.text().to_string()
     }
 
-    pub fn filter_servers_by_text<S: AsRef<str>>(&self, name: S) -> bool {
+    pub fn filter_servers(&self, server: &Server) -> bool {
         let inner = self.storage.try_read().unwrap();
 
-        inner.servers_text_filter.accept(&name.as_ref().to_lowercase())
+        inner.servers_text_filter.accept(&server.name.to_lowercase()) && inner.servers_source_filter.accept_server(server)
     }
 
     pub fn filter_servers_favorite(&self, server: &Server) -> bool {
@@ -149,6 +173,12 @@ impl UserSettings {
         let inner = self.storage.try_read().unwrap();
 
         inner.favorites.iter().filter_map(|(_, source)| source.clone()).collect()
+    }
+
+    pub fn checked_source_keys(&self) -> BTreeSet<SourceKey> {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.servers_source_filter.checked_sources().cloned().collect()
     }
 
     /// Update the information about the favorites servers.

@@ -1,3 +1,5 @@
+use log::debug;
+
 use {
     crate::{
         announces::{Announce, AnnounceQueue},
@@ -51,6 +53,8 @@ pub enum Messages {
     /// The server is identified by its name.
     FavoriteClicked(IpPort, Option<SourceKey>),
 
+    SourceFilterClicked(SourceKey, bool),
+
     /// Show the page to edit the favorite servers.
     EditFavorites,
     /// Show the page to edit the application settings.
@@ -59,7 +63,7 @@ pub enum Messages {
     Back,
     /// Pop all the state then quit the application.
     Quit,
-    
+
     /// Discard the current announce
     DiscardCurrentAnnounce,
 }
@@ -130,6 +134,10 @@ impl IcedApplication for Application {
             announces: AnnounceQueue::default(),
         };
 
+        application
+            .settings
+            .set_available_sources(application.servers_provider.get_sources());
+
         let mut command = application.refresh_command();
 
         if flags.cli_params.integration_test {
@@ -154,7 +162,8 @@ impl IcedApplication for Application {
         if !application.ping_service.is_enabled() {
             application.announces.push(Announce::new(
                 "Ping service requires permission",
-                "This application needs to be run elevated to be able to query the ping."));
+                "This application needs to be run elevated to be able to query the ping.",
+            ));
         }
 
         (application, command)
@@ -170,6 +179,7 @@ impl IcedApplication for Application {
             Messages::StartGame(params) => self.launch_executable(&params),
             Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
             Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
+            Messages::SourceFilterClicked(source_key, checked) => self.source_filter_clicked(&source_key, checked),
             Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
             Messages::EditSettings => self.states.push(States::Settings),
             Messages::Back => self.states.pop(),
@@ -270,8 +280,12 @@ impl Application {
         Command::perform(
             async move {
                 let servers = if source_keys.is_none() || source_keys.as_ref().unwrap().is_empty() {
-                    servers_provider.refresh(&settings).await
+                    debug!("Refresh all");
+                    servers_provider
+                        .refresh_some(&settings, &settings.checked_source_keys())
+                        .await
                 } else {
+                    debug!("Refresh some: {:?}", source_keys);
                     servers_provider.refresh_some(&settings, &source_keys.unwrap()).await
                 };
 
@@ -287,7 +301,7 @@ impl Application {
 
     /// Returns the servers filtered by text.
     fn servers_iter(&self) -> impl Iterator<Item = &Server> {
-        self.servers.iter().filter(|server| self.filter_server_by_text(server))
+        self.servers.iter().filter(|server| self.filter_server(server))
     }
 
     /// Returns the favorites servers, filtered by text.
@@ -295,12 +309,13 @@ impl Application {
         self.servers.iter().filter(move |server| self.filter_favorite_server(server))
     }
 
-    fn filter_server_by_text(&self, server: &Server) -> bool {
-        self.settings.filter_servers_by_text(&server.name)
+    /// Filter server using the settings
+    fn filter_server(&self, server: &Server) -> bool {
+        self.settings.filter_servers(&server)
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.filter_servers_favorite(&server) && self.filter_server_by_text(server)
+        self.settings.filter_servers_favorite(&server) && self.filter_server(server)
     }
 
     fn launch_executable(&mut self, ip_port: &IpPort) {
@@ -311,6 +326,10 @@ impl Application {
 
     fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
         self.settings.switch_favorite_server(ip_port, source_key)
+    }
+
+    fn source_filter_clicked(&mut self, source_key: &SourceKey, checked: bool) {
+        self.settings.check_source_filter(source_key, checked);
     }
 
     fn make_map_thumbnail_command(&self, server: &Server) -> Command<Messages> {
@@ -332,12 +351,12 @@ impl Application {
                     counter = counter + 1;
 
                     if result.is_ok() || counter >= MAX_RETRIES {
-                        return result
+                        return result;
                     }
 
                     if let Err(error) = result.as_ref() {
                         if error.as_http_request().is_none() && error.as_teamwork_error().is_none() {
-                            return result
+                            return result;
                         }
                         info!("Retrying to get thumbnail after a pause: {}", counter);
                         async_std::task::sleep(Duration::from_millis(1000)).await

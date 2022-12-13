@@ -1,4 +1,6 @@
-use crate::promised_value::PromisedValue;
+use iced::widget::{checkbox, Container};
+
+use crate::{promised_value::PromisedValue, sources::SourceKey};
 
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
@@ -10,30 +12,37 @@ use {
     itertools::Itertools,
 };
 
+/// View displaying the editor for favorites servers.
+/// It displays the list of sources and allows the users to choose which ones to use.
+/// Note for myself: stop trying to factorize this view and the list of favorites servers because they are really different.
 pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     icons: &Icons,
     settings: &UserSettings,
 ) -> Element<'a, Messages> {
-    column![
-        servers_filter_view(&settings.servers_filter_text(), icons),
-        vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-        scrollable(
-            servers_iterator
-                .unique_by(|server| &server.ip_port)
-                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                    column.push(server_view_edit_favorites(
-                        server,
-                        settings.filter_servers_favorite(&server),
-                        icons,
-                    ))
-                })
-                .width(Length::Fill)
-                .padding([0, 8, 0, 0]),
-        )
-        .scrollbar_width(8)
-        .scroller_width(8)
+    row![
+        column![
+            servers_filter_view(&settings.servers_filter_text(), icons),
+            vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
+            scrollable(
+                servers_iterator
+                    .unique_by(|server| &server.ip_port)
+                    .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
+                        column.push(server_view_edit_favorites(
+                            server,
+                            settings.filter_servers_favorite(&server),
+                            icons,
+                        ))
+                    })
+                    .width(Length::Fill)
+                    .padding([0, 8, 0, 0]),
+            )
+            .scrollbar_width(8)
+            .scroller_width(8)
+        ].width(Length::FillPortion(4)),
+        server_source_filter_view(settings.source_filter()).width(Length::FillPortion(1))
     ]
+    .spacing(VISUAL_SPACING_SMALL)
     .into()
 }
 
@@ -107,7 +116,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                         server.current_players_count, server.max_players_count
                     )),
                     text(format!("Map: {}", server.map)),
-                    widgets::region(server, icons),
+                    widgets::region(server, icons, 20, 0),
                 ]
                 .spacing(VISUAL_SPACING_SMALL),
                 column![
@@ -131,7 +140,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            container(widgets::country_icon(icons, country, 20)).padding([3, 2, 0, 0]),
+            widgets::country_icon(icons, country, BIG_FONT_SIZE, VISUAL_SPACING_SMALL),
+            horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
             text(&server.name).size(BIG_FONT_SIZE)
         ],
         _ => row![text(&server.name).size(BIG_FONT_SIZE)],
@@ -161,9 +171,21 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     .into()
 }
 
+fn server_source_filter_view<'a>(sources: Vec<(String, SourceKey, bool)>) -> Container<'a, Messages> {
+    container(scrollable(
+        sources
+            .into_iter()
+            .fold(column![].spacing(VISUAL_SPACING_SMALL), |column, (name, key, checked)| {
+                column.push(checkbox(name, checked, move |c| {
+                    Messages::SourceFilterClicked(key.clone(), c)
+                }))
+            }),
+    ))
+}
+
 mod widgets {
     use iced::{
-        widget::{container, image, row, svg, text},
+        widget::{container, image, row, svg, text, horizontal_space},
         Element, Length,
     };
 
@@ -171,8 +193,7 @@ mod widgets {
         application::Messages,
         icons::Icons,
         models::{Country, Server, Thumbnail},
-        promised_value::PromisedValue,
-        ui::VISUAL_SPACING_SMALL,
+        promised_value::PromisedValue, ui::VISUAL_SPACING_SMALL,
     };
 
     const THUMBNAIL_WIDTH: u16 = 250;
@@ -203,20 +224,22 @@ mod widgets {
             .into()
     }
 
-    pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+    pub fn region<'a>(server: &Server, icons: &Icons, size: u16, padding: u16) -> Element<'a, Messages> {
         match &server.country {
             PromisedValue::Ready(country) => {
-                row![text(format!("Region: {}", country)), country_icon(icons, country, 18)].into()
+                row![text(format!("Region: {}", country)), horizontal_space(Length::Units(VISUAL_SPACING_SMALL)), country_icon(icons, country, size, padding)].into()
             }
             PromisedValue::Loading => text("Region: loading...").into(),
             PromisedValue::None => text("Region: unknown").into(),
         }
     }
 
-    pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16) -> Element<'a, Messages> {
+    pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u16) -> Element<'a, Messages> {
+        let size = size - (padding * 2);
+
         match icons.flag(&country.code()) {
             Some(icon) => container(svg(icon).width(Length::Units(size)).height(Length::Units(size)))
-                .padding(VISUAL_SPACING_SMALL)
+                .padding(padding)
                 .into(),
             None => text(format!("Region: {} ({})", country, country.code())).into(),
         }

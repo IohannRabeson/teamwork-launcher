@@ -1,19 +1,17 @@
 use std::str::FromStr;
-
 use {async_trait::async_trait, teamwork::Client as TeamworkClient};
-
 use crate::{
     models::{IpPort, Server, Thumbnail},
     promised_value::PromisedValue,
     servers_provider::{GetServersInfosError, Source},
     settings::UserSettings,
 };
-
 use super::SourceKey;
 
 pub struct TeamworkSource {
     client: TeamworkClient,
     game_mode_id: String,
+    game_mode_name: String,
 }
 
 /// The rational is I do not want the entire application depends on the Teamwork.tf API.
@@ -38,10 +36,11 @@ impl From<teamwork::Server> for Server {
 }
 
 impl TeamworkSource {
-    pub fn new(game_mode_id: &str) -> Self {
+    pub fn new(game_mode_id: &str, game_mode_name: &str) -> Self {
         Self {
             client: TeamworkClient::default(),
             game_mode_id: game_mode_id.to_string(),
+            game_mode_name: game_mode_name.to_string(),
         }
     }
 }
@@ -49,7 +48,7 @@ impl TeamworkSource {
 #[async_trait]
 impl Source for TeamworkSource {
     fn display_name(&self) -> String {
-        format!("Teamwork.tf - {}", self.game_mode_id)
+        self.game_mode_name.clone()
     }
 
     fn unique_key(&self) -> SourceKey {
