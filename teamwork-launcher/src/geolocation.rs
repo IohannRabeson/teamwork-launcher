@@ -1,7 +1,7 @@
-use {async_std::sync::Mutex, async_trait::async_trait};
-
 use {
     crate::models::Country,
+    async_std::sync::Mutex,
+    async_trait::async_trait,
     std::{
         collections::{
             btree_map::Entry::{Occupied, Vacant},

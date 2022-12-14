@@ -1,11 +1,10 @@
 use {
     crate::{icons::Icons, ui::SvgHandle},
-    iced::alignment::Vertical,
-};
-
-use iced::{
-    widget::{button, text, Button, Svg},
-    Length,
+    iced::{
+        alignment::Vertical,
+        widget::{button, text, Button, Svg},
+        Length,
+    },
 };
 
 pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {

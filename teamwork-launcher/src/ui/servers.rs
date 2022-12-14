@@ -1,18 +1,13 @@
 use {
-    crate::{ui::widgets},
-    iced::widget::checkbox,
-};
-
-use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages, fonts, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
-        sources::SourceKey,
+        sources::SourceKey, ui::widgets,
     },
     iced::{
         widget::{
-            button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column,
-            Container,
+            button, checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
+            Column, Container,
         },
         Alignment, Element, Length,
     },

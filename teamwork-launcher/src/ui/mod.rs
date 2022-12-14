@@ -1,16 +1,16 @@
-use iced::{
-    alignment::{Horizontal, Vertical},
-    widget::{column, text},
-    Element, Length,
-};
-
-use crate::{application::Messages, fonts, icons::SvgHandle};
-
 pub use {
     self::buttons::{favorite_button, svg_button, text_button},
     header::header_view,
     servers::{no_favorite_servers_view, servers_view, servers_view_edit_favorites},
     settings::settings_view,
+};
+use {
+    crate::{application::Messages, fonts, icons::SvgHandle},
+    iced::{
+        alignment::{Horizontal, Vertical},
+        widget::{column, text},
+        Element, Length,
+    },
 };
 
 mod announces;

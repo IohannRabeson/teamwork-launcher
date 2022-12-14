@@ -1,5 +1,3 @@
-use iced::widget::scrollable;
-
 use {
     crate::{
         application::Messages,
@@ -7,7 +5,7 @@ use {
         ui::{servers::sources_list_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     },
     iced::{
-        widget::{checkbox, column, container, text, text_input, vertical_space},
+        widget::{checkbox, column, container, scrollable, text, text_input, vertical_space},
         Element, Length,
     },
 };

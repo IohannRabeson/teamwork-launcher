@@ -1,14 +1,15 @@
-use iced::{
-    widget::{container, horizontal_space, image, row, svg, text},
-    Element, Length,
-};
-
-use crate::{
-    application::Messages,
-    icons::Icons,
-    models::{Country, Server, Thumbnail},
-    promised_value::PromisedValue,
-    ui::VISUAL_SPACING_SMALL,
+use {
+    crate::{
+        application::Messages,
+        icons::Icons,
+        models::{Country, Server, Thumbnail},
+        promised_value::PromisedValue,
+        ui::VISUAL_SPACING_SMALL,
+    },
+    iced::{
+        widget::{container, horizontal_space, image, row, svg, text},
+        Element, Length,
+    },
 };
 
 const THUMBNAIL_WIDTH: u16 = 250;

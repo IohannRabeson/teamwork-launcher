@@ -1,30 +1,20 @@
-use log::debug;
-
-use crate::ui::{announce_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL};
-
 use {
     crate::{
         announces::{Announce, AnnounceQueue},
-        ping_service::PingService,
-        CliParameters,
-    },
-    std::{iter, time::Duration},
-};
-
-use {
-    crate::{
         geolocation::IpGeolocationService,
         icons::Icons,
         launcher::ExecutableLauncher,
         models::{Country, IpPort, Server, Thumbnail},
+        ping_service::PingService,
         servers_provider::{self, ServersProvider},
         settings::UserSettings,
         sources::SourceKey,
         states::StatesStack,
         ui::{
-            error_view, header_view, no_favorite_servers_view, refresh_view, servers_view, servers_view_edit_favorites,
-            settings_view,
+            announce_view, error_view, header_view, no_favorite_servers_view, refresh_view, servers_view,
+            servers_view_edit_favorites, settings_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL,
         },
+        CliParameters,
     },
     enum_as_inner::EnumAsInner,
     iced::{
@@ -32,8 +22,8 @@ use {
         Application as IcedApplication, Command, Element, Length, Subscription, Theme,
     },
     itertools::Itertools,
-    log::{error, info},
-    std::{cmp::Ordering, collections::BTreeSet, net::Ipv4Addr, sync::Arc},
+    log::{debug, error, info},
+    std::{cmp::Ordering, collections::BTreeSet, iter, net::Ipv4Addr, sync::Arc, time::Duration},
 };
 
 #[derive(Debug, Clone)]

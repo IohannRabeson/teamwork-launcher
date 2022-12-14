@@ -1,13 +1,13 @@
-use iced::{alignment::Horizontal, widget::container, Length};
-
-use crate::application::States;
-
 use {
     super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
-    crate::{application::Messages, icons::Icons},
+    crate::{
+        application::{Messages, States},
+        icons::Icons,
+    },
     iced::{
-        widget::{horizontal_space, row, text},
-        Element,
+        alignment::Horizontal,
+        widget::{container, horizontal_space, row, text},
+        Element, Length,
     },
 };
 

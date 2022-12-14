@@ -1,7 +1,5 @@
-use crate::ui::VISUAL_SPACING_MEDIUM;
-
 use {
-    crate::{announces::Announce, application::Messages, icons::Icons},
+    crate::{announces::Announce, application::Messages, icons::Icons, ui::VISUAL_SPACING_MEDIUM},
     iced::{
         theme,
         widget::{button, column, text},
