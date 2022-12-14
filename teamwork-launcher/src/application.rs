@@ -312,11 +312,11 @@ impl Application {
 
     /// Filter server using the settings
     fn filter_server(&self, server: &Server) -> bool {
-        self.settings.filter_servers(&server)
+        self.settings.filter_servers(server)
     }
 
     fn filter_favorite_server(&self, server: &Server) -> bool {
-        self.settings.filter_servers_favorite(&server) && self.filter_server(server)
+        self.settings.filter_servers_favorite(server) && self.filter_server(server)
     }
 
     fn launch_executable(&mut self, ip_port: &IpPort) {
@@ -336,7 +336,7 @@ impl Application {
     fn make_map_thumbnail_command(&self, server: &Server) -> Command<Messages> {
         let client = self.teamwork_client.clone();
         let map_name = server.map.clone();
-        let api_key = self.settings.teamwork_api_key().clone();
+        let api_key = self.settings.teamwork_api_key();
         let thumbnail_ready_key = server.map.clone();
 
         Command::perform(
@@ -349,7 +349,7 @@ impl Application {
                         .get_map_thumbnail(&api_key, &map_name.clone(), image::Handle::from_memory)
                         .await;
 
-                    counter = counter + 1;
+                    counter += 1;
 
                     if result.is_ok() || counter >= MAX_RETRIES {
                         return result;
@@ -393,7 +393,7 @@ impl Application {
 
     fn make_ping_ip_command(&self, ip: &Ipv4Addr) -> Command<Messages> {
         let ping_service = self.ping_service.clone();
-        let ip = ip.clone();
+        let ip = *ip;
 
         Command::perform(
             async move {
@@ -402,7 +402,7 @@ impl Application {
                     Err(_error) => None,
                 }
             },
-            move |duration| Messages::PingReady(ip.clone(), duration),
+            move |duration| Messages::PingReady(ip, duration),
         )
     }
 

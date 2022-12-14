@@ -30,7 +30,7 @@ impl container::StyleSheet for AnnounceStyle {
 
         result.border_width = 0f32;
         result.background = Some(Background::Color(style.palette().danger));
-        result.text_color = Some(style.palette().text.clone());
+        result.text_color = Some(style.palette().text);
 
         result
     }
@@ -39,7 +39,7 @@ impl container::StyleSheet for AnnounceStyle {
 pub fn announce_view<'a>(icons: &Icons, announce: &Announce) -> Element<'a, Messages> {
     const SPACING: u16 = 8;
 
-    let discard_announce_button = svg_button(icons.clear().clone(), 24)
+    let discard_announce_button = svg_button(icons.clear(), 24)
         .on_press(Messages::DiscardCurrentAnnounce)
         .style(theme::Button::Custom(Box::new(AnnounceStyle::default())));
 

@@ -1,14 +1,12 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, horizontal_space, row, text, vertical_space},
-    Background, Element, Length, Theme, Vector,
+    widget::{column, text}, Element, Length,
 };
 
 use crate::{
-    announces::Announce,
     application::Messages,
     fonts,
-    icons::{Icons, SvgHandle},
+    icons::{SvgHandle},
 };
 
 pub use {

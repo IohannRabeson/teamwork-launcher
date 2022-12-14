@@ -33,7 +33,7 @@ impl PingService {
 
             pinger.timeout(Duration::from_secs(1));
 
-            match pinger.ping(PingSequence(0), &PAYLOAD).await {
+            match pinger.ping(PingSequence(0), PAYLOAD).await {
                 Ok((IcmpPacket::V4(_reply), dur)) => Ok(dur),
                 Ok((IcmpPacket::V6(_reply), dur)) => Ok(dur),
                 Err(e) => {

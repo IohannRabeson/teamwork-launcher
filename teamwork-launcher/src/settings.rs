@@ -119,7 +119,7 @@ impl UserSettings {
         inner
             .servers_source_filter
             .sources()
-            .map(|(name, key, checked)| (name, key.clone(), checked))
+            .map(|(name, key, checked)| (name, key, checked))
             .collect()
     }
 

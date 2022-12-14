@@ -91,7 +91,7 @@ impl ServersProvider {
 
 async fn fetch_servers(source: &Box<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
     let source_key = source.unique_key();
-    match source.get_servers_infos(&settings).await {
+    match source.get_servers_infos(settings).await {
         Ok(new_servers) => servers.extend(new_servers.into_iter().map(|mut info| {
             info.source = Some(source_key.clone());
             info

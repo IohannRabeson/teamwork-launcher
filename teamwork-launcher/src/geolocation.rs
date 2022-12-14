@@ -117,7 +117,7 @@ mod country_is {
     #[async_trait]
     impl Service for CountryIsService {
         async fn locate(&self, ip: Ipv4Addr) -> Result<Country, Error> {
-            let url = format!("{}/{}", COUNTYIS_API_URL, ip.to_string());
+            let url = format!("{}/{}", COUNTYIS_API_URL, ip);
             let ip = ip.to_string();
             let reqwest_client = self.reqwest_client.clone();
             let raw_text = reqwest_client

@@ -89,26 +89,26 @@ mod directories {
         let mut log_output_path = directories::get_path();
 
         log_output_path.push(format!("{}.log", APPLICATION_NAME));
-        log_output_path.into()
+        log_output_path
     }
 
     pub fn get_settings_file_path() -> PathBuf {
         let mut settings_file_path = directories::get_path();
 
-        settings_file_path.push(format!("user_settings.json"));
-        settings_file_path.into()
+        settings_file_path.push("user_settings.json");
+        settings_file_path
     }
 }
 
 fn load_user_settings() -> UserSettings {
-    let settings = match UserSettings::load_settings() {
+    
+    match UserSettings::load_settings() {
         Ok(settings) => settings,
         Err(error) => {
             error!("Unable to load user settings: {}", error);
             UserSettings::default()
         }
-    };
-    settings
+    }
 }
 
 mod setup {

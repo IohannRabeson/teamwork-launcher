@@ -83,7 +83,7 @@ where
         servers_iterator
             .unique_by(|server| &server.ip_port)
             .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                column.push(server_view_fn(server, settings.filter_servers_favorite(&server), icons))
+                column.push(server_view_fn(server, settings.filter_servers_favorite(server), icons))
             })
             .width(Length::Fill)
             .padding([0, 8, 0, 0]),
@@ -247,7 +247,7 @@ mod widgets {
     pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u16) -> Element<'a, Messages> {
         let size = size - (padding * 2);
 
-        match icons.flag(&country.code()) {
+        match icons.flag(country.code()) {
             Some(icon) => container(svg(icon).width(Length::Units(size)).height(Length::Units(size)))
                 .padding(padding)
                 .into(),
