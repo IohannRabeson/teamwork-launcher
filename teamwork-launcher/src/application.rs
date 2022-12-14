@@ -1,6 +1,6 @@
 use log::debug;
 
-use crate::ui::announce_view;
+use crate::ui::{announce_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL};
 
 use {
     crate::{
@@ -459,12 +459,12 @@ impl Application {
 
         if let Some(announce) = self.announces.current() {
             main_column = main_column
-                .push(vertical_space(Length::Units(4)))
+                .push(vertical_space(Length::Units(VISUAL_SPACING_SMALL)))
                 .push(announce_view(&self.icons, announce));
         }
 
         main_column
-            .push(vertical_space(Length::Units(4)))
+            .push(vertical_space(Length::Units(VISUAL_SPACING_MEDIUM)))
             .push(content)
             .padding(12)
             .into()

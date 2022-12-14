@@ -101,7 +101,6 @@ mod directories {
 }
 
 fn load_user_settings() -> UserSettings {
-    
     match UserSettings::load_settings() {
         Ok(settings) => settings,
         Err(error) => {

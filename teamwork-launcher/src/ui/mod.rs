@@ -1,13 +1,10 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{column, text}, Element, Length,
+    widget::{column, text},
+    Element, Length,
 };
 
-use crate::{
-    application::Messages,
-    fonts,
-    icons::{SvgHandle},
-};
+use crate::{application::Messages, fonts, icons::SvgHandle};
 
 pub use {
     self::buttons::{favorite_button, svg_button, text_button},
@@ -21,9 +18,11 @@ mod buttons;
 mod header;
 mod servers;
 mod settings;
+mod widgets;
 
-const VISUAL_SPACING_SMALL: u16 = 4;
-const BIG_BUTTON_SIZE: u16 = 36;
+pub const VISUAL_SPACING_SMALL: u16 = 4;
+pub const VISUAL_SPACING_MEDIUM: u16 = 8;
+pub const BIG_BUTTON_SIZE: u16 = 36;
 
 pub use announces::announce_view;
 
