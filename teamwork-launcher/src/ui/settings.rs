@@ -14,7 +14,6 @@ use {
 
 pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
     column![
-        text("Settings").font(crate::fonts::TF2_SECONDARY).size(32),
         scrollable(
             column![
                 field(
