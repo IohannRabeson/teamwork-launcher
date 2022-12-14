@@ -27,8 +27,8 @@ impl button::StyleSheet for AnnounceStyle {
 }
 
 /// Show an announce.
-/// 
-/// An announce display a title and a message. 
+///
+/// An announce display a title and a message.
 /// When you click anywhere on it it's discarded.
 pub fn announce_view<'a>(_icons: &Icons, announce: &Announce) -> Element<'a, Messages> {
     button(column![text(&announce.title).size(24), text(&announce.message)].spacing(VISUAL_SPACING_MEDIUM))

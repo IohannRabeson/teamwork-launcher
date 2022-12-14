@@ -18,17 +18,13 @@ fn title_widget<'a>(title: &str) -> Element<'a, Messages> {
 }
 
 fn subtitle_widget<'a>(title: &str) -> Element<'a, Messages> {
-    container(
-        text(title)
-            .font(crate::fonts::TF2_SECONDARY)
-            .size(32)
-    )
-    .padding([0, 0, 0, 16])
-    .center_y()
-    .align_x(Horizontal::Left)
-    .height(Length::Units(TITLE_HEIGHT))
-    .width(Length::Fill)
-    .into()
+    container(text(title).font(crate::fonts::TF2_SECONDARY).size(32))
+        .padding([0, 0, 0, 16])
+        .center_y()
+        .align_x(Horizontal::Left)
+        .height(Length::Units(TITLE_HEIGHT))
+        .width(Length::Fill)
+        .into()
 }
 
 pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a, Messages> {

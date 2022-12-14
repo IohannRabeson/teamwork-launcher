@@ -13,53 +13,53 @@ use {
 };
 
 pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
-    column![
-        scrollable(
-            column![
-                field(
-                    "Game executable path:",
-                    None,
-                    text_input("Game executable path", &settings.game_executable_path(), |text| {
-                        let mut new_settings = settings.clone();
+    column![scrollable(
+        column![
+            field(
+                "Game executable path:",
+                None,
+                text_input("Game executable path", &settings.game_executable_path(), |text| {
+                    let mut new_settings = settings.clone();
 
-                        new_settings.set_game_executable_path::<&str>(&text);
+                    new_settings.set_game_executable_path::<&str>(&text);
 
-                        Messages::SettingsChanged(new_settings)
-                    })
+                    Messages::SettingsChanged(new_settings)
+                })
+            ),
+            field(
+                "Teamwork.tf API key:",
+                None,
+                text_input("Key", &settings.teamwork_api_key(), |text| {
+                    let mut new_settings = settings.clone();
+
+                    new_settings.set_teamwork_api_key::<&str>(&text);
+
+                    Messages::SettingsChanged(new_settings)
+                })
+                .password()
+            ),
+            field(
+                "Auto refresh favorite servers:",
+                Some("If enabled, the favorites servers data will be refreshed every 5 minutes."),
+                checkbox("Auto refresh", settings.auto_refresh_favorite(), |checked| {
+                    let mut new_settings = settings.clone();
+
+                    new_settings.set_auto_refresh_favorite(checked);
+
+                    Messages::SettingsChanged(new_settings)
+                })
+            ),
+            field(
+                "Server sources:",
+                Some(
+                    "For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."
                 ),
-                field(
-                    "Teamwork.tf API key:",
-                    None,
-                    text_input("Key", &settings.teamwork_api_key(), |text| {
-                        let mut new_settings = settings.clone();
-
-                        new_settings.set_teamwork_api_key::<&str>(&text);
-
-                        Messages::SettingsChanged(new_settings)
-                    })
-                    .password()
-                ),
-                field(
-                    "Auto refresh favorite servers:",
-                    Some("If enabled, the favorites servers data will be refreshed every 5 minutes."),
-                    checkbox("Auto refresh", settings.auto_refresh_favorite(), |checked| {
-                        let mut new_settings = settings.clone();
-
-                        new_settings.set_auto_refresh_favorite(checked);
-
-                        Messages::SettingsChanged(new_settings)
-                    })
-                ),
-                field(
-                    "Server sources:",
-                    Some("For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."),
-                    sources_list_view(settings.source_filter())
-                )
-            ]
-            .padding(12)
-            .spacing(VISUAL_SPACING_SMALL),
-        )
-    ]
+                sources_list_view(settings.source_filter())
+            )
+        ]
+        .padding(12)
+        .spacing(VISUAL_SPACING_SMALL),
+    )]
     .into()
 }
 

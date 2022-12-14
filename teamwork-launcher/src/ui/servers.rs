@@ -1,15 +1,18 @@
-use crate::ui::widgets;
+use {
+    crate::{server_filters::ServerFilter, ui::widgets},
+    iced::widget::checkbox,
+};
 
 use {
-    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
+    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages, fonts, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
         sources::SourceKey,
     },
     iced::{
         widget::{
-            button, checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
-            Column, Container,
+            button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column,
+            Container,
         },
         Alignment, Element, Length,
     },
@@ -24,18 +27,29 @@ pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     icons: &'a Icons,
     settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
-    row![
-        column![
-            servers_filter_view(&settings.servers_filter_text(), icons),
-            vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-            servers_view_generic(servers_iterator, server_view_edit_favorites, settings, icons),
-        ]
-        .width(Length::FillPortion(4)),
-        // TODO: put here the other filters.
-        // sources_list_view(settings.source_filter()).width(Length::FillPortion(1))
-    ]
+    row![column![
+        servers_text_filter_view(&settings.servers_filter_text(), icons),
+        vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
+        servers_view_generic(servers_iterator, server_view_edit_favorites, settings, icons),
+    ]]
     .spacing(VISUAL_SPACING_SMALL)
     .into()
+}
+
+fn servers_filter_view<'a>(settings: &'a UserSettings) -> Column<'a, Messages> {
+    let filter = settings.server_filter();
+
+    column![checkbox("With players only", filter.minimum_players_count > 0, |checked| {
+        let mut settings = settings.clone();
+
+        settings.set_minimum_players_count(match checked {
+            true => 1u8,
+            false => 0u8,
+        });
+
+        Messages::SettingsChanged(settings)
+    })]
+    .padding(VISUAL_SPACING_MEDIUM)
 }
 
 pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
@@ -46,7 +60,7 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     let server_view_fn = |server, _, icons| server_view(server, icons);
 
     column![
-        servers_filter_view(&settings.servers_filter_text(), icons),
+        servers_text_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         servers_view_generic(servers_iterator, server_view_fn, settings, icons),
     ]
@@ -82,21 +96,27 @@ where
     I: Iterator<Item = &'a Server>,
     F: Fn(&'a Server, bool, &'a Icons) -> Element<'a, Messages>,
 {
-    scrollable(
-        servers_iterator
-            .unique_by(|server| &server.ip_port)
-            .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                column.push(server_view_fn(server, settings.filter_servers_favorite(server), icons))
-            })
-            .width(Length::Fill)
-            .padding([0, 8, 0, 0]),
-    )
-    .scrollbar_width(8)
-    .scroller_width(8)
+    row![
+        container(
+            scrollable(
+                servers_iterator
+                    .unique_by(|server| &server.ip_port)
+                    .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
+                        column.push(server_view_fn(server, settings.filter_servers_favorite(server), icons))
+                    })
+                    .width(Length::Fill)
+                    .padding([0, VISUAL_SPACING_MEDIUM, 0, 0]),
+            )
+            .scrollbar_width(8)
+            .scroller_width(8)
+        )
+        .width(Length::FillPortion(4)),
+        servers_filter_view(&settings).width(Length::FillPortion(1))
+    ]
     .into()
 }
 
-fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
+fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
     let mut button = svg_button(icons.clear(), 28);
 
     // Enable the clear button only if the field contains text.
@@ -181,6 +201,12 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     .into()
 }
 
+/// Show a list of checkable sources.
+///
+/// The `sources` parameter is a vector of tuple containing:
+///  - the displayable name of the source
+///  - the key of the source
+///  - a boolean specifying if the checkbox is checked or not
 pub fn sources_list_view<'a>(sources: Vec<(String, SourceKey, bool)>) -> Container<'a, Messages> {
     container(sources.into_iter().fold(
         column![].width(Length::Fill).spacing(VISUAL_SPACING_SMALL),

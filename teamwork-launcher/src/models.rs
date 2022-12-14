@@ -78,7 +78,7 @@ impl Default for Server {
     }
 }
 
-#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Country {
     code: String,
 }

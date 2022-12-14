@@ -1,4 +1,4 @@
-use crate::{directories, servers_sources::ServersSources, text_filter::TextFilter};
+use crate::{directories, server_filters::ServerFilter, servers_sources::ServersSources, text_filter::TextFilter};
 
 use {
     crate::{
@@ -42,6 +42,8 @@ struct InnerUserSettings {
     pub favorites: BTreeMap<IpPort, Option<SourceKey>>,
     #[serde(default)]
     pub servers_text_filter: TextFilter,
+    #[serde(default)]
+    pub servers_filter: ServerFilter,
     #[serde(default)]
     pub servers_source_filter: ServersSources,
     #[serde(default)]
@@ -96,11 +98,24 @@ impl Default for InnerUserSettings {
             game_executable_path: Default::default(),
             teamwork_api_key: Default::default(),
             auto_refresh_favorite: true,
+            servers_filter: Default::default(),
         }
     }
 }
 
 impl UserSettings {
+    pub fn set_minimum_players_count(&mut self, value: u8) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.servers_filter.minimum_players_count = value;
+    }
+
+    pub fn server_filter(&self) -> ServerFilter {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.servers_filter.clone()
+    }
+
     pub fn set_available_sources(&mut self, all_source_keys: impl Iterator<Item = (String, SourceKey)>) {
         let mut inner = self.storage.try_write().unwrap();
 
@@ -150,7 +165,9 @@ impl UserSettings {
     pub fn filter_servers(&self, server: &Server) -> bool {
         let inner = self.storage.try_read().unwrap();
 
-        inner.servers_text_filter.accept(&server.name.to_lowercase()) && inner.servers_source_filter.accept_server(server)
+        inner.servers_text_filter.accept(&server.name.to_lowercase())
+            && inner.servers_source_filter.accept_server(server)
+            && inner.servers_filter.accept_server(server)
     }
 
     pub fn filter_servers_favorite(&self, server: &Server) -> bool {
