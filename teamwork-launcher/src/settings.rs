@@ -1,4 +1,4 @@
-use crate::{directories, source_filter::SourceFilter, text_filter::TextFilter};
+use crate::{directories, servers_sources::ServersSources, text_filter::TextFilter};
 
 use {
     crate::{
@@ -43,7 +43,7 @@ struct InnerUserSettings {
     #[serde(default)]
     pub servers_text_filter: TextFilter,
     #[serde(default)]
-    pub servers_source_filter: SourceFilter,
+    pub servers_source_filter: ServersSources,
     #[serde(default)]
     pub game_executable_path: String,
     #[serde(default)]

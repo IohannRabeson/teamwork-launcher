@@ -21,7 +21,7 @@ mod ping_service;
 mod promised_value;
 mod servers_provider;
 mod settings;
-mod source_filter;
+mod servers_sources;
 mod sources;
 mod states;
 mod text_filter;

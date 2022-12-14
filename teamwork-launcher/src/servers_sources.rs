@@ -1,3 +1,4 @@
+///! A source of data (a list of servers)
 use {
     crate::{models::Server, sources::SourceKey},
     serde::{Deserialize, Serialize},
@@ -5,20 +6,22 @@ use {
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct SourceFilter {
+pub struct ServersSources {
     sources: BTreeMap<SourceKey, Entry>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct Entry {
-    pub checked: bool,
+    /// If enabled, this source will be used when refreshing the list of servers.
+    pub enabled: bool,
+    /// The displayable name of the source
     pub name: String,
 }
 
-impl SourceFilter {
+impl ServersSources {
     pub fn accept_server(&self, server: &Server) -> bool {
         match &server.source {
-            Some(key) => self.sources.get(key).map(|entry| entry.checked).unwrap_or(false),
+            Some(key) => self.sources.get(key).map(|entry| entry.enabled).unwrap_or(false),
             None => false,
         }
     }
@@ -31,7 +34,7 @@ impl SourceFilter {
                 Vacant(entry) => {
                     entry.insert(Entry {
                         name: init_name,
-                        checked: true,
+                        enabled: true,
                     });
                 }
                 Occupied(mut entry) => {
@@ -44,19 +47,19 @@ impl SourceFilter {
     pub fn checked_sources(&self) -> impl Iterator<Item = &SourceKey> {
         self.sources
             .iter()
-            .filter(|(_key, entry)| entry.checked)
+            .filter(|(_key, entry)| entry.enabled)
             .map(|(key, _entry)| key)
     }
 
     pub fn sources(&self) -> impl Iterator<Item = (String, SourceKey, bool)> + '_ {
         self.sources
             .iter()
-            .map(|(key, entry)| (entry.name.clone(), key.clone(), entry.checked))
+            .map(|(key, entry)| (entry.name.clone(), key.clone(), entry.enabled))
     }
 
     pub fn check_source(&mut self, key: &SourceKey, checked: bool) {
         if let Some(entry) = self.sources.get_mut(key) {
-            entry.checked = checked;
+            entry.enabled = checked;
         }
     }
 }
