@@ -1,5 +1,5 @@
 use {
-    crate::{server_filters::ServerFilter, ui::widgets},
+    crate::{ui::widgets},
     iced::widget::checkbox,
 };
 
@@ -111,7 +111,7 @@ where
             .scroller_width(8)
         )
         .width(Length::FillPortion(4)),
-        servers_filter_view(&settings).width(Length::FillPortion(1))
+        servers_filter_view(settings).width(Length::FillPortion(1))
     ]
     .into()
 }
