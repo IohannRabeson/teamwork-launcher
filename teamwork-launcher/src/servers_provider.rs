@@ -63,7 +63,7 @@ impl Default for ServersProvider {
 }
 
 impl ServersProvider {
-    pub fn get_sources<'a>(&'a self) -> impl Iterator<Item = (String, SourceKey)> + 'a {
+    pub fn get_sources(&self) -> impl Iterator<Item = (String, SourceKey)> + '_ {
         self.sources.iter().map(|source| (source.display_name(), source.unique_key()))
     }
 

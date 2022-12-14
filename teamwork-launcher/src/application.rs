@@ -256,7 +256,7 @@ impl Application {
         self.make_refresh_command(Some(self.settings.favorite_source_keys()), false)
     }
 
-    fn sort_servers_by_favorites<'r, 's>(left: &'r Server, right: &'s Server, settings: &UserSettings) -> Ordering {
+    fn sort_servers_by_favorites(left: &Server, right: &Server, settings: &UserSettings) -> Ordering {
         let left = settings.filter_servers_favorite(left);
         let right = settings.filter_servers_favorite(right);
 

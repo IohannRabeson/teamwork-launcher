@@ -93,7 +93,7 @@ mod country_is {
 
     use super::{Error, Service};
 
-    #[derive(Clone)]
+    #[derive(Clone, Default)]
     pub struct CountryIsService {
         reqwest_client: reqwest::Client,
     }
@@ -105,14 +105,6 @@ mod country_is {
     }
 
     const COUNTYIS_API_URL: &str = "https://api.country.is";
-
-    impl Default for CountryIsService {
-        fn default() -> Self {
-            Self {
-                reqwest_client: Default::default(),
-            }
-        }
-    }
 
     #[async_trait]
     impl Service for CountryIsService {

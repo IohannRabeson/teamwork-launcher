@@ -1,8 +1,8 @@
 use {
-    crate::{announces::Announce, application::Messages, icons::Icons, ui::svg_button},
+    crate::{announces::Announce, application::Messages, icons::Icons},
     iced::{
         theme,
-        widget::{button, column, container, horizontal_space, row, text, vertical_space},
+        widget::{button, column, text},
         Background, Element, Length, Theme, Vector,
     },
 };
@@ -14,13 +14,13 @@ impl button::StyleSheet for AnnounceStyle {
     type Style = Theme;
 
     fn active(&self, style: &Self::Style) -> button::Appearance {
-        let mut result = button::Appearance::default();
-
-        result.background = Some(Background::Color(style.palette().danger));
-        result.text_color = style.palette().text;
-        result.shadow_offset = Vector::new(0f32, 0f32);
-        result.border_radius = 3.0;
-        result
+        button::Appearance {
+            shadow_offset: Vector::new(0f32, 0f32),
+            background: Some(Background::Color(style.palette().danger)),
+            border_radius: 3.0,
+            text_color: style.palette().text,
+            ..Default::default()
+        }
     }
 }
 

@@ -15,14 +15,9 @@ impl Announce {
     }
 }
 
+#[derive(Default)]
 pub struct AnnounceQueue {
     queue: VecDeque<Announce>,
-}
-
-impl Default for AnnounceQueue {
-    fn default() -> Self {
-        Self { queue: VecDeque::new() }
-    }
 }
 
 impl AnnounceQueue {

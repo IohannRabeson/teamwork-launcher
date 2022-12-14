@@ -4,7 +4,7 @@ use {
     std::collections::BTreeMap,
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct SourceFilter {
     sources: BTreeMap<SourceKey, Entry>,
 }
@@ -13,14 +13,6 @@ pub struct SourceFilter {
 struct Entry {
     pub checked: bool,
     pub name: String,
-}
-
-impl Default for SourceFilter {
-    fn default() -> Self {
-        Self {
-            sources: BTreeMap::new(),
-        }
-    }
 }
 
 impl SourceFilter {
