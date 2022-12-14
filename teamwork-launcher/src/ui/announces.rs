@@ -1,3 +1,5 @@
+use crate::ui::VISUAL_SPACING_MEDIUM;
+
 use {
     crate::{announces::Announce, application::Messages, icons::Icons},
     iced::{
@@ -24,11 +26,13 @@ impl button::StyleSheet for AnnounceStyle {
     }
 }
 
+/// Show an announce.
+/// 
+/// An announce display a title and a message. 
+/// When you click anywhere on it it's discarded.
 pub fn announce_view<'a>(_icons: &Icons, announce: &Announce) -> Element<'a, Messages> {
-    const SPACING: u16 = 8;
-
-    button(column![text(&announce.title).size(24), text(&announce.message)].spacing(SPACING))
-        .padding(SPACING)
+    button(column![text(&announce.title).size(24), text(&announce.message)].spacing(VISUAL_SPACING_MEDIUM))
+        .padding(VISUAL_SPACING_MEDIUM)
         .width(Length::Fill)
         .style(theme::Button::Custom(Box::new(AnnounceStyle::default())))
         .on_press(Messages::DiscardCurrentAnnounce)

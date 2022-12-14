@@ -52,12 +52,12 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
                 ),
                 field(
                     "Server sources:",
-                    Some("Each source will require to query the Teamwork API. Remember the count of query per minutes is limited."),
+                    Some("For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."),
                     sources_list_view(settings.source_filter())
                 )
             ]
             .padding(12)
-            .spacing(4),
+            .spacing(VISUAL_SPACING_SMALL),
         )
     ]
     .into()
