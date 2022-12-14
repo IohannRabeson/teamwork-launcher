@@ -1,10 +1,11 @@
 use log::debug;
 
+use crate::ui::announce_view;
+
 use {
     crate::{
         announces::{Announce, AnnounceQueue},
         ping_service::PingService,
-        ui::announce_view,
         CliParameters,
     },
     std::{iter, time::Duration},
