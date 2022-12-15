@@ -31,7 +31,7 @@ pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     .into()
 }
 
-fn servers_filter_view<'a>(settings: &'a UserSettings) -> Column<'a, Messages> {
+fn servers_filter_view(settings: &UserSettings) -> Column<Messages> {
     let filter = settings.server_filter();
 
     column![checkbox("With players only", filter.minimum_players_count > 0, |checked| {

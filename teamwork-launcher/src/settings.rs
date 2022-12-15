@@ -1,4 +1,4 @@
-use crate::{directories, server_filters::ServerFilter, servers_sources::ServersSources, text_filter::TextFilter};
+use crate::{directories, advanced_filter::AdvancedServerFilter, servers_sources::ServersSources, text_filter::TextFilter};
 
 use {
     crate::{
@@ -43,7 +43,7 @@ struct InnerUserSettings {
     #[serde(default)]
     pub servers_text_filter: TextFilter,
     #[serde(default)]
-    pub servers_filter: ServerFilter,
+    pub servers_filter: AdvancedServerFilter,
     #[serde(default)]
     pub servers_source_filter: ServersSources,
     #[serde(default)]
@@ -110,7 +110,7 @@ impl UserSettings {
         inner.servers_filter.minimum_players_count = value;
     }
 
-    pub fn server_filter(&self) -> ServerFilter {
+    pub fn server_filter(&self) -> AdvancedServerFilter {
         let inner = self.storage.try_read().unwrap();
 
         inner.servers_filter.clone()

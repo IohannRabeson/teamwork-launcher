@@ -19,7 +19,7 @@ mod launcher;
 mod models;
 mod ping_service;
 mod promised_value;
-mod server_filters;
+mod advanced_filter;
 mod servers_provider;
 mod servers_sources;
 mod settings;
