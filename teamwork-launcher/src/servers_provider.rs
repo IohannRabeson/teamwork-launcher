@@ -35,23 +35,26 @@ pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
 
-const GAMEMODE_IDS: [&str; 9] = [
-    "payload",
-    "attack-defend",
-    "ctf",
-    "control-point",
-    "payload-race",
-    "cp-orange",
-    "koth",
-    "medieval-mode",
-    "mvm",
+const GAMEMODE_IDS: [(&str, &str); 9] = [
+    ("Payload", "payload"),
+    ("Attack / Defend", "attack-defend"),
+    ("Capture The Flag", "ctf"),
+    ("Control point", "control-point"),
+    ("Payload race", "payload-race"),
+    ("Control Point Orange", "cp-orange"),
+    ("King Of The Hill", "koth"),
+    ("Medieval mode", "medieval-mode"),
+    ("Mann Versus Machine", "mvm"),
 ];
 
 impl Default for ServersProvider {
     fn default() -> Self {
         let mut sources: Vec<Box<dyn Source>> = vec![];
 
-        for source in GAMEMODE_IDS.into_iter().map(TeamworkSource::new).map(Box::new) {
+        for source in GAMEMODE_IDS
+            .into_iter()
+            .map(|(name, id)| Box::new(TeamworkSource::new(id, name)))
+        {
             sources.push(source)
         }
 
@@ -60,6 +63,10 @@ impl Default for ServersProvider {
 }
 
 impl ServersProvider {
+    pub fn get_sources(&self) -> impl Iterator<Item = (String, SourceKey)> + '_ {
+        self.sources.iter().map(|source| (source.display_name(), source.unique_key()))
+    }
+
     pub async fn refresh_some(
         &self,
         settings: &UserSettings,
@@ -80,24 +87,11 @@ impl ServersProvider {
 
         Ok(servers)
     }
-
-    pub async fn refresh(&self, settings: &UserSettings) -> Result<Vec<Server>, Error> {
-        let started = Instant::now();
-        let mut servers = Vec::with_capacity(16);
-
-        for source in self.sources.iter() {
-            fetch_servers(source, settings, &mut servers).await;
-        }
-
-        debug!("Refresh servers: {}ms", (Instant::now() - started).as_millis());
-
-        Ok(servers)
-    }
 }
 
 async fn fetch_servers(source: &Box<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
     let source_key = source.unique_key();
-    match source.get_servers_infos(&settings).await {
+    match source.get_servers_infos(settings).await {
         Ok(new_servers) => servers.extend(new_servers.into_iter().map(|mut info| {
             info.source = Some(source_key.clone());
             info

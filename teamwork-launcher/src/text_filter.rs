@@ -32,7 +32,7 @@ impl TextFilter {
     }
 
     fn parse_terms(text: &str) -> Vec<String> {
-        match parser::parse_terms(&text).finish() {
+        match parser::parse_terms(text).finish() {
             Ok((_, terms)) => terms,
             Err(_) => Vec::new(),
         }

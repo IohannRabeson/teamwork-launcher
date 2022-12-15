@@ -1,61 +1,63 @@
-use crate::promised_value::PromisedValue;
-
 use {
-    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_SMALL},
-    crate::{application::Messages, fonts, icons::Icons, models::Server, settings::UserSettings},
+    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+    crate::{
+        application::Messages, fonts, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
+        sources::SourceKey, ui::widgets,
+    },
     iced::{
-        widget::{button, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},
+        widget::{
+            button, checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
+            Column, Container,
+        },
         Alignment, Element, Length,
     },
     itertools::Itertools,
 };
 
+/// View displaying the editor for favorites servers.
+/// It displays the list of sources and allows the users to choose which ones to use.
+/// Note for myself: stop trying to factorize this view and the list of favorites servers because they are really different.
 pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
-    icons: &Icons,
-    settings: &UserSettings,
+    icons: &'a Icons,
+    settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
-    column![
-        servers_filter_view(&settings.servers_filter_text(), icons),
+    row![column![
+        servers_text_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-        scrollable(
-            servers_iterator
-                .unique_by(|server| &server.ip_port)
-                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                    column.push(server_view_edit_favorites(
-                        server,
-                        settings.filter_servers_favorite(&server),
-                        icons,
-                    ))
-                })
-                .width(Length::Fill)
-                .padding([0, 8, 0, 0]),
-        )
-        .scrollbar_width(8)
-        .scroller_width(8)
-    ]
+        servers_view_generic(servers_iterator, server_view_edit_favorites, settings, icons),
+    ]]
+    .spacing(VISUAL_SPACING_SMALL)
     .into()
+}
+
+fn servers_filter_view(settings: &UserSettings) -> Column<Messages> {
+    let filter = settings.server_filter();
+
+    column![checkbox("With players only", filter.minimum_players_count > 0, |checked| {
+        let mut settings = settings.clone();
+
+        settings.set_minimum_players_count(match checked {
+            true => 1u8,
+            false => 0u8,
+        });
+
+        Messages::SettingsChanged(settings)
+    })]
+    .padding(VISUAL_SPACING_MEDIUM)
 }
 
 pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
-    icons: &Icons,
-    settings: &UserSettings,
+    icons: &'a Icons,
+    settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
+    let server_view_fn = |server, _, icons| server_view(server, icons);
+
     column![
-        servers_filter_view(&settings.servers_filter_text(), icons),
+        servers_text_filter_view(&settings.servers_filter_text(), icons),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-        scrollable(
-            servers_iterator
-                .unique_by(|server| &server.ip_port)
-                .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                    column.push(server_view(server, icons))
-                })
-                .width(Length::Fill)
-                .padding([0, 8, 0, 0]),
-        )
-        .scrollbar_width(8)
-        .scroller_width(8)
+        servers_view_generic(servers_iterator, server_view_fn, settings, icons),
     ]
     .into()
 }
@@ -77,7 +79,39 @@ pub fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
     .into()
 }
 
-fn servers_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
+/// Draw the widget to display a list of servers.
+/// The parameter server_view_fn is a function that create the view for one server in the list.
+fn servers_view_generic<'a, I, F>(
+    servers_iterator: I,
+    server_view_fn: F,
+    settings: &'a UserSettings,
+    icons: &'a Icons,
+) -> Element<'a, Messages>
+where
+    I: Iterator<Item = &'a Server>,
+    F: Fn(&'a Server, bool, &'a Icons) -> Element<'a, Messages>,
+{
+    row![
+        container(
+            scrollable(
+                servers_iterator
+                    .unique_by(|server| &server.ip_port)
+                    .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
+                        column.push(server_view_fn(server, settings.filter_servers_favorite(server), icons))
+                    })
+                    .width(Length::Fill)
+                    .padding([0, VISUAL_SPACING_MEDIUM, 0, 0]),
+            )
+            .scrollbar_width(8)
+            .scroller_width(8)
+        )
+        .width(Length::FillPortion(4)),
+        servers_filter_view(settings).width(Length::FillPortion(1))
+    ]
+    .into()
+}
+
+fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
     let mut button = svg_button(icons.clear(), 28);
 
     // Enable the clear button only if the field contains text.
@@ -107,7 +141,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                         server.current_players_count, server.max_players_count
                     )),
                     text(format!("Map: {}", server.map)),
-                    widgets::region(server, icons),
+                    widgets::region(server, icons, 20, 0),
                 ]
                 .spacing(VISUAL_SPACING_SMALL),
                 column![
@@ -131,7 +165,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            container(widgets::country_icon(icons, country, 20)).padding([3, 2, 0, 0]),
+            widgets::country_icon(icons, country, BIG_FONT_SIZE, VISUAL_SPACING_SMALL),
+            horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
             text(&server.name).size(BIG_FONT_SIZE)
         ],
         _ => row![text(&server.name).size(BIG_FONT_SIZE)],
@@ -161,73 +196,20 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     .into()
 }
 
-mod widgets {
-    use iced::{
-        widget::{container, image, row, svg, text},
-        Element, Length,
-    };
-
-    use crate::{
-        application::Messages,
-        icons::Icons,
-        models::{Country, Server, Thumbnail},
-        promised_value::PromisedValue,
-        ui::VISUAL_SPACING_SMALL,
-    };
-
-    const THUMBNAIL_WIDTH: u16 = 250;
-    const THUMBNAIL_HEIGHT: u16 = 125;
-
-    fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
-        image::viewer(image)
-            .width(Length::Units(THUMBNAIL_WIDTH))
-            .height(Length::Units(THUMBNAIL_HEIGHT))
-            .scale_step(0.0)
-            .into()
-    }
-
-    fn image_thumbnail_content<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-        match &server.map_thumbnail {
-            Thumbnail::Ready(image) => image_thumbnail_viewer(image.clone()),
-            Thumbnail::Loading => return text("Loading").into(),
-            Thumbnail::None => image_thumbnail_viewer(icons.no_image()),
-        }
-    }
-
-    pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-        container(image_thumbnail_content(server, icons))
-            .width(Length::Units(THUMBNAIL_WIDTH))
-            .height(Length::Units(THUMBNAIL_HEIGHT))
-            .center_x()
-            .center_y()
-            .into()
-    }
-
-    pub fn region<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-        match &server.country {
-            PromisedValue::Ready(country) => {
-                row![text(format!("Region: {}", country)), country_icon(icons, country, 18)].into()
-            }
-            PromisedValue::Loading => text("Region: loading...").into(),
-            PromisedValue::None => text("Region: unknown").into(),
-        }
-    }
-
-    pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16) -> Element<'a, Messages> {
-        match icons.flag(&country.code()) {
-            Some(icon) => container(svg(icon).width(Length::Units(size)).height(Length::Units(size)))
-                .padding(VISUAL_SPACING_SMALL)
-                .into(),
-            None => text(format!("Region: {} ({})", country, country.code())).into(),
-        }
-    }
-
-    pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
-        match &server.ping {
-            PromisedValue::Ready(duration) => text(format!("Ping: {} ms", duration.as_millis())),
-            PromisedValue::Loading => text("Ping: loading..."),
-            PromisedValue::None => text("Ping: timeout"),
-        }
-        .into()
-    }
+/// Show a list of checkable sources.
+///
+/// The `sources` parameter is a vector of tuple containing:
+///  - the displayable name of the source
+///  - the key of the source
+///  - a boolean specifying if the checkbox is checked or not
+pub fn sources_list_view<'a>(sources: Vec<(String, SourceKey, bool)>) -> Container<'a, Messages> {
+    container(sources.into_iter().fold(
+        column![].width(Length::Fill).spacing(VISUAL_SPACING_SMALL),
+        |column, (name, key, checked)| {
+            column.push(checkbox(name, checked, move |c| {
+                Messages::SourceFilterClicked(key.clone(), c)
+            }))
+        },
+    ))
+    .width(Length::Fill)
 }

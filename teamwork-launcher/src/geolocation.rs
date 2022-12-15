@@ -1,7 +1,7 @@
-use {async_std::sync::Mutex, async_trait::async_trait};
-
 use {
     crate::models::Country,
+    async_std::sync::Mutex,
+    async_trait::async_trait,
     std::{
         collections::{
             btree_map::Entry::{Occupied, Vacant},
@@ -93,7 +93,7 @@ mod country_is {
 
     use super::{Error, Service};
 
-    #[derive(Clone)]
+    #[derive(Clone, Default)]
     pub struct CountryIsService {
         reqwest_client: reqwest::Client,
     }
@@ -106,18 +106,10 @@ mod country_is {
 
     const COUNTYIS_API_URL: &str = "https://api.country.is";
 
-    impl Default for CountryIsService {
-        fn default() -> Self {
-            Self {
-                reqwest_client: Default::default(),
-            }
-        }
-    }
-
     #[async_trait]
     impl Service for CountryIsService {
         async fn locate(&self, ip: Ipv4Addr) -> Result<Country, Error> {
-            let url = format!("{}/{}", COUNTYIS_API_URL, ip.to_string());
+            let url = format!("{}/{}", COUNTYIS_API_URL, ip);
             let ip = ip.to_string();
             let reqwest_client = self.reqwest_client.clone();
             let raw_text = reqwest_client

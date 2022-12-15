@@ -151,13 +151,13 @@ impl Client {
     /// In case of failure, try to parse the same text but assuming the JSON contains an error (TeamworkErrorResponse).
     /// If this also fails, just return the original error as JSON error.
     fn try_parse_response<'a, T: Deserialize<'a>>(text: &'a str, url: &UrlWithKey) -> Result<T, Error> {
-        match serde_json::from_str::<'a, T>(&text) {
+        match serde_json::from_str::<'a, T>(text) {
             Ok(value) => Ok(value),
             Err(json_error) => {
-                match serde_json::from_str::<TeamworkErrorResponse>(&text) {
+                match serde_json::from_str::<TeamworkErrorResponse>(text) {
                     Ok(error) => Err(Error::TeamworkError {
                         address: url.to_string(),
-                        error: error.message.clone(),
+                        error: error.message,
                     }),
                     Err(_error) => {
                         trace!("Failed to parse JSON: {}", text);

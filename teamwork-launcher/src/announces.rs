@@ -15,19 +15,14 @@ impl Announce {
     }
 }
 
+#[derive(Default)]
 pub struct AnnounceQueue {
     queue: VecDeque<Announce>,
 }
 
-impl Default for AnnounceQueue {
-    fn default() -> Self {
-        Self { queue: VecDeque::new() }
-    }
-}
-
 impl AnnounceQueue {
     /// Enqueue a new announce on the display queue.
-    /// The announce is only added if it not already present in the queue.
+    /// The announce is only added if it's not already present in the queue.
     pub fn push(&mut self, announce: Announce) {
         if !self.queue.contains(&announce) {
             self.queue.push_front(announce);

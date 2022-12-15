@@ -1,16 +1,30 @@
-use crate::application::States;
-
 use {
     super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
-    crate::{application::Messages, icons::Icons},
+    crate::{
+        application::{Messages, States},
+        icons::Icons,
+    },
     iced::{
-        widget::{horizontal_space, row, text},
-        Element,
+        alignment::Horizontal,
+        widget::{container, horizontal_space, row, text},
+        Element, Length,
     },
 };
 
+const TITLE_HEIGHT: u16 = 44;
+
 fn title_widget<'a>(title: &str) -> Element<'a, Messages> {
-    text(title).font(crate::fonts::TF2_BUILD).size(44).into()
+    text(title).font(crate::fonts::TF2_BUILD).size(TITLE_HEIGHT).into()
+}
+
+fn subtitle_widget<'a>(title: &str) -> Element<'a, Messages> {
+    container(text(title).font(crate::fonts::TF2_SECONDARY).size(32))
+        .padding([0, 0, 0, 16])
+        .center_y()
+        .align_x(Horizontal::Left)
+        .height(Length::Units(TITLE_HEIGHT))
+        .width(Length::Fill)
+        .into()
 }
 
 pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a, Messages> {
@@ -29,7 +43,7 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
         States::EditFavoriteServers => {
             row![
                 title_widget,
-                horizontal_space(iced::Length::Fill),
+                subtitle_widget("Edit favorite servers"),
                 svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings),
                 svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshServers),
                 svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
@@ -40,8 +54,9 @@ pub fn header_view<'a>(title: &str, icons: &Icons, state: &States) -> Element<'a
         }
         States::Settings => {
             row![
+                horizontal_space(iced::Length::Units(VISUAL_SPACING_SMALL)),
                 title_widget,
-                horizontal_space(iced::Length::Fill),
+                subtitle_widget("Settings"),
                 svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
             ]
         }

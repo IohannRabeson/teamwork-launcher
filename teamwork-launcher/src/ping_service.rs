@@ -26,14 +26,14 @@ impl PingService {
     pub fn is_enabled(&self) -> bool {
         self.client.is_some()
     }
-    
+
     pub async fn ping(&self, ip: &Ipv4Addr) -> Result<Duration, Error> {
         if let Some(client) = self.client.as_ref() {
             let mut pinger = client.pinger(IpAddr::from(*ip), PingIdentifier(111)).await;
 
             pinger.timeout(Duration::from_secs(1));
 
-            match pinger.ping(PingSequence(0), &PAYLOAD).await {
+            match pinger.ping(PingSequence(0), PAYLOAD).await {
                 Ok((IcmpPacket::V4(_reply), dur)) => Ok(dur),
                 Ok((IcmpPacket::V6(_reply), dur)) => Ok(dur),
                 Err(e) => {
