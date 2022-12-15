@@ -1,3 +1,5 @@
+use crate::{GIT_SHA_SHORT, APPLICATION_VERSION};
+
 use {
     crate::{
         announces::{Announce, AnnounceQueue},
@@ -156,6 +158,8 @@ impl IcedApplication for Application {
                 "This application needs to be run elevated to be able to query the ping.",
             ));
         }
+
+        info!("Version: {}-{}", APPLICATION_VERSION, GIT_SHA_SHORT);
 
         (application, command)
     }

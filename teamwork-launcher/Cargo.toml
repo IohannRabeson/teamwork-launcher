@@ -2,6 +2,7 @@
 name = "teamwork-launcher"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 [dependencies]
 teamwork = { path = "../teamwork" }
@@ -30,3 +31,7 @@ include_dir = "0.7.3"
 iso_country = "0.1.4"
 surge-ping = "0.7.3"
 chrono = "0.4.23"
+
+[build-dependencies]
+anyhow = "1.0"
+vergen = { version = "7", default-features = false, features = ["build", "rustc", "git"] }

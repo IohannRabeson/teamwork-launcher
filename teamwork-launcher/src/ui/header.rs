@@ -1,3 +1,5 @@
+use crate::{APPLICATION_VERSION, fonts::{TITLE_FONT_SIZE, VERSION_FONT_SIZE, SUBTITLE_FONT_SIZE}, GIT_SHA_SHORT};
+
 use {
     super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
     crate::{
@@ -11,18 +13,19 @@ use {
     },
 };
 
-const TITLE_HEIGHT: u16 = 44;
-
 fn title_widget<'a>(title: &str) -> Element<'a, Messages> {
-    text(title).font(crate::fonts::TF2_BUILD).size(TITLE_HEIGHT).into()
+    row![
+        text(title).font(crate::fonts::TF2_BUILD).size(TITLE_FONT_SIZE),
+        text(format!("{}-{}", APPLICATION_VERSION, GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
+    ].into()
 }
 
 fn subtitle_widget<'a>(title: &str) -> Element<'a, Messages> {
-    container(text(title).font(crate::fonts::TF2_SECONDARY).size(32))
+    container(text(title).font(crate::fonts::TF2_SECONDARY).size(SUBTITLE_FONT_SIZE))
         .padding([0, 0, 0, 16])
         .center_y()
         .align_x(Horizontal::Left)
-        .height(Length::Units(TITLE_HEIGHT))
+        .height(Length::Units(TITLE_FONT_SIZE))
         .width(Length::Fill)
         .into()
 }
