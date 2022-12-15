@@ -33,12 +33,12 @@ pub fn refresh_view<'a>() -> Element<'a, Messages> {
         .horizontal_alignment(Horizontal::Center)
         .vertical_alignment(Vertical::Center)
         .font(fonts::TF2_SECONDARY)
-        .size(40)
+        .size(fonts::TITLE_FONT_SIZE)
         .into()
 }
 
 pub fn error_view<'a>(message: &str) -> Element<'a, Messages> {
-    column![text("Error").font(fonts::TF2_SECONDARY).size(32), text(message)]
+    column![text("Error").font(fonts::TF2_SECONDARY).size(fonts::SUBTITLE_FONT_SIZE), text(message)]
         .padding(12)
         .into()
 }
