@@ -53,6 +53,17 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
                     "For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."
                 ),
                 sources_list_view(settings.source_filter())
+            ),
+            field(
+                "Quit when start game:",
+                Some("When enabled, th launcher quits when the game is started."),
+                checkbox("Quit when start game", settings.quit_on_launch(), |checked| {
+                    let mut new_settings = settings.clone();
+
+                    new_settings.set_quit_on_launch(checked);
+
+                    Messages::SettingsChanged(new_settings)
+                })
             )
         ]
         .padding(12)
