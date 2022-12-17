@@ -52,6 +52,8 @@ struct InnerUserSettings {
     pub teamwork_api_key: String,
     #[serde(default)]
     pub auto_refresh_favorite: bool,
+    #[serde(default)]
+    pub quit_on_launch: bool,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug)]
@@ -99,11 +101,24 @@ impl Default for InnerUserSettings {
             teamwork_api_key: Default::default(),
             auto_refresh_favorite: true,
             servers_filter: Default::default(),
+            quit_on_launch: false,
         }
     }
 }
 
 impl UserSettings {
+    pub fn set_quit_on_launch(&mut self, value: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.quit_on_launch = value;
+    }
+
+    pub fn quit_on_launch(&self) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.quit_on_launch
+    }
+
     pub fn set_minimum_players_count(&mut self, value: u8) {
         let mut inner = self.storage.try_write().unwrap();
 

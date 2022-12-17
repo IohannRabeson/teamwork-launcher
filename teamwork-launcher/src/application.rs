@@ -316,6 +316,10 @@ impl Application {
     fn launch_executable(&mut self, ip_port: &IpPort) {
         if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
             self.states.push(States::Error { message: error.message });
+        } else {
+            if self.settings.quit_on_launch() {
+                self.should_exit = true;
+            }
         }
     }
 
