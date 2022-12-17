@@ -56,7 +56,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             ),
             field(
                 "Quit when start game:",
-                Some("When enabled, th launcher quits when the game is started."),
+                Some("When enabled, the launcher quits when the game starts."),
                 checkbox("Quit when start game", settings.quit_on_launch(), |checked| {
                     let mut new_settings = settings.clone();
 
