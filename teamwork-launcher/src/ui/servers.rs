@@ -1,12 +1,12 @@
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
-        application::Messages, fonts, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
+        application::Messages, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
         sources::SourceKey, ui::widgets,
     },
     iced::{
         widget::{
-            button, checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
+            checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
             Column, Container,
         },
         Alignment, Element, Length,
@@ -59,23 +59,6 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
         servers_view_generic(servers_iterator, server_view_fn, settings, icons),
     ]
-    .into()
-}
-
-pub fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
-    container(
-        column![
-            text("No favorite servers!").font(fonts::TF2_SECONDARY).size(36),
-            text("You can edit the list of your favorite servers by clicking on the star button on the top right of the window."),
-            button("Edit favorite servers").on_press(Messages::EditFavorites),
-        ]
-        .align_items(Alignment::Center)
-        .spacing(12),
-    )
-    .width(Length::Fill)
-    .height(Length::Fill)
-    .center_x()
-    .center_y()
     .into()
 }
 

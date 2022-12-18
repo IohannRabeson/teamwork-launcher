@@ -54,7 +54,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
                 ),
                 sources_list_view(settings.source_filter())
             ),
-            text("Auto quit:").size(25),
+            section_title("Auto quit:"),
             column![
             field(
                 None,
@@ -85,10 +85,14 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
     .into()
 }
 
+fn section_title<'a>(label: &str) -> Element<'a, Messages> {
+    text(label).size(25).into()
+}
+
 /// Compose a field by creating a label and an element.
 fn field<'a>(label: Option<&str>, description: Option<&str>, field: impl Into<Element<'a, Messages>>) -> Element<'a, Messages> {
     let mut content = match label {
-        Some(label) => column![text(label).size(25), vertical_space(Length::Units(VISUAL_SPACING_SMALL)),],
+        Some(label) => column![section_title(label), vertical_space(Length::Units(VISUAL_SPACING_SMALL)),],
         None => column![],
     };
 
