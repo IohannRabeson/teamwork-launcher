@@ -50,7 +50,7 @@ pub fn header_view<'a>(title: &str, icons: &'a Icons, state: &States) -> Element
         States::EditFavoriteServers => {
             row![
                 title_widget,
-                subtitle_widget("Edit favorite servers"),
+                horizontal_space(iced::Length::Fill),
                 settings_button(icons),
                 refresh_button(icons),
                 back_button(icons),

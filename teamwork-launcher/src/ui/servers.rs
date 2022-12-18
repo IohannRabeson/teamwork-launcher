@@ -109,26 +109,29 @@ fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messag
         .into()
 }
 
-fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Icons) -> Element<'a, Messages> {
-    const BIG_FONT_SIZE: u16 = 32;
+const TITLE_FONT_SIZE: u16 = 24;
+const TEXT_FONT_SIZE: u16 = 18;
+const SMALL_FLAG_SIZE: u16 = 20;
 
+fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Icons) -> Element<'a, Messages> {
     container(row![
         widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
-            text(&server.name).size(BIG_FONT_SIZE),
+            
             row![
                 column![
+                    text(&server.name).size(TITLE_FONT_SIZE),
                     text(format!(
                         "Players: {} / {}",
                         server.current_players_count, server.max_players_count
-                    )),
-                    text(format!("Map: {}", server.map)),
-                    widgets::region(server, icons, 20, 0),
+                    )).size(TEXT_FONT_SIZE),
+                    text(format!("Map: {}", server.map)).size(TEXT_FONT_SIZE),
+                    widgets::region(server, icons, SMALL_FLAG_SIZE, 0),
                 ]
                 .spacing(VISUAL_SPACING_SMALL),
                 column![
-                    favorite_button(is_favorite, icons, BIG_FONT_SIZE)
+                    favorite_button(is_favorite, icons, 28)
                         .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
                     widgets::ping(server)
                 ]
@@ -144,15 +147,13 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
 }
 
 fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-    const BIG_FONT_SIZE: u16 = 32;
-
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            widgets::country_icon(icons, country, BIG_FONT_SIZE, VISUAL_SPACING_SMALL),
+            widgets::country_icon(icons, country, TITLE_FONT_SIZE, VISUAL_SPACING_SMALL),
             horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
-            text(&server.name).size(BIG_FONT_SIZE)
+            text(&server.name).size(TITLE_FONT_SIZE)
         ],
-        _ => row![text(&server.name).size(BIG_FONT_SIZE)],
+        _ => row![text(&server.name).size(TITLE_FONT_SIZE)],
     };
 
     container(row![
@@ -162,8 +163,8 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
             text(format!(
                 "Players: {} / {}",
                 server.current_players_count, server.max_players_count
-            )),
-            text(format!("Map: {}", server.map)),
+            )).size(TEXT_FONT_SIZE),
+            text(format!("Map: {}", server.map)).size(TEXT_FONT_SIZE),
             widgets::ping(server),
         ]
         .spacing(VISUAL_SPACING_SMALL),
