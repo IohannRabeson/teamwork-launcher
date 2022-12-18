@@ -18,6 +18,7 @@ mod buttons;
 mod header;
 mod servers;
 mod settings;
+mod styles;
 mod widgets;
 
 pub const VISUAL_SPACING_SMALL: u16 = 4;
