@@ -1,8 +1,12 @@
+use iced::widget::Container;
+
+use crate::sources::SourceKey;
+
 use {
     crate::{
         application::Messages,
         settings::UserSettings,
-        ui::{servers::sources_list_view, VISUAL_SPACING_BIG, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+        ui::{VISUAL_SPACING_BIG, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     },
     iced::{
         widget::{checkbox, column, container, scrollable, text, text_input, vertical_space},
@@ -103,4 +107,20 @@ fn field<'a>(label: Option<&str>, description: Option<&str>, field: impl Into<El
     content
         .push(container(field).padding(VISUAL_SPACING_MEDIUM).width(Length::Fill))
         .into()
+}
+
+/// The `sources` parameter is a vector of tuple containing:
+///  - the displayable name of the source
+///  - the key of the source
+///  - a boolean specifying if the checkbox is checked or not
+fn sources_list_view<'a>(sources: Vec<(String, SourceKey, bool)>) -> Container<'a, Messages> {
+    container(sources.into_iter().fold(
+        column![].width(Length::Fill).spacing(VISUAL_SPACING_SMALL),
+        |column, (name, key, checked)| {
+            column.push(checkbox(name, checked, move |c| {
+                Messages::SourceFilterClicked(key.clone(), c)
+            }))
+        },
+    ))
+    .width(Length::Fill)
 }

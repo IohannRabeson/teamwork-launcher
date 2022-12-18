@@ -43,16 +43,16 @@ pub fn header_view<'a>(title: &str, icons: &'a Icons, state: &States) -> Element
                 title_widget,
                 horizontal_space(iced::Length::Fill),
                 settings_button(icons),
-                refresh_button(icons),
+                refresh_button(icons, Messages::RefreshFavoriteServers),
                 favorites_button(icons),
             ]
         }
         States::EditFavoriteServers => {
             row![
                 title_widget,
-                subtitle_widget("Edit favorite servers"),
+                horizontal_space(iced::Length::Fill),
                 settings_button(icons),
-                refresh_button(icons),
+                refresh_button(icons, Messages::RefreshServers),
                 back_button(icons),
             ]
         }
@@ -93,9 +93,9 @@ fn settings_button(icons: &Icons) -> Element<Messages> {
     .into()
 }
 
-fn refresh_button(icons: &Icons) -> Element<Messages> {
+fn refresh_button(icons: &Icons, message: Messages) -> Element<Messages> {
     tooltip(
-        svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(Messages::RefreshFavoriteServers),
+        svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(message),
         "Refresh the servers information",
         iced::widget::tooltip::Position::Bottom
     )
