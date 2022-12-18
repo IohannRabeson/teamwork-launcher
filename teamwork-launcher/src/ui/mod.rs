@@ -22,6 +22,7 @@ mod widgets;
 
 pub const VISUAL_SPACING_SMALL: u16 = 4;
 pub const VISUAL_SPACING_MEDIUM: u16 = 8;
+pub const VISUAL_SPACING_BIG: u16 = 12;
 pub const BIG_BUTTON_SIZE: u16 = 36;
 
 pub use announces::announce_view;
@@ -38,7 +39,10 @@ pub fn refresh_view<'a>() -> Element<'a, Messages> {
 }
 
 pub fn error_view<'a>(message: &str) -> Element<'a, Messages> {
-    column![text("Error").font(fonts::TF2_SECONDARY).size(fonts::SUBTITLE_FONT_SIZE), text(message)]
-        .padding(12)
-        .into()
+    column![
+        text("Error").font(fonts::TF2_SECONDARY).size(fonts::SUBTITLE_FONT_SIZE),
+        text(message)
+    ]
+    .padding(12)
+    .into()
 }

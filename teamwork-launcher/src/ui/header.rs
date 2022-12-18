@@ -1,4 +1,7 @@
-use crate::{APPLICATION_VERSION, fonts::{TITLE_FONT_SIZE, VERSION_FONT_SIZE, SUBTITLE_FONT_SIZE}, GIT_SHA_SHORT};
+use crate::{
+    fonts::{SUBTITLE_FONT_SIZE, TITLE_FONT_SIZE, VERSION_FONT_SIZE},
+    APPLICATION_VERSION, GIT_SHA_SHORT,
+};
 
 use {
     super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
@@ -17,7 +20,8 @@ fn title_widget<'a>(title: &str) -> Element<'a, Messages> {
     row![
         text(title).font(crate::fonts::TF2_BUILD).size(TITLE_FONT_SIZE),
         text(format!("{}-{}", APPLICATION_VERSION, GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
-    ].into()
+    ]
+    .into()
 }
 
 fn subtitle_widget<'a>(title: &str) -> Element<'a, Messages> {

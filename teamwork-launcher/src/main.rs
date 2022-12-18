@@ -10,6 +10,7 @@ use {
     settings::UserSettings,
 };
 
+mod advanced_filter;
 mod announces;
 mod application;
 mod fonts;
@@ -19,7 +20,6 @@ mod launcher;
 mod models;
 mod ping_service;
 mod promised_value;
-mod advanced_filter;
 mod servers_provider;
 mod servers_sources;
 mod settings;

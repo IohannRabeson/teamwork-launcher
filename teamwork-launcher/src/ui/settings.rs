@@ -2,7 +2,7 @@ use {
     crate::{
         application::Messages,
         settings::UserSettings,
-        ui::{servers::sources_list_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+        ui::{servers::sources_list_view, VISUAL_SPACING_BIG, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     },
     iced::{
         widget::{checkbox, column, container, scrollable, text, text_input, vertical_space},
@@ -64,9 +64,20 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                     Messages::SettingsChanged(new_settings)
                 })
+            ),
+            field(
+                "Quit when connection string is copied to clipboard:",
+                Some("When enabled, the launcher quits when the connection string is copied to the clipboard."),
+                checkbox("Quit when copy", settings.quit_on_copy(), |checked| {
+                    let mut new_settings = settings.clone();
+
+                    new_settings.set_quit_on_copy(checked);
+
+                    Messages::SettingsChanged(new_settings)
+                })
             )
         ]
-        .padding(12)
+        .padding(VISUAL_SPACING_BIG)
         .spacing(VISUAL_SPACING_SMALL),
     )]
     .into()
