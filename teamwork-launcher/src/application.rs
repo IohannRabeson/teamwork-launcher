@@ -463,7 +463,7 @@ impl Application {
     }
 
     /// Display a content with a title and a header.
-    fn normal_view<'a>(&self, content: Element<'a, Messages>) -> Element<'a, Messages> {
+    fn normal_view<'a>(&'a self, content: Element<'a, Messages>) -> Element<'a, Messages> {
         let mut main_column = column![header_view(&self.title(), &self.icons, self.states.current())];
 
         if let Some(announce) = self.announces.current() {
