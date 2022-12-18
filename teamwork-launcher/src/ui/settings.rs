@@ -56,7 +56,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             ),
             field(
                 "Quit when start game:",
-                Some("When enabled, the launcher quits when the game starts."),
+                Some("If enabled, the launcher quits when the game starts."),
                 checkbox("Quit when start game", settings.quit_on_launch(), |checked| {
                     let mut new_settings = settings.clone();
 
@@ -67,7 +67,7 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             ),
             field(
                 "Quit when connection string is copied to clipboard:",
-                Some("When enabled, the launcher quits when the connection string is copied to the clipboard."),
+                Some("If enabled, the launcher quits when the connection string is copied to the clipboard."),
                 checkbox("Quit when copy", settings.quit_on_copy(), |checked| {
                     let mut new_settings = settings.clone();
 
