@@ -2,12 +2,12 @@ use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
-        sources::SourceKey, ui::widgets,
+        ui::widgets,
     },
     iced::{
         widget::{
             checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
-            Column, Container,
+            Column,
         },
         Alignment, Element, Length,
     },
@@ -43,7 +43,7 @@ fn servers_filter_view(settings: &UserSettings) -> Column<Messages> {
         });
 
         Messages::SettingsChanged(settings)
-    })]
+    }).text_size(TEXT_FONT_SIZE)]
     .padding(VISUAL_SPACING_MEDIUM)
 }
 
@@ -118,7 +118,6 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
         widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![
-            
             row![
                 column![
                     text(&server.name).size(TITLE_FONT_SIZE),
@@ -133,7 +132,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                 column![
                     favorite_button(is_favorite, icons, 28)
                         .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
-                    widgets::ping(server)
+                    widgets::ping(server).size(TEXT_FONT_SIZE)
                 ]
                 .spacing(VISUAL_SPACING_SMALL)
                 .width(Length::Fill)
@@ -165,7 +164,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
                 server.current_players_count, server.max_players_count
             )).size(TEXT_FONT_SIZE),
             text(format!("Map: {}", server.map)).size(TEXT_FONT_SIZE),
-            widgets::ping(server),
+            widgets::ping(server).size(TEXT_FONT_SIZE),
         ]
         .spacing(VISUAL_SPACING_SMALL),
         horizontal_space(Length::Fill),
@@ -178,22 +177,4 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     ])
     .padding(6)
     .into()
-}
-
-/// Show a list of checkable sources.
-///
-/// The `sources` parameter is a vector of tuple containing:
-///  - the displayable name of the source
-///  - the key of the source
-///  - a boolean specifying if the checkbox is checked or not
-pub fn sources_list_view<'a>(sources: Vec<(String, SourceKey, bool)>) -> Container<'a, Messages> {
-    container(sources.into_iter().fold(
-        column![].width(Length::Fill).spacing(VISUAL_SPACING_SMALL),
-        |column, (name, key, checked)| {
-            column.push(checkbox(name, checked, move |c| {
-                Messages::SourceFilterClicked(key.clone(), c)
-            }))
-        },
-    ))
-    .width(Length::Fill)
 }

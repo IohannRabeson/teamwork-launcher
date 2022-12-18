@@ -11,11 +11,8 @@ use {
         Element, Length,
     },
 };
-
-use iced::theme;
-
+use iced::{theme, widget::Text};
 use super::{VISUAL_SPACING_MEDIUM, styles};
-
 
 const THUMBNAIL_WIDTH: u16 = 250;
 const THUMBNAIL_HEIGHT: u16 = 125;
@@ -71,7 +68,7 @@ pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u1
     }
 }
 
-pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
+pub fn ping<'a>(server: &Server) -> Text<'a> {
     match &server.ping {
         PromisedValue::Ready(duration) => text(format!("Ping: {} ms", duration.as_millis())),
         PromisedValue::Loading => text("Ping: loading..."),
