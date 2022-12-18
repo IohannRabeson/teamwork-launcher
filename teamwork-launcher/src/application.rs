@@ -1,4 +1,4 @@
-use crate::{GIT_SHA_SHORT, APPLICATION_VERSION};
+use crate::{APPLICATION_VERSION, GIT_SHA_SHORT};
 
 use {
     crate::{
@@ -172,7 +172,7 @@ impl IcedApplication for Application {
             Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
             Messages::SettingsChanged(settings) => self.settings = settings,
             Messages::StartGame(params) => self.launch_executable(&params),
-            Messages::CopyToClipboard(text) => return iced::clipboard::write(text),
+            Messages::CopyToClipboard(text) => return self.copy_to_clipboard_command(text),
             Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
             Messages::SourceFilterClicked(source_key, checked) => self.source_filter_clicked(&source_key, checked),
             Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
@@ -320,6 +320,17 @@ impl Application {
             if self.settings.quit_on_launch() {
                 self.should_exit = true;
             }
+        }
+    }
+
+    fn copy_to_clipboard_command(&mut self, text: String) -> Command<Messages> {
+        if self.settings.quit_on_copy() {
+            Command::batch(vec![
+                iced::clipboard::write(text),
+                Command::perform(async move { () }, |_| Messages::Quit),
+            ])
+        } else {
+            iced::clipboard::write(text)
         }
     }
 

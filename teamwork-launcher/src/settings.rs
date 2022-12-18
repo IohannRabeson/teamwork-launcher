@@ -1,4 +1,4 @@
-use crate::{directories, advanced_filter::AdvancedServerFilter, servers_sources::ServersSources, text_filter::TextFilter};
+use crate::{advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources, text_filter::TextFilter};
 
 use {
     crate::{
@@ -54,6 +54,8 @@ struct InnerUserSettings {
     pub auto_refresh_favorite: bool,
     #[serde(default)]
     pub quit_on_launch: bool,
+    #[serde(default)]
+    quit_on_copy: bool,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug)]
@@ -102,11 +104,24 @@ impl Default for InnerUserSettings {
             auto_refresh_favorite: true,
             servers_filter: Default::default(),
             quit_on_launch: false,
+            quit_on_copy: false,
         }
     }
 }
 
 impl UserSettings {
+    pub fn set_quit_on_copy(&mut self, value: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.quit_on_copy = value;
+    }
+
+    pub fn quit_on_copy(&self) -> bool {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.quit_on_copy
+    }
+
     pub fn set_quit_on_launch(&mut self, value: bool) {
         let mut inner = self.storage.try_write().unwrap();
 
