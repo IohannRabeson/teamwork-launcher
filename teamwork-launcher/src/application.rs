@@ -58,7 +58,7 @@ pub enum Messages {
     Back,
     /// Pop all the state then quit the application.
     Quit,
-
+    DoNothing,
     PushAnnounce(Announce),
 
     /// Discard the current announce
@@ -190,6 +190,7 @@ impl IcedApplication for Application {
             Messages::DiscardCurrentAnnounce => self.announces.pop(),
             Messages::PushAnnounce(announce) => self.announces.push(announce),
             Messages::OpenConfigurationDirectory(directory_path) => return self.explore_directory(directory_path),
+            Messages::DoNothing => (),
         }
 
         Command::none()
@@ -490,10 +491,7 @@ impl Application {
         Command::perform(
             async move { Self::open_directory(file_to_edit).await },
             move |result| match result {
-                Ok(_) => Messages::PushAnnounce(Announce::new(
-                    "Application restart needed",
-                    "The application must restart to reload the edited configuration file.",
-                )),
+                Ok(_) => Messages::DoNothing,
                 Err(error) => Messages::PushAnnounce(Announce::new(
                     format!(
                         "Can't edit '{}'.",
@@ -514,11 +512,11 @@ impl Application {
 
     #[cfg(target_os = "windows")]
     async fn open_directory(file_to_edit: PathBuf) -> Result<(), String> {
-        tokio::task::spawn_blocking(|| {
+        tokio::task::spawn_blocking(move || {
             use std::process::Command;
 
             Command::new("explorer.exe")
-                .args(vec![format!("/e,{}", file_to_edit.to_string())])
+                .args(vec![format!("/e,{}", file_to_edit.to_string_lossy())])
                 .output()
                 .map_err(|error| error.to_string())?;
 
