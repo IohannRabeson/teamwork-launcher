@@ -1,15 +1,12 @@
-use iced::widget::Container;
-
-use crate::sources::SourceKey;
-
 use {
     crate::{
         application::Messages,
         settings::UserSettings,
+        sources::SourceKey,
         ui::{VISUAL_SPACING_BIG, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     },
     iced::{
-        widget::{checkbox, column, container, scrollable, text, text_input, vertical_space},
+        widget::{button, checkbox, column, container, scrollable, text, text_input, vertical_space, Container},
         Element, Length,
     },
 };
@@ -81,7 +78,14 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                         Messages::SettingsChanged(new_settings)
                     })
-                )
+                ),
+                field(
+                    Some("Configuration directory: "),
+                    None,
+                    button("Open location").on_press(Messages::OpenConfigurationDirectory(
+                        crate::directories::get_configuration_directory()
+                    ))
+                ),
             ]
         ]
         .padding(VISUAL_SPACING_BIG)

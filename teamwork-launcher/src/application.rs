@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{APPLICATION_VERSION, GIT_SHA_SHORT};
 
 use {
@@ -57,10 +59,12 @@ pub enum Messages {
     /// Pop all the state then quit the application.
     Quit,
 
+    PushAnnounce(Announce),
+
     /// Discard the current announce
     DiscardCurrentAnnounce,
 
-    OpenSettingsLocation,
+    OpenConfigurationDirectory(PathBuf),
 }
 
 pub struct Flags {
@@ -184,7 +188,8 @@ impl IcedApplication for Application {
             Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
             Messages::Quit => self.should_exit = true,
             Messages::DiscardCurrentAnnounce => self.announces.pop(),
-            Messages::OpenSettingsLocation => todo!(),
+            Messages::PushAnnounce(announce) => self.announces.push(announce),
+            Messages::OpenConfigurationDirectory(directory_path) => return self.explore_directory(directory_path),
         }
 
         Command::none()
@@ -479,5 +484,65 @@ impl Application {
             .push(content)
             .padding(12)
             .into()
+    }
+
+    fn explore_directory(&self, file_to_edit: PathBuf) -> Command<Messages> {
+        let file_to_edit_for_error = file_to_edit.clone();
+
+        Command::perform(
+            async move { Self::open_directory(file_to_edit).await },
+            move |result| match result {
+                Ok(_) => Messages::PushAnnounce(Announce::new(
+                    "Application restart needed",
+                    "The application must restart to reload the edited configuration file.",
+                )),
+                Err(error) => Messages::PushAnnounce(Announce::new(
+                    format!(
+                        "Can't edit '{}'.",
+                        file_to_edit_for_error
+                            .file_name()
+                            .map(|s| s.to_string_lossy())
+                            .unwrap_or_default()
+                    ),
+                    format!(
+                        "The file '{}' can't be edited:\n - {}",
+                        file_to_edit_for_error.display(),
+                        error
+                    ),
+                )),
+            },
+        )
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn open_directory(file_to_edit: PathBuf) -> Result<(), String> {
+        tokio::task::spawn_blocking(|| {
+            use std::process::Command;
+
+            Command::new("explorer.exe")
+                .args(vec![format!("/e,{}", file_to_edit.to_string())])
+                .output()
+                .map_err(|error| error.to_string())?;
+
+            Ok(())
+        })
+        .await
+        .unwrap()
+    }
+
+    #[cfg(target_os = "macos")]
+    async fn open_directory(file_to_edit: PathBuf) -> Result<(), String> {
+        tokio::task::spawn_blocking(move || {
+            use std::process::Command;
+
+            Command::new("open")
+                .args(vec![file_to_edit.to_string_lossy().to_string()])
+                .output()
+                .map_err(|error| error.to_string())?;
+
+            Ok(())
+        })
+        .await
+        .unwrap()
     }
 }

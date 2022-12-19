@@ -3493,6 +3493,7 @@ dependencies = [
  "teamwork",
  "test-case",
  "thiserror",
+ "tokio",
  "unidecode",
  "vergen",
  "xmltree",

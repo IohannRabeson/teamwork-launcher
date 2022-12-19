@@ -1,7 +1,4 @@
-use crate::{
-    advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources,
-    text_filter::TextFilter,
-};
+use crate::{advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources, text_filter::TextFilter};
 
 use {
     crate::{
