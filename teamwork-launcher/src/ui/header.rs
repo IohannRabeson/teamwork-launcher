@@ -1,13 +1,10 @@
-use crate::{
-    fonts::{SUBTITLE_FONT_SIZE, TITLE_FONT_SIZE, VERSION_FONT_SIZE},
-    APPLICATION_VERSION, GIT_SHA_SHORT,
-};
-use super::widgets::tooltip;
 use {
-    super::{svg_button, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
+    super::{svg_button, widgets::tooltip, BIG_BUTTON_SIZE, VISUAL_SPACING_SMALL},
     crate::{
         application::{Messages, States},
+        fonts::{SUBTITLE_FONT_SIZE, TITLE_FONT_SIZE, VERSION_FONT_SIZE},
         icons::Icons,
+        APPLICATION_VERSION, GIT_SHA_SHORT,
     },
     iced::{
         alignment::Horizontal,
@@ -79,7 +76,7 @@ fn back_button(icons: &Icons) -> Element<Messages> {
     tooltip(
         svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
         "Go back",
-        iced::widget::tooltip::Position::Bottom
+        iced::widget::tooltip::Position::Bottom,
     )
     .into()
 }
@@ -88,7 +85,7 @@ fn settings_button(icons: &Icons) -> Element<Messages> {
     tooltip(
         svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings),
         "Open settings editor",
-        iced::widget::tooltip::Position::Bottom
+        iced::widget::tooltip::Position::Bottom,
     )
     .into()
 }
@@ -97,7 +94,7 @@ fn refresh_button(icons: &Icons, message: Messages) -> Element<Messages> {
     tooltip(
         svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(message),
         "Refresh the servers information",
-        iced::widget::tooltip::Position::Bottom
+        iced::widget::tooltip::Position::Bottom,
     )
     .into()
 }
@@ -106,7 +103,7 @@ fn favorites_button(icons: &Icons) -> Element<Messages> {
     tooltip(
         svg_button(icons.favorite_border(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
         "Open favorites servers editor",
-        iced::widget::tooltip::Position::Bottom
+        iced::widget::tooltip::Position::Bottom,
     )
     .into()
 }

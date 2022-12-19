@@ -1,4 +1,7 @@
-use iced::{widget::{container, button}, Background, Theme, Vector};
+use iced::{
+    widget::{button, container},
+    Background, Theme, Vector,
+};
 
 #[derive(Default)]
 pub struct ToolTip;
@@ -18,7 +21,6 @@ impl container::StyleSheet for ToolTip {
         }
     }
 }
-
 
 #[derive(Default)]
 pub struct Announce;

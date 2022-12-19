@@ -10,5 +10,6 @@ pub const TF2_BUILD: Font = Font::External {
 };
 
 pub const TITLE_FONT_SIZE: u16 = 44;
+pub const TEXT_FONT_SIZE: u16 = 18;
 pub const VERSION_FONT_SIZE: u16 = 16;
 pub const SUBTITLE_FONT_SIZE: u16 = 32;

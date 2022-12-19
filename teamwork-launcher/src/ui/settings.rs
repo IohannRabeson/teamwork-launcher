@@ -60,28 +60,29 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             ),
             section_title("Auto quit:"),
             column![
-            field(
-                None,
-                Some("If enabled, the launcher quits when the game starts."),
-                checkbox("Quit when the game is started", settings.quit_on_launch(), |checked| {
-                    let mut new_settings = settings.clone();
+                field(
+                    None,
+                    Some("If enabled, the launcher quits when the game starts."),
+                    checkbox("Quit when the game is started", settings.quit_on_launch(), |checked| {
+                        let mut new_settings = settings.clone();
 
-                    new_settings.set_quit_on_launch(checked);
+                        new_settings.set_quit_on_launch(checked);
 
-                    Messages::SettingsChanged(new_settings)
-                })
-            ),
-            field(
-                None,
-                Some("If enabled, the launcher quits when the connection string is copied to the clipboard."),
-                checkbox("Quit when connection string is copied", settings.quit_on_copy(), |checked| {
-                    let mut new_settings = settings.clone();
+                        Messages::SettingsChanged(new_settings)
+                    })
+                ),
+                field(
+                    None,
+                    Some("If enabled, the launcher quits when the connection string is copied to the clipboard."),
+                    checkbox("Quit when connection string is copied", settings.quit_on_copy(), |checked| {
+                        let mut new_settings = settings.clone();
 
-                    new_settings.set_quit_on_copy(checked);
+                        new_settings.set_quit_on_copy(checked);
 
-                    Messages::SettingsChanged(new_settings)
-                })
-            )]
+                        Messages::SettingsChanged(new_settings)
+                    })
+                )
+            ]
         ]
         .padding(VISUAL_SPACING_BIG)
         .spacing(VISUAL_SPACING_SMALL),
@@ -94,7 +95,11 @@ fn section_title<'a>(label: &str) -> Element<'a, Messages> {
 }
 
 /// Compose a field by creating a label and an element.
-fn field<'a>(label: Option<&str>, description: Option<&str>, field: impl Into<Element<'a, Messages>>) -> Element<'a, Messages> {
+fn field<'a>(
+    label: Option<&str>,
+    description: Option<&str>,
+    field: impl Into<Element<'a, Messages>>,
+) -> Element<'a, Messages> {
     let mut content = match label {
         Some(label) => column![section_title(label), vertical_space(Length::Units(VISUAL_SPACING_SMALL)),],
         None => column![],

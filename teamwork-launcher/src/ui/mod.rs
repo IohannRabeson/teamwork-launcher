@@ -8,7 +8,7 @@ use {
     crate::{application::Messages, fonts, icons::SvgHandle},
     iced::{
         alignment::{Horizontal, Vertical},
-        widget::{column, text, button},
+        widget::{button, column, text},
         Element, Length,
     },
 };
@@ -20,6 +20,7 @@ mod servers;
 mod settings;
 mod styles;
 mod widgets;
+mod advanced_filter;
 
 pub const VISUAL_SPACING_SMALL: u16 = 4;
 pub const VISUAL_SPACING_MEDIUM: u16 = 8;
