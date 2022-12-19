@@ -17,7 +17,7 @@ pub fn announce_view<'a>(_icons: &Icons, announce: &Announce) -> Element<'a, Mes
     button(column![text(&announce.title).size(24), text(&announce.message)].spacing(VISUAL_SPACING_MEDIUM))
         .padding(VISUAL_SPACING_MEDIUM)
         .width(Length::Fill)
-        .style(theme::Button::Custom(Box::new(styles::Announce::default())))
+        .style(theme::Button::Custom(Box::<styles::Announce>::default()))
         .on_press(Messages::DiscardCurrentAnnounce)
         .into()
 }

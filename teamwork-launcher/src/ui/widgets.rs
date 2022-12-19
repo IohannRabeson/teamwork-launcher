@@ -45,7 +45,7 @@ pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
 pub fn region<'a>(server: &Server, icons: &Icons, size: u16, padding: u16) -> Element<'a, Messages> {
     match &server.country {
         PromisedValue::Ready(country) => row![
-            text(format!("Region:")),
+            text("Region:".to_string()),
             horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
             country_icon(icons, country, size, padding)
         ]
@@ -61,10 +61,9 @@ pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u1
     match icons.flag(country.code()) {
         Some(icon) => tooltip(
             container(svg(icon).width(Length::Units(size)).height(Length::Units(size))).padding(padding),
-            &country,
+            country,
             iced::widget::tooltip::Position::Right,
-        )
-        .into(),
+        ),
         None => text(format!("Region: {} ({})", country, country.code())).into(),
     }
 }
@@ -75,7 +74,6 @@ pub fn ping<'a>(server: &Server) -> Text<'a> {
         PromisedValue::Loading => text("Ping: loading..."),
         PromisedValue::None => text("Ping: timeout"),
     }
-    .into()
 }
 
 pub fn tooltip<'a>(
@@ -85,6 +83,6 @@ pub fn tooltip<'a>(
 ) -> Element<'a, Messages> {
     iced::widget::tooltip(content, tooltip, position)
         .gap(VISUAL_SPACING_MEDIUM)
-        .style(theme::Container::Custom(Box::new(styles::ToolTip::default())))
+        .style(theme::Container::Custom(Box::<styles::ToolTip>::default()))
         .into()
 }

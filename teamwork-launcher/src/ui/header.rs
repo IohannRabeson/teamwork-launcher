@@ -78,7 +78,6 @@ fn back_button(icons: &Icons) -> Element<Messages> {
         "Go back",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
 fn settings_button(icons: &Icons) -> Element<Messages> {
@@ -87,7 +86,6 @@ fn settings_button(icons: &Icons) -> Element<Messages> {
         "Open settings editor",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
 fn refresh_button(icons: &Icons, message: Messages) -> Element<Messages> {
@@ -96,7 +94,6 @@ fn refresh_button(icons: &Icons, message: Messages) -> Element<Messages> {
         "Refresh the servers information",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
 fn favorites_button(icons: &Icons) -> Element<Messages> {
@@ -105,5 +102,4 @@ fn favorites_button(icons: &Icons) -> Element<Messages> {
         "Open favorites servers editor",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }

@@ -1,9 +1,6 @@
 use std::{collections::BTreeSet, path::PathBuf};
-
 use serde::{Deserialize, Serialize};
-
 use crate::directories;
-
 use {
     crate::{
         models::Server,
@@ -216,7 +213,8 @@ impl ServersProvider {
     }
 }
 
-async fn fetch_servers(source: &Box<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
+async fn fetch_servers(source: impl AsRef<dyn Source>, settings: &UserSettings, servers: &mut Vec<Server>) {
+    let source = source.as_ref();
     let source_key = source.unique_key();
     match source.get_servers_infos(settings).await {
         Ok(new_servers) => servers.extend(new_servers.into_iter().map(|mut info| {
