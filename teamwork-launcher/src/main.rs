@@ -6,7 +6,7 @@ use {
     clap::Parser,
     iced::{Application as IcedApplication, Settings},
     launcher::ExecutableLauncher,
-    log::{error, info, warn},
+    log::{error, warn},
     settings::UserSettings,
 };
 
