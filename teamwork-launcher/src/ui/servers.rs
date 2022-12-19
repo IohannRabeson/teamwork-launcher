@@ -2,13 +2,10 @@ use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
-        ui::widgets,
+        ui::widgets, ui::advanced_filter::advanced_filter_view, fonts,
     },
     iced::{
-        widget::{
-            checkbox, column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
-            Column,
-        },
+        widget::{column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},
         Alignment, Element, Length,
     },
     itertools::Itertools,
@@ -29,22 +26,6 @@ pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     ]]
     .spacing(VISUAL_SPACING_SMALL)
     .into()
-}
-
-fn servers_filter_view(settings: &UserSettings) -> Column<Messages> {
-    let filter = settings.server_filter();
-
-    column![checkbox("With players only", filter.minimum_players_count > 0, |checked| {
-        let mut settings = settings.clone();
-
-        settings.set_minimum_players_count(match checked {
-            true => 1u8,
-            false => 0u8,
-        });
-
-        Messages::SettingsChanged(settings)
-    }).text_size(TEXT_FONT_SIZE)]
-    .padding(VISUAL_SPACING_MEDIUM)
 }
 
 pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
@@ -89,7 +70,7 @@ where
             .scroller_width(8)
         )
         .width(Length::FillPortion(4)),
-        servers_filter_view(settings).width(Length::FillPortion(1))
+        advanced_filter_view(settings).width(Length::FillPortion(1))
     ]
     .into()
 }
@@ -110,35 +91,33 @@ fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messag
 }
 
 const TITLE_FONT_SIZE: u16 = 24;
-const TEXT_FONT_SIZE: u16 = 18;
 const SMALL_FLAG_SIZE: u16 = 20;
 
 fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Icons) -> Element<'a, Messages> {
     container(row![
         widgets::thumbnail(server, icons),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
-        column![
-            row![
-                column![
-                    text(&server.name).size(TITLE_FONT_SIZE),
-                    text(format!(
-                        "Players: {} / {}",
-                        server.current_players_count, server.max_players_count
-                    )).size(TEXT_FONT_SIZE),
-                    text(format!("Map: {}", server.map)).size(TEXT_FONT_SIZE),
-                    widgets::region(server, icons, SMALL_FLAG_SIZE, 0),
-                ]
-                .spacing(VISUAL_SPACING_SMALL),
-                column![
-                    favorite_button(is_favorite, icons, 28)
-                        .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
-                    widgets::ping(server).size(TEXT_FONT_SIZE)
-                ]
-                .spacing(VISUAL_SPACING_SMALL)
-                .width(Length::Fill)
-                .align_items(Alignment::End),
+        column![row![
+            column![
+                text(&server.name).size(TITLE_FONT_SIZE),
+                text(format!(
+                    "Players: {} / {}",
+                    server.current_players_count, server.max_players_count
+                ))
+                .size(fonts::TEXT_FONT_SIZE),
+                text(format!("Map: {}", server.map)).size(fonts::TEXT_FONT_SIZE),
+                widgets::region(server, icons, SMALL_FLAG_SIZE, 0),
             ]
-        ],
+            .spacing(VISUAL_SPACING_SMALL),
+            column![
+                favorite_button(is_favorite, icons, 28)
+                    .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
+                widgets::ping(server).size(fonts::TEXT_FONT_SIZE)
+            ]
+            .spacing(VISUAL_SPACING_SMALL)
+            .width(Length::Fill)
+            .align_items(Alignment::End),
+        ]],
         horizontal_space(Length::Fill),
     ])
     .padding(6)
@@ -162,9 +141,10 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
             text(format!(
                 "Players: {} / {}",
                 server.current_players_count, server.max_players_count
-            )).size(TEXT_FONT_SIZE),
-            text(format!("Map: {}", server.map)).size(TEXT_FONT_SIZE),
-            widgets::ping(server).size(TEXT_FONT_SIZE),
+            ))
+            .size(fonts::TEXT_FONT_SIZE),
+            text(format!("Map: {}", server.map)).size(fonts::TEXT_FONT_SIZE),
+            widgets::ping(server).size(fonts::TEXT_FONT_SIZE),
         ]
         .spacing(VISUAL_SPACING_SMALL),
         horizontal_space(Length::Fill),

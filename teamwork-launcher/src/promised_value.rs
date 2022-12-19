@@ -7,6 +7,15 @@ pub enum PromisedValue<T: Clone + Hash + Debug> {
     None,
 }
 
+impl<T: Clone + Hash + Debug> PromisedValue<T> {
+    pub fn is_none(&self) -> bool {
+        match self {
+            PromisedValue::None => true,
+            _ => false,
+        }
+    }
+}
+
 impl<T: Clone + Hash + Debug> Default for PromisedValue<T> {
     fn default() -> Self {
         Self::None

@@ -140,6 +140,12 @@ impl UserSettings {
         inner.servers_filter.minimum_players_count = value;
     }
 
+    pub fn set_online_server_only(&mut self, value: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.servers_filter.with_valid_ping = value;
+    }
+
     pub fn server_filter(&self) -> AdvancedServerFilter {
         let inner = self.storage.try_read().unwrap();
 

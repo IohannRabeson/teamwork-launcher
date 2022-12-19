@@ -1,4 +1,5 @@
 use {
+    super::{styles, VISUAL_SPACING_MEDIUM},
     crate::{
         application::Messages,
         icons::Icons,
@@ -7,12 +8,11 @@ use {
         ui::VISUAL_SPACING_SMALL,
     },
     iced::{
-        widget::{container, horizontal_space, image, row, svg, text},
+        theme,
+        widget::{container, horizontal_space, image, row, svg, text, Text},
         Element, Length,
     },
 };
-use iced::{theme, widget::Text};
-use super::{VISUAL_SPACING_MEDIUM, styles};
 
 const THUMBNAIL_WIDTH: u16 = 250;
 const THUMBNAIL_HEIGHT: u16 = 125;
@@ -59,11 +59,12 @@ pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u1
     let size = size - (padding * 2);
 
     match icons.flag(country.code()) {
-        Some(icon) => {
-            tooltip(container(svg(icon).width(Length::Units(size)).height(Length::Units(size)))
-                    .padding(padding), &country, iced::widget::tooltip::Position::Right)
-                    .into()
-        },
+        Some(icon) => tooltip(
+            container(svg(icon).width(Length::Units(size)).height(Length::Units(size))).padding(padding),
+            &country,
+            iced::widget::tooltip::Position::Right,
+        )
+        .into(),
         None => text(format!("Region: {} ({})", country, country.code())).into(),
     }
 }
@@ -80,14 +81,10 @@ pub fn ping<'a>(server: &Server) -> Text<'a> {
 pub fn tooltip<'a>(
     content: impl Into<Element<'a, Messages>>,
     tooltip: impl ToString,
-    position: iced::widget::tooltip::Position) -> Element<'a, Messages>
-{
-    iced::widget::tooltip(
-        content,
-        tooltip,
-        position,
-    )
-    .gap(VISUAL_SPACING_MEDIUM)
-    .style(theme::Container::Custom(Box::new(styles::ToolTip::default())))
-    .into()
+    position: iced::widget::tooltip::Position,
+) -> Element<'a, Messages> {
+    iced::widget::tooltip(content, tooltip, position)
+        .gap(VISUAL_SPACING_MEDIUM)
+        .style(theme::Container::Custom(Box::new(styles::ToolTip::default())))
+        .into()
 }
