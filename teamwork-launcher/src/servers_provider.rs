@@ -35,25 +35,50 @@ pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
 
-const GAMEMODE_IDS: [(&str, &str); 9] = [
-    ("Payload", "payload"),
-    ("Attack / Defend", "attack-defend"),
-    ("Capture The Flag", "ctf"),
-    ("Control point", "control-point"),
-    ("Payload race", "payload-race"),
-    ("Control Point Orange", "cp-orange"),
-    ("King Of The Hill", "koth"),
-    ("Medieval mode", "medieval-mode"),
-    ("Mann Versus Machine", "mvm"),
+const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 10] = [
+    ("Skial", "https://teamwork.tf/api/v1/community/provider/skial/servers"),
+    (
+        "Blackwonder",
+        "https://teamwork.tf/api/v1/community/provider/blackwonder/servers",
+    ),
+    (
+        "Uncletopia",
+        "https://teamwork.tf/api/v1/community/provider/uncletopia/servers",
+    ),
+    (
+        "Panda-Community",
+        "https://teamwork.tf/api/v1/community/provider/panda-community/servers",
+    ),
+    ("Otaku", "https://teamwork.tf/api/v1/community/provider/otakugamingtf/servers"),
+    (
+        "Fire Friendly",
+        "https://teamwork.tf/api/v1/community/provider/fire_friendly/servers",
+    ),
+    (
+        "Jump Academy",
+        "https://teamwork.tf/api/v1/community/provider/jumpacademy/servers",
+    ),
+    (
+        "Games For Life",
+        "https://teamwork.tf/api/v1/community/provider/gamesforlifegfl/servers",
+    ),
+    (
+        "Spaceship Servers",
+        "https://teamwork.tf/api/v1/community/provider/spaceshipservers/servers",
+    ),
+    (
+        "Leaders Of the Old School",
+        "https://teamwork.tf/api/v1/community/provider/leadersoftheoldschool/servers",
+    ),
 ];
 
 impl Default for ServersProvider {
     fn default() -> Self {
         let mut sources: Vec<Box<dyn Source>> = vec![];
 
-        for source in GAMEMODE_IDS
+        for source in DEFAULT_TEAMWORK_PROVIDERS
             .into_iter()
-            .map(|(name, id)| Box::new(TeamworkSource::new(id, name)))
+            .map(|(name, base_url)| Box::new(TeamworkSource::new(base_url, name)))
         {
             sources.push(source)
         }

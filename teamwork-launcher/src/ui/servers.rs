@@ -1,8 +1,13 @@
 use {
     super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
-        application::Messages, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
-        ui::widgets, ui::advanced_filter::advanced_filter_view, fonts,
+        application::Messages,
+        fonts,
+        icons::Icons,
+        models::Server,
+        promised_value::PromisedValue,
+        settings::UserSettings,
+        ui::{advanced_filter::advanced_filter_view, widgets},
     },
     iced::{
         widget::{column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},

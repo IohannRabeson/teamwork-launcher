@@ -13,6 +13,7 @@ use {
     },
 };
 
+mod advanced_filter;
 mod announces;
 mod buttons;
 mod header;
@@ -20,7 +21,6 @@ mod servers;
 mod settings;
 mod styles;
 mod widgets;
-mod advanced_filter;
 
 pub const VISUAL_SPACING_SMALL: u16 = 4;
 pub const VISUAL_SPACING_MEDIUM: u16 = 8;

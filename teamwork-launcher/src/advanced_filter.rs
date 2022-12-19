@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::Server;
 
-fn default_as_true() -> bool { true }
+fn default_as_true() -> bool {
+    true
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct AdvancedServerFilter {

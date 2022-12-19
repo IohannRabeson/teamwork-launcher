@@ -109,9 +109,12 @@ impl IcedApplication for Application {
     type Flags = Flags;
     type Theme = Theme;
 
-    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+    fn new(mut flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
+
+        flags.settings.set_available_sources(servers_provider.get_sources());
+
         let mut application = Self {
             should_exit: false,
             icons: Icons::new(&theme),
@@ -126,10 +129,6 @@ impl IcedApplication for Application {
             ping_service: PingService::default(),
             announces: AnnounceQueue::default(),
         };
-
-        application
-            .settings
-            .set_available_sources(application.servers_provider.get_sources());
 
         let mut command = application.refresh_command();
 
