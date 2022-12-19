@@ -43,7 +43,7 @@ pub enum Messages {
     SettingsChanged(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
-    /// The server is identified by its name.
+
     FavoriteClicked(IpPort, Option<SourceKey>),
 
     SourceFilterClicked(SourceKey, bool),
@@ -59,6 +59,8 @@ pub enum Messages {
 
     /// Discard the current announce
     DiscardCurrentAnnounce,
+
+    OpenSettingsLocation,
 }
 
 pub struct Flags {
@@ -182,6 +184,7 @@ impl IcedApplication for Application {
             Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
             Messages::Quit => self.should_exit = true,
             Messages::DiscardCurrentAnnounce => self.announces.pop(),
+            Messages::OpenSettingsLocation => todo!(),
         }
 
         Command::none()

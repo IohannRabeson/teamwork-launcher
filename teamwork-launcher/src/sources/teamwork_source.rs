@@ -40,11 +40,11 @@ impl From<teamwork::Server> for Server {
 }
 
 impl TeamworkSource {
-    pub fn new(query_url_base: &str, game_mode_name: &str) -> Self {
+    pub fn new(url: &str, source_name: &str) -> Self {
         Self {
             client: TeamworkClient::default(),
-            query_url_base: query_url_base.to_string(),
-            source_name: game_mode_name.to_string(),
+            query_url_base: url.to_string(),
+            source_name: source_name.to_string(),
         }
     }
 }

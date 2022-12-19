@@ -1,4 +1,8 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, path::PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+use crate::directories;
 
 use {
     crate::{
@@ -35,7 +39,7 @@ pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
 
-const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 10] = [
+const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 18] = [
     ("Skial", "https://teamwork.tf/api/v1/community/provider/skial/servers"),
     (
         "Blackwonder",
@@ -70,15 +74,113 @@ const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 10] = [
         "Leaders Of the Old School",
         "https://teamwork.tf/api/v1/community/provider/leadersoftheoldschool/servers",
     ),
+    ("Petrol.tf", "https://teamwork.tf/api/v1/community/provider/petroltf/servers"),
+    (
+        "The Outpost Community",
+        "https://teamwork.tf/api/v1/community/provider/theoutpostcommunity/servers",
+    ),
+    ("MicSnobs", "https://teamwork.tf/api/v1/community/provider/micsnobs/servers"),
+    (
+        "EdgeGamers Organization",
+        "https://teamwork.tf/api/v1/community/provider/edgegamersorganization/servers",
+    ),
+    (
+        "Nexus Reality",
+        "https://teamwork.tf/api/v1/community/provider/glubbablesservers/servers",
+    ),
+    (
+        "IdleServer.Com",
+        "https://teamwork.tf/api/v1/community/provider/idleservercom/servers",
+    ),
+    (
+        "TF2SwapShop.com",
+        "https://teamwork.tf/api/v1/community/provider/tf2swapshop/servers",
+    ),
+    (
+        "++RJump ECJ",
+        "https://teamwork.tf/api/v1/community/provider/rjumpecj/servers",
+    ),
 ];
+
+#[derive(thiserror::Error, Debug)]
+enum ConfigurationError {
+    #[error("Unable to read providers configuration '{0}': {1}")]
+    CantReadFile(PathBuf, std::io::Error),
+    #[error("Unable to parse providers configuration '{0}': {1}")]
+    CantParseJson(PathBuf, serde_json::Error),
+    #[error("Unable to write providers configuration '{0}': {1}")]
+    CantWriteFile(PathBuf, std::io::Error),
+    #[error("Unable to format JSON for providers configuration: {0}")]
+    CantFormatJson(serde_json::Error),
+}
+
+#[derive(Serialize, Deserialize)]
+struct ProviderEntry {
+    pub url: String,
+    pub display_name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Configuration {
+    pub entries: Vec<ProviderEntry>,
+}
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            entries: DEFAULT_TEAMWORK_PROVIDERS
+                .iter()
+                .map(|(name, url)| ProviderEntry {
+                    display_name: name.to_string(),
+                    url: url.to_string(),
+                })
+                .collect(),
+        }
+    }
+}
+
+impl Configuration {
+    pub fn load_file() -> Result<Configuration, ConfigurationError> {
+        let global_config_file_path = directories::get_providers_file_path();
+        let content = std::fs::read_to_string(&global_config_file_path)
+            .map_err(|e| ConfigurationError::CantReadFile(global_config_file_path.clone(), e))?;
+
+        serde_json::from_str(&content).map_err(|e| ConfigurationError::CantParseJson(global_config_file_path, e))
+    }
+
+    pub fn write_file(&self) -> Result<(), ConfigurationError> {
+        let global_config_file_path = directories::get_providers_file_path();
+        let content = serde_json::to_string_pretty(self).map_err(ConfigurationError::CantFormatJson)?;
+
+        std::fs::write(&global_config_file_path, content)
+            .map_err(|e| ConfigurationError::CantWriteFile(global_config_file_path.clone(), e))
+    }
+}
 
 impl Default for ServersProvider {
     fn default() -> Self {
-        let mut sources: Vec<Box<dyn Source>> = vec![];
+        // Try to load a configuration file.
+        // If it succeed, all good, otherwise, it create a default configuration
+        // then write the file at the expected location.
+        let configuration = match Configuration::load_file() {
+            Ok(configuration) => configuration,
+            Err(error) => {
+                error!("{}", error);
 
-        for source in DEFAULT_TEAMWORK_PROVIDERS
-            .into_iter()
-            .map(|(name, base_url)| Box::new(TeamworkSource::new(base_url, name)))
+                Configuration::default()
+            }
+        };
+
+        if let Err(error) = configuration.write_file() {
+            error!("Failed to write providers configuration: {}", error);
+        }
+
+        let mut sources: Vec<Box<dyn Source>> = Vec::new();
+
+        for source in configuration
+            .entries
+            .iter()
+            .map(|entry| Box::new(TeamworkSource::new(&entry.url, &entry.display_name)))
         {
             sources.push(source)
         }

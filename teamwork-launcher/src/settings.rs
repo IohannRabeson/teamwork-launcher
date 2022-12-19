@@ -1,5 +1,5 @@
 use crate::{
-    advanced_filter::AdvancedServerFilter, directories, servers_provider::ServersProvider, servers_sources::ServersSources,
+    advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources,
     text_filter::TextFilter,
 };
 

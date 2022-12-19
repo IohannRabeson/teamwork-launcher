@@ -45,7 +45,7 @@ pub struct CliParameters {
 fn main() -> anyhow::Result<()> {
     let cli_params = CliParameters::parse();
 
-    directories::create_if_needed();
+    directories::create_configuration_directory_if_needed();
     setup::setup_logger()?;
 
     if cli_params.integration_test {
@@ -66,7 +66,7 @@ mod directories {
 
     use super::*;
 
-    pub fn create_if_needed() {
+    pub fn create_configuration_directory_if_needed() {
         let application_directory_path = get_configuration_directory();
 
         if !application_directory_path.exists() {
@@ -99,6 +99,13 @@ mod directories {
         let mut settings_file_path = directories::get_configuration_directory();
 
         settings_file_path.push("user_settings.json");
+        settings_file_path
+    }
+
+    pub fn get_providers_file_path() -> PathBuf {
+        let mut settings_file_path = directories::get_configuration_directory();
+
+        settings_file_path.push("providers.json");
         settings_file_path
     }
 }
