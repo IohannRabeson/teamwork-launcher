@@ -96,8 +96,8 @@ impl ExecutableLauncher {
                 ExecutableArgument::Server,
             ],
             launcher: match enable_debug_mode {
-                true => Box::new(DebugLauncher::default()),
-                false => Box::new(GameLauncher::default()),
+                true => Box::<DebugLauncher>::default(),
+                false => Box::<GameLauncher>::default(),
             },
         }
     }

@@ -332,7 +332,7 @@ impl Application {
         if self.settings.quit_on_copy() {
             Command::batch(vec![
                 iced::clipboard::write(text),
-                Command::perform(async move { () }, |_| Messages::Quit),
+                Command::perform(async move {}, |_| Messages::Quit),
             ])
         } else {
             iced::clipboard::write(text)

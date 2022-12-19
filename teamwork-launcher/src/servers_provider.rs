@@ -102,13 +102,13 @@ const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 18] = [
 #[derive(thiserror::Error, Debug)]
 enum ConfigurationError {
     #[error("Unable to read providers configuration '{0}': {1}")]
-    CantReadFile(PathBuf, std::io::Error),
+    ReadFile(PathBuf, std::io::Error),
     #[error("Unable to parse providers configuration '{0}': {1}")]
-    CantParseJson(PathBuf, serde_json::Error),
+    ParseJson(PathBuf, serde_json::Error),
     #[error("Unable to write providers configuration '{0}': {1}")]
-    CantWriteFile(PathBuf, std::io::Error),
+    WriteFile(PathBuf, std::io::Error),
     #[error("Unable to format JSON for providers configuration: {0}")]
-    CantFormatJson(serde_json::Error),
+    FormatJson(serde_json::Error),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -140,17 +140,17 @@ impl Configuration {
     pub fn load_file() -> Result<Configuration, ConfigurationError> {
         let global_config_file_path = directories::get_providers_file_path();
         let content = std::fs::read_to_string(&global_config_file_path)
-            .map_err(|e| ConfigurationError::CantReadFile(global_config_file_path.clone(), e))?;
+            .map_err(|e| ConfigurationError::ReadFile(global_config_file_path.clone(), e))?;
 
-        serde_json::from_str(&content).map_err(|e| ConfigurationError::CantParseJson(global_config_file_path, e))
+        serde_json::from_str(&content).map_err(|e| ConfigurationError::ParseJson(global_config_file_path, e))
     }
 
     pub fn write_file(&self) -> Result<(), ConfigurationError> {
         let global_config_file_path = directories::get_providers_file_path();
-        let content = serde_json::to_string_pretty(self).map_err(ConfigurationError::CantFormatJson)?;
+        let content = serde_json::to_string_pretty(self).map_err(ConfigurationError::FormatJson)?;
 
         std::fs::write(&global_config_file_path, content)
-            .map_err(|e| ConfigurationError::CantWriteFile(global_config_file_path.clone(), e))
+            .map_err(|e| ConfigurationError::WriteFile(global_config_file_path.clone(), e))
     }
 }
 
