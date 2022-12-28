@@ -6,7 +6,6 @@ use {
     crate::{
         announces::{Announce, AnnounceQueue},
         geolocation::IpGeolocationService,
-        icons::Icons,
         launcher::ExecutableLauncher,
         models::{Country, IpPort, Server, Thumbnail},
         ping_service::PingService,
@@ -84,7 +83,6 @@ pub enum States {
 
 pub struct Application {
     settings: UserSettings,
-    icons: Icons,
     servers: Vec<Server>,
     /// The stack managing the states.
     states: StatesStack<States>,
@@ -116,14 +114,12 @@ impl IcedApplication for Application {
     type Theme = Theme;
 
     fn new(mut flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
 
         flags.settings.set_available_sources(servers_provider.get_sources());
 
         let mut application = Self {
             should_exit: false,
-            icons: Icons::new(&theme),
             servers_provider,
             settings: flags.settings,
             launcher: flags.launcher,
@@ -208,8 +204,8 @@ impl IcedApplication for Application {
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         let content = match self.states.current() {
             States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
-            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
-            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
+            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.settings),
+            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.settings),
             States::Settings => settings_view(&self.settings),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
@@ -470,12 +466,12 @@ impl Application {
 
     /// Display a content with a title and a header.
     fn normal_view<'a>(&'a self, content: Element<'a, Messages>) -> Element<'a, Messages> {
-        let mut main_column = column![header_view(&self.title(), &self.icons, self.states.current())];
+        let mut main_column = column![header_view(&self.title(), self.states.current())];
 
         if let Some(announce) = self.announces.current() {
             main_column = main_column
                 .push(vertical_space(Length::Units(VISUAL_SPACING_SMALL)))
-                .push(announce_view(&self.icons, announce));
+                .push(announce_view(announce));
         }
 
         main_column
