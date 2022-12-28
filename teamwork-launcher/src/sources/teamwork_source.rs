@@ -3,7 +3,7 @@ use {
     crate::{
         models::{IpPort, Server, Thumbnail},
         promised_value::PromisedValue,
-        servers_provider::{GetServersInfosError, Source},
+        servers_provider::{GetServersInfoError, Source},
         settings::UserSettings,
     },
     async_trait::async_trait,
@@ -59,14 +59,14 @@ impl Source for TeamworkSource {
         SourceKey::new(self.query_url_base.clone())
     }
 
-    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
+    async fn get_servers_info(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfoError> {
         self.client
             .get_servers(UrlWithKey::new(&self.query_url_base, &settings.teamwork_api_key()))
             .await
             .map(|servers: Vec<teamwork::Server>| -> Vec<Server> {
                 servers.into_iter().map(|server: teamwork::Server| server.into()).collect()
             })
-            .map_err(|error| GetServersInfosError {
+            .map_err(|error| GetServersInfoError {
                 source_name: self.display_name(),
                 message: format!("Failed to get servers data: {}", error),
             })

@@ -1,6 +1,6 @@
 use iced::{
-    widget::{button, container},
-    Background, Theme, Vector,
+    widget::{button, container, svg},
+    Background, Color, Theme, Vector,
 };
 
 #[derive(Default)]
@@ -35,6 +35,19 @@ impl button::StyleSheet for Announce {
             border_radius: 3.0,
             text_color: style.palette().text,
             ..Default::default()
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct SvgButtonIconStyle;
+
+impl svg::StyleSheet for SvgButtonIconStyle {
+    type Style = Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> svg::Appearance {
+        svg::Appearance {
+            color: Some(Color::from_rgb(1.0, 1.0, 1.0)),
         }
     }
 }

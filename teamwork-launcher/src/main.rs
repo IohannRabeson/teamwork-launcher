@@ -22,7 +22,6 @@ mod models;
 mod ping_service;
 mod promised_value;
 mod servers_provider;
-mod servers_sources;
 mod settings;
 mod sources;
 mod states;

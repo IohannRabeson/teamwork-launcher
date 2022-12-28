@@ -1,5 +1,5 @@
 use nom::{
-    bytes::complete::{tag, take_while_m_n},
+    bytes::complete::{take_while_m_n},
     combinator::map_res,
     sequence::tuple,
     IResult,
@@ -23,14 +23,4 @@ pub(crate) fn hex_color(input: &str) -> IResult<&str, Color> {
     let (input, (r, g, b)) = tuple((hex_primary, hex_primary, hex_primary))(input)?;
 
     Ok((input, Color { r, g, b }))
-}
-
-pub(crate) fn hex_color_prefix(input: &str) -> IResult<&str, Color> {
-    let (input, _) = tag("#")(input)?;
-
-    hex_color(input)
-}
-
-pub(crate) fn compute_color_component(value: f32) -> u8 {
-    (value * u8::MAX as f32) as u8
 }

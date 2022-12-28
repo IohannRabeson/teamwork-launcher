@@ -2,7 +2,7 @@ use {
     super::{styles, VISUAL_SPACING_MEDIUM},
     crate::{
         application::Messages,
-        icons::Icons,
+        icons,
         models::{Country, Server, Thumbnail},
         promised_value::PromisedValue,
         ui::VISUAL_SPACING_SMALL,
@@ -25,16 +25,16 @@ fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Messages> {
         .into()
 }
 
-fn image_thumbnail_content<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+fn image_thumbnail_content<'a>(server: &Server) -> Element<'a, Messages> {
     match &server.map_thumbnail {
         Thumbnail::Ready(image) => image_thumbnail_viewer(image.clone()),
         Thumbnail::Loading => return text("Loading").into(),
-        Thumbnail::None => image_thumbnail_viewer(icons.no_image()),
+        Thumbnail::None => image_thumbnail_viewer(icons::NO_IMAGE.clone()),
     }
 }
 
-pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
-    container(image_thumbnail_content(server, icons))
+pub fn thumbnail<'a>(server: &Server) -> Element<'a, Messages> {
+    container(image_thumbnail_content(server))
         .width(Length::Units(THUMBNAIL_WIDTH))
         .height(Length::Units(THUMBNAIL_HEIGHT))
         .center_x()
@@ -42,12 +42,12 @@ pub fn thumbnail<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         .into()
 }
 
-pub fn region<'a>(server: &Server, icons: &Icons, size: u16, padding: u16) -> Element<'a, Messages> {
+pub fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Messages> {
     match &server.country {
         PromisedValue::Ready(country) => row![
             text("Region:".to_string()),
             horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
-            country_icon(icons, country, size, padding)
+            country_icon(country, size, padding)
         ]
         .into(),
         PromisedValue::Loading => text("Region: loading...").into(),
@@ -55,10 +55,10 @@ pub fn region<'a>(server: &Server, icons: &Icons, size: u16, padding: u16) -> El
     }
 }
 
-pub fn country_icon<'a>(icons: &Icons, country: &Country, size: u16, padding: u16) -> Element<'a, Messages> {
+pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'a, Messages> {
     let size = size - (padding * 2);
 
-    match icons.flag(country.code()) {
+    match icons::flag(country.code()) {
         Some(icon) => tooltip(
             container(svg(icon).width(Length::Units(size)).height(Length::Units(size))).padding(padding),
             country,

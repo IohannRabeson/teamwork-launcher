@@ -6,7 +6,7 @@ pub fn tooltip<'a, Message, Renderer>(
     content: impl Into<Element<'a, Message, Renderer>>,
     tooltip: impl ToString) 
 {
-    tooltip(
+    tooltips(
         content,
         tooltip,
         tooltip::Position::Bottom,
