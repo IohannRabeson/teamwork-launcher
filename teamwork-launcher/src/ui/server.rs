@@ -31,7 +31,7 @@ pub fn server_view<'a>(
 ) -> Element<'a, Messages> {
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            widgets::country_icon(country, TITLE_FONT_SIZE, VISUAL_SPACING_SMALL),
+            widgets::country_icon(country, TITLE_FONT_SIZE, 1),
             horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
             text(&server.name).size(TITLE_FONT_SIZE)
         ],
@@ -48,7 +48,7 @@ pub fn server_view<'a>(
             ))
             .size(fonts::TEXT_FONT_SIZE),
             text(format!("Map: {}", server.map)).size(fonts::TEXT_FONT_SIZE),
-            widgets::ping(server).size(fonts::TEXT_FONT_SIZE),
+            widgets::ping(server),
             source_text(server, servers_provider).size(fonts::TEXT_FONT_SIZE)
         ]
         .spacing(VISUAL_SPACING_SMALL),
@@ -131,7 +131,7 @@ pub fn server_view_edit_favorites<'a>(
             column![
                 favorite_button(is_favorite, SMALL_BUTTON_SIZE)
                     .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
-                widgets::ping(server).size(fonts::TEXT_FONT_SIZE)
+                widgets::ping(server)
             ]
             .spacing(VISUAL_SPACING_SMALL)
             .width(Length::Fill)
