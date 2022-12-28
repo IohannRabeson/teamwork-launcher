@@ -1,4 +1,4 @@
-use crate::{advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources, text_filter::TextFilter};
+use crate::{advanced_filter::AdvancedServerFilter, directories, text_filter::TextFilter};
 
 use {
     crate::{
@@ -16,6 +16,7 @@ use {
 };
 
 use {
+    crate::servers_provider::ServersProvider,
     async_rwlock::RwLock,
     log::{error, info},
     serde::{Deserialize, Deserializer, Serialize, Serializer},
@@ -45,7 +46,7 @@ struct InnerUserSettings {
     #[serde(default)]
     pub servers_filter: AdvancedServerFilter,
     #[serde(default)]
-    pub servers_source_filter: ServersSources,
+    pub servers_source_filter: BTreeSet<SourceKey>,
     #[serde(default)]
     pub game_executable_path: String,
     #[serde(default)]
@@ -154,23 +155,33 @@ impl UserSettings {
 
     pub fn set_available_sources(&mut self, all_source_keys: impl Iterator<Item = (String, SourceKey)>) {
         let mut inner = self.storage.try_write().unwrap();
+        let available_keys: BTreeSet<SourceKey> = all_source_keys.map(|(_, key)| key).collect();
+        let new_keys: BTreeSet<SourceKey> = inner.servers_source_filter.intersection(&available_keys).cloned().collect();
 
-        inner.servers_source_filter.set_available_sources(all_source_keys);
+        inner.servers_source_filter.clear();
+        inner.servers_source_filter.extend(new_keys);
     }
 
     pub fn check_source_filter(&mut self, key: &SourceKey, checked: bool) {
         let mut inner = self.storage.try_write().unwrap();
 
-        inner.servers_source_filter.check_source(key, checked);
+        match checked {
+            true => inner.servers_source_filter.insert(key.clone()),
+            false => inner.servers_source_filter.remove(key),
+        };
     }
 
-    pub fn source_filter(&self) -> Vec<(String, SourceKey, bool)> {
+    pub fn source_filter(&self, servers_provider: &ServersProvider) -> Vec<(String, SourceKey, bool)> {
         let inner = self.storage.try_read().unwrap();
+        let available_sources = servers_provider.get_sources();
 
-        inner
-            .servers_source_filter
-            .sources()
-            .map(|(name, key, checked)| (name, key, checked))
+        available_sources
+            .into_iter()
+            .map(|(name, key)| {
+                let checked = inner.servers_source_filter.contains(&key);
+
+                (name, key, checked)
+            })
             .collect()
     }
 
@@ -201,9 +212,7 @@ impl UserSettings {
     pub fn filter_servers(&self, server: &Server) -> bool {
         let inner = self.storage.try_read().unwrap();
 
-        inner.servers_text_filter.accept(&server.name.to_lowercase())
-            && inner.servers_source_filter.accept_server(server)
-            && inner.servers_filter.accept_server(server)
+        inner.servers_text_filter.accept(&server.name.to_lowercase()) && inner.servers_filter.accept_server(server)
     }
 
     pub fn filter_servers_favorite(&self, server: &Server) -> bool {
@@ -231,7 +240,7 @@ impl UserSettings {
     pub fn checked_source_keys(&self) -> BTreeSet<SourceKey> {
         let inner = self.storage.try_read().unwrap();
 
-        inner.servers_source_filter.checked_sources().cloned().collect()
+        inner.servers_source_filter.clone()
     }
 
     /// Update the information about the favorites servers.

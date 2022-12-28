@@ -1,10 +1,11 @@
+use std::path::PathBuf;
+
 use crate::{APPLICATION_VERSION, GIT_SHA_SHORT};
 
 use {
     crate::{
         announces::{Announce, AnnounceQueue},
         geolocation::IpGeolocationService,
-        icons::Icons,
         launcher::ExecutableLauncher,
         models::{Country, IpPort, Server, Thumbnail},
         ping_service::PingService,
@@ -43,7 +44,7 @@ pub enum Messages {
     SettingsChanged(UserSettings),
     /// Text passed as parameter will be copied to the clipboard.
     CopyToClipboard(String),
-    /// The server is identified by its name.
+
     FavoriteClicked(IpPort, Option<SourceKey>),
 
     SourceFilterClicked(SourceKey, bool),
@@ -56,9 +57,13 @@ pub enum Messages {
     Back,
     /// Pop all the state then quit the application.
     Quit,
+    DoNothing,
+    PushAnnounce(Announce),
 
     /// Discard the current announce
     DiscardCurrentAnnounce,
+
+    OpenConfigurationDirectory(PathBuf),
 }
 
 pub struct Flags {
@@ -78,7 +83,6 @@ pub enum States {
 
 pub struct Application {
     settings: UserSettings,
-    icons: Icons,
     servers: Vec<Server>,
     /// The stack managing the states.
     states: StatesStack<States>,
@@ -109,12 +113,13 @@ impl IcedApplication for Application {
     type Flags = Flags;
     type Theme = Theme;
 
-    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let theme = Theme::default();
+    fn new(mut flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         let servers_provider = Arc::new(ServersProvider::default());
+
+        flags.settings.set_available_sources(servers_provider.get_sources());
+
         let mut application = Self {
             should_exit: false,
-            icons: Icons::new(&theme),
             servers_provider,
             settings: flags.settings,
             launcher: flags.launcher,
@@ -126,10 +131,6 @@ impl IcedApplication for Application {
             ping_service: PingService::default(),
             announces: AnnounceQueue::default(),
         };
-
-        application
-            .settings
-            .set_available_sources(application.servers_provider.get_sources());
 
         let mut command = application.refresh_command();
 
@@ -183,6 +184,9 @@ impl IcedApplication for Application {
             Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
             Messages::Quit => self.should_exit = true,
             Messages::DiscardCurrentAnnounce => self.announces.pop(),
+            Messages::PushAnnounce(announce) => self.announces.push(announce),
+            Messages::OpenConfigurationDirectory(directory_path) => return self.explore_directory(directory_path),
+            Messages::DoNothing => (),
         }
 
         Command::none()
@@ -200,9 +204,9 @@ impl IcedApplication for Application {
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
         let content = match self.states.current() {
             States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
-            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.icons, &self.settings),
-            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.icons, &self.settings),
-            States::Settings => settings_view(&self.settings),
+            States::ShowServers => servers_view(self.favorite_servers_iter(), &self.settings),
+            States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.settings),
+            States::Settings => settings_view(&self.settings, &self.servers_provider),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
         };
@@ -316,10 +320,8 @@ impl Application {
     fn launch_executable(&mut self, ip_port: &IpPort) {
         if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
             self.states.push(States::Error { message: error.message });
-        } else {
-            if self.settings.quit_on_launch() {
-                self.should_exit = true;
-            }
+        } else if self.settings.quit_on_launch() {
+            self.should_exit = true;
         }
     }
 
@@ -327,7 +329,7 @@ impl Application {
         if self.settings.quit_on_copy() {
             Command::batch(vec![
                 iced::clipboard::write(text),
-                Command::perform(async move { () }, |_| Messages::Quit),
+                Command::perform(async move {}, |_| Messages::Quit),
             ])
         } else {
             iced::clipboard::write(text)
@@ -464,12 +466,12 @@ impl Application {
 
     /// Display a content with a title and a header.
     fn normal_view<'a>(&'a self, content: Element<'a, Messages>) -> Element<'a, Messages> {
-        let mut main_column = column![header_view(&self.title(), &self.icons, self.states.current())];
+        let mut main_column = column![header_view(&self.title(), self.states.current())];
 
         if let Some(announce) = self.announces.current() {
             main_column = main_column
                 .push(vertical_space(Length::Units(VISUAL_SPACING_SMALL)))
-                .push(announce_view(&self.icons, announce));
+                .push(announce_view(announce));
         }
 
         main_column
@@ -477,5 +479,62 @@ impl Application {
             .push(content)
             .padding(12)
             .into()
+    }
+
+    fn explore_directory(&self, file_to_edit: PathBuf) -> Command<Messages> {
+        let file_to_edit_for_error = file_to_edit.clone();
+
+        Command::perform(
+            async move { Self::open_directory(file_to_edit).await },
+            move |result| match result {
+                Ok(_) => Messages::DoNothing,
+                Err(error) => Messages::PushAnnounce(Announce::new(
+                    format!(
+                        "Can't edit '{}'.",
+                        file_to_edit_for_error
+                            .file_name()
+                            .map(|s| s.to_string_lossy())
+                            .unwrap_or_default()
+                    ),
+                    format!(
+                        "The file '{}' can't be edited:\n - {}",
+                        file_to_edit_for_error.display(),
+                        error
+                    ),
+                )),
+            },
+        )
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn open_directory(file_to_edit: PathBuf) -> Result<(), String> {
+        tokio::task::spawn_blocking(move || {
+            use std::process::Command;
+
+            Command::new("explorer.exe")
+                .args(vec![format!("/e,{}", file_to_edit.to_string_lossy())])
+                .output()
+                .map_err(|error| error.to_string())?;
+
+            Ok(())
+        })
+        .await
+        .unwrap()
+    }
+
+    #[cfg(target_os = "macos")]
+    async fn open_directory(file_to_edit: PathBuf) -> Result<(), String> {
+        tokio::task::spawn_blocking(move || {
+            use std::process::Command;
+
+            Command::new("open")
+                .args(vec![file_to_edit.to_string_lossy().to_string()])
+                .output()
+                .map_err(|error| error.to_string())?;
+
+            Ok(())
+        })
+        .await
+        .unwrap()
     }
 }

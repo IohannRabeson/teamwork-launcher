@@ -3,8 +3,7 @@ use {
     crate::{
         application::{Messages, States},
         fonts::{SUBTITLE_FONT_SIZE, TITLE_FONT_SIZE, VERSION_FONT_SIZE},
-        icons::Icons,
-        APPLICATION_VERSION, GIT_SHA_SHORT,
+        icons, APPLICATION_VERSION, GIT_SHA_SHORT,
     },
     iced::{
         alignment::Horizontal,
@@ -31,7 +30,7 @@ fn subtitle_widget<'a>(title: &str) -> Element<'a, Messages> {
         .into()
 }
 
-pub fn header_view<'a>(title: &str, icons: &'a Icons, state: &States) -> Element<'a, Messages> {
+pub fn header_view<'a>(title: &str, state: &States) -> Element<'a, Messages> {
     let title_widget = title_widget(title);
 
     match state {
@@ -39,18 +38,18 @@ pub fn header_view<'a>(title: &str, icons: &'a Icons, state: &States) -> Element
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),
-                settings_button(icons),
-                refresh_button(icons, Messages::RefreshFavoriteServers),
-                favorites_button(icons),
+                settings_button(),
+                refresh_button(Messages::RefreshFavoriteServers),
+                favorites_button(),
             ]
         }
         States::EditFavoriteServers => {
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),
-                settings_button(icons),
-                refresh_button(icons, Messages::RefreshServers),
-                back_button(icons),
+                settings_button(),
+                refresh_button(Messages::RefreshServers),
+                back_button(),
             ]
         }
         States::Reloading => {
@@ -61,49 +60,45 @@ pub fn header_view<'a>(title: &str, icons: &'a Icons, state: &States) -> Element
                 horizontal_space(iced::Length::Units(VISUAL_SPACING_SMALL)),
                 title_widget,
                 subtitle_widget("Settings"),
-                back_button(icons),
+                back_button(),
             ]
         }
         _ => {
-            row![title_widget, horizontal_space(iced::Length::Fill), back_button(icons),]
+            row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
         }
     }
     .spacing(VISUAL_SPACING_SMALL)
     .into()
 }
 
-fn back_button(icons: &Icons) -> Element<Messages> {
+fn back_button<'a>() -> Element<'a, Messages> {
     tooltip(
-        svg_button(icons.back(), BIG_BUTTON_SIZE).on_press(Messages::Back),
+        svg_button(icons::BACK_ICON.clone(), BIG_BUTTON_SIZE).on_press(Messages::Back),
         "Go back",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
-fn settings_button(icons: &Icons) -> Element<Messages> {
+fn settings_button<'a>() -> Element<'a, Messages> {
     tooltip(
-        svg_button(icons.settings(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings),
+        svg_button(icons::SETTINGS_ICON.clone(), BIG_BUTTON_SIZE).on_press(Messages::EditSettings),
         "Open settings editor",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
-fn refresh_button(icons: &Icons, message: Messages) -> Element<Messages> {
+fn refresh_button<'a>(message: Messages) -> Element<'a, Messages> {
     tooltip(
-        svg_button(icons.refresh(), BIG_BUTTON_SIZE).on_press(message),
+        svg_button(icons::REFRESH_ICON.clone(), BIG_BUTTON_SIZE).on_press(message),
         "Refresh the servers information",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }
 
-fn favorites_button(icons: &Icons) -> Element<Messages> {
+fn favorites_button<'a>() -> Element<'a, Messages> {
     tooltip(
-        svg_button(icons.favorite_border(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
+        svg_button(icons::FAVORITE_UNCHECKED_ICON.clone(), BIG_BUTTON_SIZE).on_press(Messages::EditFavorites),
         "Open favorites servers editor",
         iced::widget::tooltip::Position::Bottom,
     )
-    .into()
 }

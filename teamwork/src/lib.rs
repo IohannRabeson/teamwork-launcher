@@ -1,10 +1,12 @@
-pub use models::{GameMode, Server};
 use {
     self::models::GameModes,
     async_mutex::Mutex,
     log::{error, trace},
     serde::{de::DeserializeOwned, Deserialize},
     std::{collections::BTreeMap, sync::Arc, time::Duration},
+};
+pub use {
+    models::{GameMode, Server},
     url_with_key::UrlWithKey,
 };
 
@@ -107,12 +109,7 @@ impl Client {
         Ok(game_modes)
     }
 
-    pub async fn get_servers(&self, api_key: &str, game_mode_id: &str) -> Result<Vec<Server>, Error> {
-        if api_key.is_empty() {
-            return Err(Error::NoTeamworkApiKey);
-        }
-
-        let url = UrlWithKey::new(format!("{}/{}/servers", TEAMWORK_TF_QUICKPLAY_API, game_mode_id), api_key);
+    pub async fn get_servers(&self, url: UrlWithKey) -> Result<Vec<Server>, Error> {
         let mut servers: Vec<Server> = self.get(&url).await?;
 
         for server in &mut servers {

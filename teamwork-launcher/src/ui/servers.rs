@@ -1,8 +1,12 @@
 use {
-    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+    super::{favorite_button, svg_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
-        application::Messages, icons::Icons, models::Server, promised_value::PromisedValue, settings::UserSettings,
-        ui::widgets, ui::advanced_filter::advanced_filter_view, fonts,
+        application::Messages,
+        fonts, icons,
+        models::Server,
+        promised_value::PromisedValue,
+        settings::UserSettings,
+        ui::{advanced_filter::advanced_filter_view, widgets, SMALL_BUTTON_SIZE},
     },
     iced::{
         widget::{column, container, horizontal_space, row, scrollable, text, text_input, vertical_space, Column},
@@ -16,13 +20,12 @@ use {
 /// Note for myself: stop trying to factorize this view and the list of favorites servers because they are really different.
 pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
-    icons: &'a Icons,
     settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
     row![column![
-        servers_text_filter_view(&settings.servers_filter_text(), icons),
+        servers_text_filter_view(&settings.servers_filter_text()),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-        servers_view_generic(servers_iterator, server_view_edit_favorites, settings, icons),
+        servers_view_generic(servers_iterator, server_view_edit_favorites, settings),
     ]]
     .spacing(VISUAL_SPACING_SMALL)
     .into()
@@ -30,15 +33,14 @@ pub fn servers_view_edit_favorites<'a, I: Iterator<Item = &'a Server>>(
 
 pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
-    icons: &'a Icons,
     settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
-    let server_view_fn = |server, _, icons| server_view(server, icons);
+    let server_view_fn = |server, _| server_view(server);
 
     column![
-        servers_text_filter_view(&settings.servers_filter_text(), icons),
+        servers_text_filter_view(&settings.servers_filter_text()),
         vertical_space(Length::Units(VISUAL_SPACING_SMALL)),
-        servers_view_generic(servers_iterator, server_view_fn, settings, icons),
+        servers_view_generic(servers_iterator, server_view_fn, settings),
     ]
     .into()
 }
@@ -49,11 +51,10 @@ fn servers_view_generic<'a, I, F>(
     servers_iterator: I,
     server_view_fn: F,
     settings: &'a UserSettings,
-    icons: &'a Icons,
 ) -> Element<'a, Messages>
 where
     I: Iterator<Item = &'a Server>,
-    F: Fn(&'a Server, bool, &'a Icons) -> Element<'a, Messages>,
+    F: Fn(&'a Server, bool) -> Element<'a, Messages>,
 {
     row![
         container(
@@ -61,7 +62,7 @@ where
                 servers_iterator
                     .unique_by(|server| &server.ip_port)
                     .fold(Column::new().spacing(VISUAL_SPACING_SMALL), |column, server| {
-                        column.push(server_view_fn(server, settings.filter_servers_favorite(server), icons))
+                        column.push(server_view_fn(server, settings.filter_servers_favorite(server)))
                     })
                     .width(Length::Fill)
                     .padding([0, VISUAL_SPACING_MEDIUM, 0, 0]),
@@ -75,8 +76,8 @@ where
     .into()
 }
 
-fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messages> {
-    let mut button = svg_button(icons.clear(), 28);
+fn servers_text_filter_view<'a>(text: &str) -> Element<'a, Messages> {
+    let mut button = svg_button(icons::CLEAR_ICON.clone(), SMALL_BUTTON_SIZE);
 
     // Enable the clear button only if the field contains text.
     if !text.is_empty() {
@@ -93,9 +94,9 @@ fn servers_text_filter_view<'a>(text: &str, icons: &Icons) -> Element<'a, Messag
 const TITLE_FONT_SIZE: u16 = 24;
 const SMALL_FLAG_SIZE: u16 = 20;
 
-fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Icons) -> Element<'a, Messages> {
+fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool) -> Element<'a, Messages> {
     container(row![
-        widgets::thumbnail(server, icons),
+        widgets::thumbnail(server),
         horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
         column![row![
             column![
@@ -106,11 +107,11 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
                 ))
                 .size(fonts::TEXT_FONT_SIZE),
                 text(format!("Map: {}", server.map)).size(fonts::TEXT_FONT_SIZE),
-                widgets::region(server, icons, SMALL_FLAG_SIZE, 0),
+                widgets::region(server, SMALL_FLAG_SIZE, 0),
             ]
             .spacing(VISUAL_SPACING_SMALL),
             column![
-                favorite_button(is_favorite, icons, 28)
+                favorite_button(is_favorite, SMALL_BUTTON_SIZE)
                     .on_press(Messages::FavoriteClicked(server.ip_port.clone(), server.source.clone())),
                 widgets::ping(server).size(fonts::TEXT_FONT_SIZE)
             ]
@@ -124,10 +125,10 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool, icons: &Ic
     .into()
 }
 
-fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
+fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
-            widgets::country_icon(icons, country, TITLE_FONT_SIZE, VISUAL_SPACING_SMALL),
+            widgets::country_icon(country, TITLE_FONT_SIZE, VISUAL_SPACING_SMALL),
             horizontal_space(Length::Units(VISUAL_SPACING_SMALL)),
             text(&server.name).size(TITLE_FONT_SIZE)
         ],
@@ -135,7 +136,7 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
     };
 
     container(row![
-        widgets::thumbnail(server, icons),
+        widgets::thumbnail(server),
         column![
             server_name_row,
             text(format!(
@@ -149,8 +150,16 @@ fn server_view<'a>(server: &Server, icons: &Icons) -> Element<'a, Messages> {
         .spacing(VISUAL_SPACING_SMALL),
         horizontal_space(Length::Fill),
         row![
-            svg_button(icons.copy(), 28).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
-            text_button("Play").on_press(Messages::StartGame(server.ip_port.clone())),
+            widgets::tooltip(
+                svg_button(icons::COPY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
+                &format!("Copy to clipboard the connection string \"{}\"", server.ip_port.steam_connection_string()),
+                iced::widget::tooltip::Position::Bottom,
+            ),
+            widgets::tooltip(
+                svg_button(icons::PLAY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::StartGame(server.ip_port.clone())),
+                "Start Team Fortress 2 and connect to this server",
+                iced::widget::tooltip::Position::Bottom,
+            ),
         ]
         .align_items(Alignment::End)
         .spacing(VISUAL_SPACING_SMALL)

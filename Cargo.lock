@@ -3482,6 +3482,7 @@ dependencies = [
  "include_dir",
  "iso_country",
  "itertools",
+ "lazy_static",
  "log",
  "nom",
  "platform-dirs",
@@ -3493,9 +3494,9 @@ dependencies = [
  "teamwork",
  "test-case",
  "thiserror",
+ "tokio",
  "unidecode",
  "vergen",
- "xmltree",
 ]
 
 [[package]]
@@ -4517,15 +4518,6 @@ name = "xmlparser"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"
-
-[[package]]
-name = "xmltree"
-version = "0.10.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7d8a75eaf6557bb84a65ace8609883db44a29951042ada9b393151532e41fcb"
-dependencies = [
- "xml-rs",
-]
 
 [[package]]
 name = "xmlwriter"

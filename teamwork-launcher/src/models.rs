@@ -7,7 +7,7 @@ use {
 
 use crate::{promised_value::PromisedValue, sources::SourceKey};
 
-/// The unique key identifiying a server.
+/// The unique key identifying a server.
 #[derive(Debug, Hash, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IpPort {
     ip: Ipv4Addr,

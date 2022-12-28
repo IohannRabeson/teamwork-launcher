@@ -1,0 +1,32 @@
+{
+  "entries": [
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/attack-defend/servers",
+      "display_name": "Attack/Defend"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/ctf/servers",
+      "display_name": "Capture the Flag"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/control-point/servers",
+      "display_name": "Control Points"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/koth/servers",
+      "display_name": "King of the Hill"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/payload/servers",
+      "display_name": "Payload"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/payload-race/servers",
+      "display_name": "Payload Race"
+    },
+    {
+      "url": "https://teamwork.tf/api/v1/quickplay/medieval-mode/servers",
+      "display_name": "Medieval Mode"
+    }
+  ]
+}

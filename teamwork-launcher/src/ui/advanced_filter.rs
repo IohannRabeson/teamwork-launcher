@@ -1,6 +1,8 @@
-use iced::widget::{Column, checkbox, column};
-use crate::{fonts, settings::UserSettings, application::Messages};
-use super::{VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL};
+use {
+    super::{VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+    crate::{application::Messages, fonts, settings::UserSettings},
+    iced::widget::{checkbox, column, Column},
+};
 
 pub fn advanced_filter_view(settings: &UserSettings) -> Column<Messages> {
     let filter = settings.server_filter();
@@ -17,7 +19,6 @@ pub fn advanced_filter_view(settings: &UserSettings) -> Column<Messages> {
             Messages::SettingsChanged(settings)
         })
         .text_size(fonts::TEXT_FONT_SIZE),
-
         checkbox("Online only", filter.with_valid_ping, |checked| {
             let mut settings = settings.clone();
 

@@ -3,18 +3,19 @@ use {
     crate::{
         models::{IpPort, Server, Thumbnail},
         promised_value::PromisedValue,
-        servers_provider::{GetServersInfosError, Source},
+        servers_provider::{GetServersInfoError, Source},
         settings::UserSettings,
     },
     async_trait::async_trait,
     std::str::FromStr,
-    teamwork::Client as TeamworkClient,
+    teamwork::{Client as TeamworkClient, UrlWithKey},
 };
 
 pub struct TeamworkSource {
     client: TeamworkClient,
-    game_mode_id: String,
-    game_mode_name: String,
+    query_url_base: String,
+    /// The name displayed
+    source_name: String,
 }
 
 /// The rational is I do not want the entire application depends on the Teamwork.tf API.
@@ -39,11 +40,11 @@ impl From<teamwork::Server> for Server {
 }
 
 impl TeamworkSource {
-    pub fn new(game_mode_id: &str, game_mode_name: &str) -> Self {
+    pub fn new(url: &str, source_name: &str) -> Self {
         Self {
             client: TeamworkClient::default(),
-            game_mode_id: game_mode_id.to_string(),
-            game_mode_name: game_mode_name.to_string(),
+            query_url_base: url.to_string(),
+            source_name: source_name.to_string(),
         }
     }
 }
@@ -51,21 +52,21 @@ impl TeamworkSource {
 #[async_trait]
 impl Source for TeamworkSource {
     fn display_name(&self) -> String {
-        self.game_mode_name.clone()
+        self.source_name.clone()
     }
 
     fn unique_key(&self) -> SourceKey {
-        SourceKey::new(format!("teamwork.tf.{}", self.game_mode_id))
+        SourceKey::new(self.query_url_base.clone())
     }
 
-    async fn get_servers_infos(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfosError> {
+    async fn get_servers_info(&self, settings: &UserSettings) -> Result<Vec<Server>, GetServersInfoError> {
         self.client
-            .get_servers(&settings.teamwork_api_key(), &self.game_mode_id)
+            .get_servers(UrlWithKey::new(&self.query_url_base, &settings.teamwork_api_key()))
             .await
             .map(|servers: Vec<teamwork::Server>| -> Vec<Server> {
                 servers.into_iter().map(|server: teamwork::Server| server.into()).collect()
             })
-            .map_err(|error| GetServersInfosError {
+            .map_err(|error| GetServersInfoError {
                 source_name: self.display_name(),
                 message: format!("Failed to get servers data: {}", error),
             })

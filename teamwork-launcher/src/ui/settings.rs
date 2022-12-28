@@ -1,20 +1,18 @@
-use iced::widget::Container;
-
-use crate::sources::SourceKey;
-
 use {
     crate::{
         application::Messages,
+        servers_provider::ServersProvider,
         settings::UserSettings,
+        sources::SourceKey,
         ui::{VISUAL_SPACING_BIG, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     },
     iced::{
-        widget::{checkbox, column, container, scrollable, text, text_input, vertical_space},
+        widget::{button, checkbox, column, container, scrollable, text, text_input, vertical_space, Container},
         Element, Length,
     },
 };
 
-pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
+pub fn settings_view<'a>(settings: &'a UserSettings, servers_provider: &'a ServersProvider) -> Element<'a, Messages> {
     column![scrollable(
         column![
             field(
@@ -54,9 +52,10 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             field(
                 Some("Server sources:"),
                 Some(
-                    "For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."
+                    "For each source the Teamwork API will be queried. \
+                     Remember the count of query per minutes is limited."
                 ),
-                sources_list_view(settings.source_filter())
+                sources_list_view(settings.source_filter(servers_provider))
             ),
             section_title("Auto quit:"),
             column![
@@ -81,7 +80,14 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
 
                         Messages::SettingsChanged(new_settings)
                     })
-                )
+                ),
+                field(
+                    Some("Log and configuration directory: "),
+                    Some("Currently editing settings is limited. For full control, you can edit the JSON file user_settings.json in the configuration directory."),
+                    button("Open location").on_press(Messages::OpenConfigurationDirectory(
+                        crate::directories::get_configuration_directory()
+                    ))
+                ),
             ]
         ]
         .padding(VISUAL_SPACING_BIG)

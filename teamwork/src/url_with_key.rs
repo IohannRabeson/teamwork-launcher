@@ -3,7 +3,7 @@ use std::fmt::Display;
 /// An URL that does not leak your API key when you print it.
 /// Use UrlWithKey.make_url() to get the final URL.
 /// When displayed the API key is hidden.
-pub(crate) struct UrlWithKey {
+pub struct UrlWithKey {
     url: String,
     api_key: String,
 }

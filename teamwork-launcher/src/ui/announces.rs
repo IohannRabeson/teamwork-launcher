@@ -1,7 +1,7 @@
 use super::styles;
 
 use {
-    crate::{announces::Announce, application::Messages, icons::Icons, ui::VISUAL_SPACING_MEDIUM},
+    crate::{announces::Announce, application::Messages, ui::VISUAL_SPACING_MEDIUM},
     iced::{
         theme,
         widget::{button, column, text},
@@ -13,11 +13,11 @@ use {
 ///
 /// An announce display a title and a message.
 /// When you click anywhere on it it's discarded.
-pub fn announce_view<'a>(_icons: &Icons, announce: &Announce) -> Element<'a, Messages> {
+pub fn announce_view<'a>(announce: &Announce) -> Element<'a, Messages> {
     button(column![text(&announce.title).size(24), text(&announce.message)].spacing(VISUAL_SPACING_MEDIUM))
         .padding(VISUAL_SPACING_MEDIUM)
         .width(Length::Fill)
-        .style(theme::Button::Custom(Box::new(styles::Announce::default())))
+        .style(theme::Button::Custom(Box::<styles::Announce>::default()))
         .on_press(Messages::DiscardCurrentAnnounce)
         .into()
 }
