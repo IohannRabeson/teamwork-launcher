@@ -17,6 +17,7 @@ mod advanced_filter;
 mod announces;
 mod buttons;
 mod header;
+mod server;
 mod servers;
 mod settings;
 mod styles;
