@@ -22,14 +22,14 @@ impl Icons {
 
         Self {
             storage: Rc::new(IconsStorage {
-                clear: load_svg(include_bytes!("clear.svg"), light_color, "clear.svg"),
-                copy: load_svg(include_bytes!("copy.svg"), light_color, "copy.svg"),
-                favorite_border: load_svg(include_bytes!("favorite_border.svg"), light_color, "favorite_border.svg"),
-                favorite: load_svg(include_bytes!("favorite.svg"), light_color, "favorite.svg"),
-                refresh: load_svg(include_bytes!("refresh.svg"), light_color, "refresh.svg"),
-                settings: load_svg(include_bytes!("settings.svg"), light_color, "settings.svg"),
-                back: load_svg(include_bytes!("back.svg"), light_color, "back.svg"),
-                no_image: ImageHandle::from_memory(include_bytes!("no-image.png").as_bytes()),
+                clear: load_svg(include_bytes!("old/clear.svg"), light_color, "clear.svg"),
+                copy: load_svg(include_bytes!("old/copy.svg"), light_color, "copy.svg"),
+                favorite_border: load_svg(include_bytes!("old/favorite_border.svg"), light_color, "favorite_border.svg"),
+                favorite: load_svg(include_bytes!("old/favorite.svg"), light_color, "favorite.svg"),
+                refresh: load_svg(include_bytes!("old/refresh.svg"), light_color, "refresh.svg"),
+                settings: load_svg(include_bytes!("old/settings.svg"), light_color, "settings.svg"),
+                back: load_svg(include_bytes!("old/back.svg"), light_color, "back.svg"),
+                no_image: ImageHandle::from_memory(include_bytes!("old/no-image.png").as_bytes()),
                 flags: load_flags_icons(),
             }),
         }
