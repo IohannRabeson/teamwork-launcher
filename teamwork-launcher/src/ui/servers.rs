@@ -35,7 +35,7 @@ pub fn servers_view<'a, I: Iterator<Item = &'a Server>>(
     servers_iterator: I,
     settings: &'a UserSettings,
 ) -> Element<'a, Messages> {
-    let server_view_fn = |server, _| server_view(server);
+    let server_view_fn = |server, _| server_view(server, settings);
 
     column![
         servers_text_filter_view(&settings.servers_filter_text()),
@@ -125,7 +125,7 @@ fn server_view_edit_favorites<'a>(server: &Server, is_favorite: bool) -> Element
     .into()
 }
 
-fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
+fn server_view<'a>(server: &Server, settings: &UserSettings) -> Element<'a, Messages> {
     let server_name_row = match &server.country {
         PromisedValue::Ready(country) => row![
             widgets::country_icon(country, TITLE_FONT_SIZE, VISUAL_SPACING_SMALL),
@@ -134,6 +134,18 @@ fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
         ],
         _ => row![text(&server.name).size(TITLE_FONT_SIZE)],
     };
+
+    let mut copy_tooltip_text = format!("Copy to clipboard the connection string.");
+
+    if settings.quit_on_copy() {
+        copy_tooltip_text += "\nThe launcher will quit."
+    }
+
+    let mut start_tooltip_text = String::from("Start Team Fortress 2 and connect to this server.");
+
+    if settings.quit_on_launch() {
+        start_tooltip_text += "\nThe launcher will quit."
+    }
 
     container(row![
         widgets::thumbnail(server),
@@ -157,12 +169,12 @@ fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
             ),
             widgets::tooltip(
                 svg_button(icons::COPY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
-                &format!("Copy to clipboard the connection string \"{}\"", server.ip_port.steam_connection_string()),
+                copy_tooltip_text,
                 iced::widget::tooltip::Position::Bottom,
             ),
             widgets::tooltip(
                 svg_button(icons::PLAY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::StartGame(server.ip_port.clone())),
-                "Start Team Fortress 2 and connect to this server",
+                start_tooltip_text,
                 iced::widget::tooltip::Position::Bottom,
             ),
         ]
