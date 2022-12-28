@@ -151,6 +151,11 @@ fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
         horizontal_space(Length::Fill),
         row![
             widgets::tooltip(
+                svg_button(icons::CLEAR_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::FavoriteClicked(server.ip_port.clone(), None)),
+                "Remove this server from favorites",
+                iced::widget::tooltip::Position::Bottom,
+            ),
+            widgets::tooltip(
                 svg_button(icons::COPY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
                 &format!("Copy to clipboard the connection string \"{}\"", server.ip_port.steam_connection_string()),
                 iced::widget::tooltip::Position::Bottom,
