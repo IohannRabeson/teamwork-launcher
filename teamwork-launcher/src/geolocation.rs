@@ -13,7 +13,7 @@ use {
 };
 
 #[derive(thiserror::Error, Debug)]
-#[error("Failed to geolocalize IP '{ip}': {message}")]
+#[error("Failed to geo-localize IP '{ip}': {message}")]
 pub struct Error {
     pub ip: String,
     pub message: String,
