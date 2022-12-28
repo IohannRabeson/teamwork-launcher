@@ -137,6 +137,14 @@ impl ServersProvider {
         self.sources.iter().map(|source| (source.display_name(), source.unique_key()))
     }
 
+    pub fn get_source_name(&self, key: &SourceKey) -> Option<String> {
+        self.find_source_by_key(key).map(|source| source.display_name())
+    }
+
+    fn find_source_by_key(&self, key: &SourceKey) -> Option<&Box<dyn Source>> {
+        self.sources.iter().find(|source| key == &source.unique_key())
+    }
+
     pub async fn refresh_some(
         &self,
         settings: &UserSettings,
