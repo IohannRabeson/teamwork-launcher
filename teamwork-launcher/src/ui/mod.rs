@@ -1,5 +1,5 @@
 pub use {
-    self::buttons::{favorite_button, svg_button, text_button},
+    self::buttons::{favorite_button, svg_button},
     header::header_view,
     servers::{servers_view, servers_view_edit_favorites},
     settings::settings_view,

@@ -114,7 +114,6 @@ impl IcedApplication for Application {
     type Theme = Theme;
 
     fn new(mut flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let theme = Theme::default();
         let servers_provider = Arc::new(ServersProvider::default());
 
         flags.settings.set_available_sources(servers_provider.get_sources());

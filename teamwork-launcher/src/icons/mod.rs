@@ -1,9 +1,8 @@
 pub use iced::widget::{image::Handle as ImageHandle, svg::Handle as SvgHandle};
 use {
-    iced::{Color, Theme},
     include_dir::{include_dir, Dir},
     nom::AsBytes,
-    std::{collections::BTreeMap, rc::Rc},
+    std::collections::BTreeMap,
 };
 
 /// This folder is part of a Git submodule.

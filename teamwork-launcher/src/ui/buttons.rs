@@ -4,29 +4,18 @@ use {
         ui::{styles::SvgButtonIconStyle, SvgHandle},
     },
     iced::{
-        alignment::Vertical,
         theme,
-        widget::{button, svg, svg::Appearance, text, Button, Svg},
-        Color, Length, Theme,
+        widget::{button, Button, Svg},
+        Length,
     },
 };
 
 pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
     button(
         Svg::new(svg)
-            .style(theme::Svg::Custom(Box::new(SvgButtonIconStyle::default())))
+            .style(theme::Svg::Custom(Box::<SvgButtonIconStyle>::default()))
             .width(Length::Units(size))
             .height(Length::Units(size)),
-    )
-}
-
-pub fn text_button<'a, M: Clone + 'a>(content: &str) -> Button<'a, M> {
-    button(
-        text(content)
-            .height(Length::Units(18))
-            .vertical_alignment(Vertical::Center)
-            .font(crate::fonts::TF2_SECONDARY)
-            .size(16),
     )
 }
 

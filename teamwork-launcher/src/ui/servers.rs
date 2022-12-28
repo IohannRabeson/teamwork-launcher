@@ -1,5 +1,5 @@
 use {
-    super::{favorite_button, svg_button, text_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
+    super::{favorite_button, svg_button, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL},
     crate::{
         application::Messages,
         fonts, icons,
