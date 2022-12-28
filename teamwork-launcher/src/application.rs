@@ -206,7 +206,7 @@ impl IcedApplication for Application {
             States::ShowServers if self.servers.is_empty() => no_favorite_servers_view(),
             States::ShowServers => servers_view(self.favorite_servers_iter(), &self.settings),
             States::EditFavoriteServers => servers_view_edit_favorites(self.servers_iter(), &self.settings),
-            States::Settings => settings_view(&self.settings),
+            States::Settings => settings_view(&self.settings, &self.servers_provider),
             States::Reloading => refresh_view(),
             States::Error { message } => error_view(message),
         };

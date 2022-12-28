@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-pub mod servers_sources;
 mod teamwork_source;
 
 pub use teamwork_source::TeamworkSource;
