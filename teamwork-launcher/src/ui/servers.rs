@@ -150,9 +150,16 @@ fn server_view<'a>(server: &Server) -> Element<'a, Messages> {
         .spacing(VISUAL_SPACING_SMALL),
         horizontal_space(Length::Fill),
         row![
-            svg_button(icons::COPY_ICON.clone(), SMALL_BUTTON_SIZE)
-                .on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
-            svg_button(icons::PLAY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::StartGame(server.ip_port.clone())),
+            widgets::tooltip(
+                svg_button(icons::COPY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::CopyToClipboard(server.ip_port.steam_connection_string())),
+                &format!("Copy to clipboard the connection string \"{}\"", server.ip_port.steam_connection_string()),
+                iced::widget::tooltip::Position::Bottom,
+            ),
+            widgets::tooltip(
+                svg_button(icons::PLAY_ICON.clone(), SMALL_BUTTON_SIZE).on_press(Messages::StartGame(server.ip_port.clone())),
+                "Start Team Fortress 2 and connect to this server",
+                iced::widget::tooltip::Position::Bottom,
+            ),
         ]
         .align_items(Alignment::End)
         .spacing(VISUAL_SPACING_SMALL)
