@@ -1,4 +1,4 @@
-use crate::{advanced_filter::AdvancedServerFilter, directories, servers_sources::ServersSources, text_filter::TextFilter};
+use crate::{advanced_filter::AdvancedServerFilter, directories, text_filter::TextFilter};
 
 use {
     crate::{
@@ -16,6 +16,7 @@ use {
 };
 
 use {
+    crate::sources::servers_sources::ServersSources,
     async_rwlock::RwLock,
     log::{error, info},
     serde::{Deserialize, Deserializer, Serialize, Serializer},

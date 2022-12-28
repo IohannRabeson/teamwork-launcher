@@ -25,7 +25,8 @@ mod widgets;
 pub const VISUAL_SPACING_SMALL: u16 = 4;
 pub const VISUAL_SPACING_MEDIUM: u16 = 8;
 pub const VISUAL_SPACING_BIG: u16 = 12;
-pub const BIG_BUTTON_SIZE: u16 = 36;
+pub const BIG_BUTTON_SIZE: u16 = 26;
+pub const SMALL_BUTTON_SIZE: u16 = 20;
 
 pub use announces::announce_view;
 use iced::{widget::container, Alignment};
