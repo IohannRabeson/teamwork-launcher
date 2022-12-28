@@ -6,7 +6,7 @@ use {
     clap::Parser,
     iced::{Application as IcedApplication, Settings},
     launcher::ExecutableLauncher,
-    log::{error, warn},
+    log::{error, info, warn},
     settings::UserSettings,
 };
 
@@ -46,7 +46,13 @@ fn main() -> anyhow::Result<()> {
     let cli_params = CliParameters::parse();
 
     directories::create_configuration_directory_if_needed();
+
     setup::setup_logger()?;
+
+    info!(
+        "Configuration directory: {}",
+        directories::get_configuration_directory().display()
+    );
 
     if cli_params.integration_test {
         warn!("Integration test mode enabled!");

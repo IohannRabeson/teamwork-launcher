@@ -35,67 +35,14 @@ pub struct ServersProvider {
     sources: Vec<Box<dyn Source>>,
 }
 
-const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 18] = [
-    ("Skial", "https://teamwork.tf/api/v1/community/provider/skial/servers"),
-    (
-        "Blackwonder",
-        "https://teamwork.tf/api/v1/community/provider/blackwonder/servers",
-    ),
-    (
-        "Uncletopia",
-        "https://teamwork.tf/api/v1/community/provider/uncletopia/servers",
-    ),
-    (
-        "Panda-Community",
-        "https://teamwork.tf/api/v1/community/provider/panda-community/servers",
-    ),
-    ("Otaku", "https://teamwork.tf/api/v1/community/provider/otakugamingtf/servers"),
-    (
-        "Fire Friendly",
-        "https://teamwork.tf/api/v1/community/provider/fire_friendly/servers",
-    ),
-    (
-        "Jump Academy",
-        "https://teamwork.tf/api/v1/community/provider/jumpacademy/servers",
-    ),
-    (
-        "Games For Life",
-        "https://teamwork.tf/api/v1/community/provider/gamesforlifegfl/servers",
-    ),
-    (
-        "Spaceship Servers",
-        "https://teamwork.tf/api/v1/community/provider/spaceshipservers/servers",
-    ),
-    (
-        "Leaders Of the Old School",
-        "https://teamwork.tf/api/v1/community/provider/leadersoftheoldschool/servers",
-    ),
-    ("Petrol.tf", "https://teamwork.tf/api/v1/community/provider/petroltf/servers"),
-    (
-        "The Outpost Community",
-        "https://teamwork.tf/api/v1/community/provider/theoutpostcommunity/servers",
-    ),
-    ("MicSnobs", "https://teamwork.tf/api/v1/community/provider/micsnobs/servers"),
-    (
-        "EdgeGamers Organization",
-        "https://teamwork.tf/api/v1/community/provider/edgegamersorganization/servers",
-    ),
-    (
-        "Nexus Reality",
-        "https://teamwork.tf/api/v1/community/provider/glubbablesservers/servers",
-    ),
-    (
-        "IdleServer.Com",
-        "https://teamwork.tf/api/v1/community/provider/idleservercom/servers",
-    ),
-    (
-        "TF2SwapShop.com",
-        "https://teamwork.tf/api/v1/community/provider/tf2swapshop/servers",
-    ),
-    (
-        "++RJump ECJ",
-        "https://teamwork.tf/api/v1/community/provider/rjumpecj/servers",
-    ),
+const DEFAULT_TEAMWORK_PROVIDERS: [(&str, &str); 7] = [
+    ("https://teamwork.tf/api/v1/quickplay/attack-defend/servers", "Attack/Defend"),
+    ("https://teamwork.tf/api/v1/quickplay/ctf/servers", "Capture the Flag"),
+    ("https://teamwork.tf/api/v1/quickplay/control-point/servers", "Control Points"),
+    ("https://teamwork.tf/api/v1/quickplay/koth/servers", "King of the Hill"),
+    ("https://teamwork.tf/api/v1/quickplay/payload/servers", "Payload"),
+    ("https://teamwork.tf/api/v1/quickplay/payload-race/servers", "Payload Race"),
+    ("https://teamwork.tf/api/v1/quickplay/medieval-mode/servers", "Medieval Mode"),
 ];
 
 #[derive(thiserror::Error, Debug)]
@@ -126,7 +73,7 @@ impl Default for Configuration {
         Self {
             entries: DEFAULT_TEAMWORK_PROVIDERS
                 .iter()
-                .map(|(name, url)| ProviderEntry {
+                .map(|(url, name)| ProviderEntry {
                     display_name: name.to_string(),
                     url: url.to_string(),
                 })

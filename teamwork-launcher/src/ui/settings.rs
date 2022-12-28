@@ -51,7 +51,8 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
             field(
                 Some("Server sources:"),
                 Some(
-                    "For each source the Teamwork API will be queried. Remember the count of query per minutes is limited."
+                    "For each source the Teamwork API will be queried. \
+                     Remember the count of query per minutes is limited."
                 ),
                 sources_list_view(settings.source_filter())
             ),
@@ -80,8 +81,8 @@ pub fn settings_view(settings: &UserSettings) -> Element<Messages> {
                     })
                 ),
                 field(
-                    Some("Configuration directory: "),
-                    None,
+                    Some("Log and configuration directory: "),
+                    Some("Currently editing settings is limited.\nYou can edit the file user_settings.json."),
                     button("Open location").on_press(Messages::OpenConfigurationDirectory(
                         crate::directories::get_configuration_directory()
                     ))
