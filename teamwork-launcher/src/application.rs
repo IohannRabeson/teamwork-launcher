@@ -1,5 +1,9 @@
 use {
-    iced::{subscription, window, window::Mode, Event},
+    iced::{
+        subscription,
+        window::{self, Mode},
+        Event,
+    },
     std::path::PathBuf,
 };
 
@@ -7,9 +11,8 @@ use crate::{APPLICATION_VERSION, GIT_SHA_SHORT};
 
 use {
     crate::{
-        announces::{Announce, AnnounceQueue},
         geolocation::IpGeolocationService,
-        launcher::ExecutableLauncher,
+        launcher::{ExecutableLauncher, LaunchError},
         models::{Country, IpPort, Server, Thumbnail},
         ping_service::PingService,
         servers_provider::{self, ServersProvider},
@@ -17,8 +20,8 @@ use {
         sources::SourceKey,
         states::StatesStack,
         ui::{
-            announce_view, error_view, header_view, no_favorite_servers_view, refresh_view, servers_view,
-            servers_view_edit_favorites, settings_view, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL,
+            error_view, header_view, no_favorite_servers_view, refresh_view, servers_view, servers_view_edit_favorites,
+            settings_view, Announce, AnnounceQueue, VISUAL_SPACING_MEDIUM, VISUAL_SPACING_SMALL,
         },
         CliParameters,
     },
@@ -171,7 +174,7 @@ impl IcedApplication for Application {
                 |_| Messages::Quit(false),
             ));
 
-            application.announces.push(Announce::new(
+            application.announces.push(Announce::error(
                 "Integration test mode",
                 "The application run in integration test mode. The application will close itself after 5 seconds",
             ));
@@ -180,13 +183,13 @@ impl IcedApplication for Application {
         application.restore_window_settings_command();
 
         if application.settings.teamwork_api_key().trim().is_empty() {
-            application.announces.push(Announce::new(
+            application.announces.push(Announce::error(
                 "No Teamwork.tf API key",
                 "This application needs a Teamwork.tf API key to fetch all the information.\nTo get an API key, please login in teamwork.tf then go to https://teamwork.tf/settings."));
         }
 
         if !application.ping_service.is_enabled() {
-            application.announces.push(Announce::new(
+            application.announces.push(Announce::warning(
                 "Ping service requires permission",
                 "This application needs to be run elevated to be able to query the ping.",
             ));
@@ -204,8 +207,8 @@ impl IcedApplication for Application {
             Messages::RefreshFavoriteServers => return self.refresh_favorites_command(),
             Messages::FilterChanged(text_filter) => self.settings.set_filter_servers_text(text_filter),
             Messages::SettingsChanged(settings) => self.settings = settings,
-            Messages::StartGame(params) => self.launch_executable(&params),
-            Messages::CopyToClipboard(text) => return self.copy_to_clipboard_command(text),
+            Messages::StartGame(params) => return self.launch_executable(&params),
+            Messages::CopyToClipboard(text) => return self.copy_to_clipboard_command(text, self.settings.quit_on_copy()),
             Messages::FavoriteClicked(server_ip_port, source_key) => self.switch_favorite_server(server_ip_port, source_key),
             Messages::SourceFilterClicked(source_key, checked) => self.source_filter_clicked(&source_key, checked),
             Messages::EditFavorites => self.states.push(States::EditFavoriteServers),
@@ -367,23 +370,40 @@ impl Application {
         self.settings.filter_servers_favorite(server) && self.filter_server(server)
     }
 
-    fn launch_executable(&mut self, ip_port: &IpPort) {
-        if let Err(error) = self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
-            self.states.push(States::Error { message: error.message });
-        } else if self.settings.quit_on_launch() {
-            self.should_exit = true;
+    fn launch_executable(&mut self, ip_port: &IpPort) -> Command<Messages> {
+        match self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
+            Ok(_) => {
+                if self.settings.quit_on_launch() {
+                    self.should_exit = true;
+                }
+            }
+            Err(LaunchError::CantStartProcess { executable_path, origin }) => {
+                self.announces.push(Announce::error(
+                    "Failed to start Team Fortress executable",
+                    format!("Details: {0}\nExecutable path: {1}", origin, executable_path),
+                ));
+            }
+            Err(LaunchError::AlreadyStarted) => {
+                self.announces.push(Announce::warning(
+                    "Team Fortress executable is already started.",
+                    "The connection string has been copied to the clipboard.",
+                ));
+
+                return self.copy_to_clipboard_command(ip_port.steam_connection_string(), false);
+            }
         }
+
+        Command::none()
     }
 
-    fn copy_to_clipboard_command(&mut self, text: String) -> Command<Messages> {
-        if self.settings.quit_on_copy() {
-            Command::batch(vec![
-                iced::clipboard::write(text),
-                Command::perform(async move {}, |_| Messages::Quit(false)),
-            ])
-        } else {
-            iced::clipboard::write(text)
+    fn copy_to_clipboard_command(&mut self, text: String, quit: bool) -> Command<Messages> {
+        let mut commands = vec![iced::clipboard::write(text)];
+
+        if quit {
+            commands.push(Command::perform(async move {}, |_| Messages::Quit(false)));
         }
+
+        Command::batch(commands.into_iter())
     }
 
     fn switch_favorite_server(&mut self, ip_port: IpPort, source_key: Option<SourceKey>) {
@@ -521,7 +541,7 @@ impl Application {
         if let Some(announce) = self.announces.current() {
             main_column = main_column
                 .push(vertical_space(Length::Units(VISUAL_SPACING_SMALL)))
-                .push(announce_view(announce));
+                .push(announce.view());
         }
 
         main_column
@@ -538,7 +558,7 @@ impl Application {
             async move { Self::open_directory(file_to_edit).await },
             move |result| match result {
                 Ok(_) => Messages::DoNothing,
-                Err(error) => Messages::PushAnnounce(Announce::new(
+                Err(error) => Messages::PushAnnounce(Announce::error(
                     format!(
                         "Can't edit '{}'.",
                         file_to_edit_for_error
@@ -615,13 +635,16 @@ impl Application {
     pub fn restore_window_settings_command(&self) -> Command<Messages> {
         let settings = self.settings.get_window_settings();
 
-        Command::batch(vec![
-            window::move_to(settings.x, settings.y),
-            window::resize(settings.width, settings.height),
-            window::set_mode(match settings.is_fullscreen {
-                true => window::Mode::Fullscreen,
-                false => window::Mode::Windowed,
-            })
-        ].into_iter())
+        Command::batch(
+            vec![
+                window::move_to(settings.x, settings.y),
+                window::resize(settings.width, settings.height),
+                window::set_mode(match settings.is_fullscreen {
+                    true => window::Mode::Fullscreen,
+                    false => window::Mode::Windowed,
+                }),
+            ]
+            .into_iter(),
+        )
     }
 }

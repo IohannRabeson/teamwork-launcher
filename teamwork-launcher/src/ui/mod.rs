@@ -1,5 +1,6 @@
 pub use {
     self::buttons::{favorite_button, svg_button},
+    announces::{Announce, AnnounceQueue},
     header::header_view,
     servers::{servers_view, servers_view_edit_favorites},
     settings::settings_view,
@@ -29,7 +30,6 @@ pub const VISUAL_SPACING_BIG: u16 = 12;
 pub const BIG_BUTTON_SIZE: u16 = 26;
 pub const SMALL_BUTTON_SIZE: u16 = 20;
 
-pub use announces::announce_view;
 use iced::{widget::container, Alignment};
 
 pub fn refresh_view<'a>() -> Element<'a, Messages> {

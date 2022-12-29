@@ -18,18 +18,26 @@ impl container::StyleSheet for ToolTip {
     }
 }
 
-#[derive(Default)]
-pub struct Announce;
+pub struct Announce {
+    background: Color,
+    text: Color,
+}
+
+impl Announce {
+    pub fn new(text: Color, background: Color) -> Self {
+        Self { text, background }
+    }
+}
 
 impl button::StyleSheet for Announce {
     type Style = Theme;
 
-    fn active(&self, style: &Self::Style) -> button::Appearance {
+    fn active(&self, _style: &Self::Style) -> button::Appearance {
         button::Appearance {
             shadow_offset: Vector::new(0f32, 0f32),
-            background: Some(Background::Color(style.palette().danger)),
+            background: Some(Background::Color(self.background.clone())),
             border_radius: 3.0,
-            text_color: style.palette().text,
+            text_color: self.text.clone(),
             ..Default::default()
         }
     }

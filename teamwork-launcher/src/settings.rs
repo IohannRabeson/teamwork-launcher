@@ -311,16 +311,12 @@ impl UserSettings {
         let mut inner = self.storage.try_write().unwrap();
 
         inner.window_settings = settings;
-
-        println!("{:?}", inner.window_settings);
     }
 
     pub fn set_window_fullscreen(&mut self, fullscreen: bool) {
         let mut inner = self.storage.try_write().unwrap();
 
         inner.window_settings.is_fullscreen = fullscreen;
-
-        println!("{:?}", inner.window_settings);
     }
 
     pub fn get_window_settings(&self) -> WindowSettings {
