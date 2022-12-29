@@ -1,6 +1,7 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
+use iced::window;
 use {
     application::{Application, Flags},
     clap::Parser,
@@ -58,17 +59,25 @@ fn main() -> anyhow::Result<()> {
         warn!("Integration test mode enabled!");
     }
 
+    Application::run(create_application_settings(cli_params))?;
+
+    Ok(())
+}
+
+fn create_application_settings(cli_params: CliParameters) -> Settings<Flags> {
     let mut settings = Settings::with_flags(Flags {
         cli_params,
         settings: load_user_settings(),
         launcher: ExecutableLauncher::new(false),
     });
+    let window_settings = settings.flags.settings.get_window_settings();
 
     settings.exit_on_close_request = false;
+    settings.window.size.0 = window_settings.width;
+    settings.window.size.1 = window_settings.height;
+    settings.window.position = window::Position::Specific(window_settings.x, window_settings.y);
 
-    Application::run(settings)?;
-
-    Ok(())
+    settings
 }
 
 fn load_user_settings() -> UserSettings {
