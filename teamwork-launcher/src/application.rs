@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use {
+    iced::{subscription, window, window::Mode, Event},
+    std::path::PathBuf,
+};
 
 use crate::{APPLICATION_VERSION, GIT_SHA_SHORT};
 
@@ -26,7 +29,7 @@ use {
     },
     itertools::Itertools,
     log::{debug, error, info},
-    std::{cmp::Ordering, collections::BTreeSet, iter, net::Ipv4Addr, sync::Arc, time::Duration},
+    std::{cmp::Ordering, collections::BTreeSet, net::Ipv4Addr, sync::Arc, time::Duration},
 };
 
 #[derive(Debug, Clone)]
@@ -56,7 +59,8 @@ pub enum Messages {
     /// Pop the current state.
     Back,
     /// Pop all the state then quit the application.
-    Quit,
+    /// The boolean controls whether the application should really quit immediately.
+    Quit(bool),
     DoNothing,
     PushAnnounce(Announce),
 
@@ -64,6 +68,16 @@ pub enum Messages {
     DiscardCurrentAnnounce,
 
     OpenConfigurationDirectory(PathBuf),
+
+    WindowResized {
+        width: u32,
+        height: u32,
+    },
+    WindowMoved {
+        x: i32,
+        y: i32,
+    },
+    WindowModeChanged(bool),
 }
 
 pub struct Flags {
@@ -100,6 +114,22 @@ pub struct Application {
     should_exit: bool,
 }
 
+impl Application {
+    pub(crate) fn request_quit(&mut self, force: bool) -> Command<Messages> {
+        if force {
+            self.should_exit = true;
+            return Command::none();
+        }
+
+        let commands = vec![
+            Self::make_fetch_fullscreen_command(),
+            Command::perform(async {}, |_| Messages::Quit(true)),
+        ];
+
+        return Command::batch(commands.into_iter());
+    }
+}
+
 impl Drop for Application {
     fn drop(&mut self) {
         self.settings.update_favorites(self.servers.iter());
@@ -132,20 +162,22 @@ impl IcedApplication for Application {
             announces: AnnounceQueue::default(),
         };
 
-        let mut command = application.refresh_command();
+        let mut commands = vec![application.refresh_command(), application.restore_window_settings_command()];
 
         if flags.cli_params.integration_test {
             // The integration test is basic, it runs the application for 5 seconds.
-            command = Command::batch(iter::once(command).chain(iter::once(Command::perform(
+            commands.push(Command::perform(
                 async { async_std::task::sleep(Duration::from_secs(5)).await },
-                |_| Messages::Quit,
-            ))));
+                |_| Messages::Quit(false),
+            ));
 
             application.announces.push(Announce::new(
                 "Integration test mode",
                 "The application run in integration test mode. The application will close itself after 5 seconds",
             ));
         }
+
+        application.restore_window_settings_command();
 
         if application.settings.teamwork_api_key().trim().is_empty() {
             application.announces.push(Announce::new(
@@ -162,7 +194,7 @@ impl IcedApplication for Application {
 
         info!("Version: {}-{}", APPLICATION_VERSION, GIT_SHA_SHORT);
 
-        (application, command)
+        (application, Command::batch(commands.into_iter()))
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -182,23 +214,39 @@ impl IcedApplication for Application {
             Messages::MapThumbnailReady(map_name, image) => self.map_thumbnail_ready(&map_name, image),
             Messages::CountryForIpReady(ip, country) => self.country_for_ip_ready(ip, country),
             Messages::PingReady(ip, duration) => self.ping_ready(ip, duration),
-            Messages::Quit => self.should_exit = true,
+            // When the user request to quit, the force flag is false.
+            // The command created by request_quit will be executed and will
+            // produce the message Quit(true).
+            Messages::Quit(force) => return self.request_quit(force),
             Messages::DiscardCurrentAnnounce => self.announces.pop(),
             Messages::PushAnnounce(announce) => self.announces.push(announce),
             Messages::OpenConfigurationDirectory(directory_path) => return self.explore_directory(directory_path),
             Messages::DoNothing => (),
+            Messages::WindowResized { width, height } => return self.on_window_resized(width, height),
+            Messages::WindowMoved { x, y } => self.on_window_moved(x, y),
+            Messages::WindowModeChanged(fullscreen) => self.settings.set_window_fullscreen(fullscreen),
         }
 
         Command::none()
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
+        let mut subscriptions: Vec<Subscription<Self::Message>> = Vec::new();
+
         if self.states.current().is_show_servers() && self.settings.auto_refresh_favorite() {
             // Each 5 minutes refresh the favorites servers
-            return iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers);
+            subscriptions
+                .push(iced::time::every(std::time::Duration::from_secs(60 * 5)).map(|_| Messages::RefreshFavoriteServers));
         }
 
-        Subscription::none()
+        subscriptions.push(subscription::events_with(|event, _status| match event {
+            Event::Window(window::Event::CloseRequested) => Some(Messages::Quit(false)),
+            Event::Window(window::Event::Resized { width, height }) => Some(Messages::WindowResized { width, height }),
+            Event::Window(window::Event::Moved { x, y }) => Some(Messages::WindowMoved { x, y }),
+            _ => None,
+        }));
+
+        Subscription::batch(subscriptions.into_iter())
     }
 
     fn view(&self) -> iced::Element<Self::Message, iced::Renderer<Self::Theme>> {
@@ -331,7 +379,7 @@ impl Application {
         if self.settings.quit_on_copy() {
             Command::batch(vec![
                 iced::clipboard::write(text),
-                Command::perform(async move {}, |_| Messages::Quit),
+                Command::perform(async move {}, |_| Messages::Quit(false)),
             ])
         } else {
             iced::clipboard::write(text)
@@ -538,5 +586,43 @@ impl Application {
         })
         .await
         .unwrap()
+    }
+
+    pub fn on_window_resized(&mut self, width: u32, height: u32) -> Command<Messages> {
+        let mut settings = self.settings.get_window_settings();
+
+        settings.width = width;
+        settings.height = height;
+
+        self.settings.set_window_settings(settings);
+
+        Self::make_fetch_fullscreen_command()
+    }
+
+    fn make_fetch_fullscreen_command() -> Command<Messages> {
+        window::fetch_mode(|mode| Messages::WindowModeChanged(mode == Mode::Fullscreen))
+    }
+
+    pub fn on_window_moved(&mut self, x: i32, y: i32) {
+        let mut settings = self.settings.get_window_settings();
+
+        settings.x = x;
+        settings.y = y;
+
+        self.settings.set_window_settings(settings);
+    }
+
+    pub fn restore_window_settings_command(&self) -> Command<Messages> {
+        let settings = self.settings.get_window_settings();
+        let mut command: Vec<Command<Messages>> = Vec::new();
+
+        command.push(window::move_to(settings.x, settings.y));
+        command.push(window::resize(settings.width, settings.height));
+        command.push(window::set_mode(match settings.is_fullscreen {
+            true => window::Mode::Fullscreen,
+            false => window::Mode::Windowed,
+        }));
+
+        Command::batch(command.into_iter())
     }
 }
