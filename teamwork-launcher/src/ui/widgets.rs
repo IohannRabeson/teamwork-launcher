@@ -6,14 +6,13 @@ use {
         icons,
         models::{Country, Server, Thumbnail},
         promised_value::PromisedValue,
-        ui::VISUAL_SPACING_SMALL,
+        ui::{styles::ColoredPingIndicatorStyle, VISUAL_SPACING_SMALL},
     },
     iced::{
         theme,
         widget::{container, horizontal_space, image, row, svg, text, tooltip::Position},
-        Alignment, Color, Element, Length, Theme,
+        Alignment, Element, Length,
     },
-    lazy_static::lazy_static,
     std::time::Duration,
 };
 
@@ -73,22 +72,6 @@ pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'
     }
 }
 
-struct ColoredSvgStyle(Color);
-
-impl svg::StyleSheet for ColoredSvgStyle {
-    type Style = Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> svg::Appearance {
-        svg::Appearance { color: Some(self.0) }
-    }
-}
-
-lazy_static! {
-    pub static ref GOOD_PING_COLOR: Color = Color::from_rgb8(0, 255, 0);
-    pub static ref BAD_PING_COLOR: Color = Color::from_rgb8(255, 255, 0);
-    pub static ref VERY_BAD_PING_COLOR: Color = Color::from_rgb8(255, 0, 0);
-}
-
 pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
     match &server.ping {
         PromisedValue::Ready(duration) => {
@@ -104,14 +87,13 @@ pub fn ping<'a>(server: &Server) -> Element<'a, Messages> {
 
 fn ping_icon<'a>(duration: &Duration, size: u16) -> Element<'a, Messages> {
     let icon = if duration < &Duration::from_millis(25) {
-        svg(icons::RECEPTION_GOOD.clone()).style(theme::Svg::Custom(Box::new(ColoredSvgStyle(GOOD_PING_COLOR.clone()))))
+        svg(icons::RECEPTION_GOOD.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::Good)))
     } else if duration < &Duration::from_millis(50) {
-        svg(icons::RECEPTION_OK.clone()).style(theme::Svg::Custom(Box::new(ColoredSvgStyle(GOOD_PING_COLOR.clone()))))
+        svg(icons::RECEPTION_OK.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::Good)))
     } else if duration < &Duration::from_millis(100) {
-        svg(icons::RECEPTION_BAD.clone()).style(theme::Svg::Custom(Box::new(ColoredSvgStyle(BAD_PING_COLOR.clone()))))
+        svg(icons::RECEPTION_BAD.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::Bad)))
     } else {
-        svg(icons::RECEPTION_VERY_BAD.clone())
-            .style(theme::Svg::Custom(Box::new(ColoredSvgStyle(VERY_BAD_PING_COLOR.clone()))))
+        svg(icons::RECEPTION_VERY_BAD.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::VeryBad)))
     };
 
     tooltip(
@@ -119,7 +101,6 @@ fn ping_icon<'a>(duration: &Duration, size: u16) -> Element<'a, Messages> {
         format!("{}ms", duration.as_millis()),
         Position::Bottom,
     )
-    .into()
 }
 
 pub fn tooltip<'a>(

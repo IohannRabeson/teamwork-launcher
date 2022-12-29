@@ -126,7 +126,7 @@ impl Application {
             Command::perform(async {}, |_| Messages::Quit(true)),
         ];
 
-        return Command::batch(commands.into_iter());
+        Command::batch(commands.into_iter())
     }
 }
 
@@ -614,15 +614,14 @@ impl Application {
 
     pub fn restore_window_settings_command(&self) -> Command<Messages> {
         let settings = self.settings.get_window_settings();
-        let mut command: Vec<Command<Messages>> = Vec::new();
 
-        command.push(window::move_to(settings.x, settings.y));
-        command.push(window::resize(settings.width, settings.height));
-        command.push(window::set_mode(match settings.is_fullscreen {
-            true => window::Mode::Fullscreen,
-            false => window::Mode::Windowed,
-        }));
-
-        Command::batch(command.into_iter())
+        Command::batch(vec![
+            window::move_to(settings.x, settings.y),
+            window::resize(settings.width, settings.height),
+            window::set_mode(match settings.is_fullscreen {
+                true => window::Mode::Fullscreen,
+                false => window::Mode::Windowed,
+            })
+        ].into_iter())
     }
 }

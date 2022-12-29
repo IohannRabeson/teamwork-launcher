@@ -63,6 +63,7 @@ fn main() -> anyhow::Result<()> {
         settings: load_user_settings(),
         launcher: ExecutableLauncher::new(false),
     });
+
     settings.exit_on_close_request = false;
 
     Application::run(settings)?;

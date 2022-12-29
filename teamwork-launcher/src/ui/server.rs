@@ -67,14 +67,13 @@ fn source_text<'a>(server: &Server, servers_provider: &ServersProvider) -> Text<
         server
             .source
             .as_ref()
-            .map(|key| { servers_provider.get_source_name(key) })
-            .flatten()
-            .unwrap_or(" - ".into())
+            .and_then(|key| { servers_provider.get_source_name(key) })
+            .unwrap_or_else(|| " - ".into())
     ))
 }
 
 fn buttons_row<'a>(server: &Server, settings: &UserSettings) -> Row<'a, Messages> {
-    let mut copy_tooltip_text = format!("Copy to clipboard the connection string.");
+    let mut copy_tooltip_text = "Copy to clipboard the connection string.".to_string();
 
     if settings.quit_on_copy() {
         copy_tooltip_text += "\nThe launcher will quit."
