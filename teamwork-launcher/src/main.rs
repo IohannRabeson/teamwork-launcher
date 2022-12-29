@@ -1,18 +1,16 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
-use iced::window;
 use {
     application::{Application, Flags},
     clap::Parser,
-    iced::{Application as IcedApplication, Settings},
+    iced::{window, Application as IcedApplication, Settings},
     launcher::ExecutableLauncher,
     log::{error, info, warn},
     settings::UserSettings,
 };
 
 mod advanced_filter;
-mod announces;
 mod application;
 mod directories;
 mod fonts;
@@ -21,6 +19,7 @@ mod icons;
 mod launcher;
 mod models;
 mod ping_service;
+mod process_detection;
 mod promised_value;
 mod servers_provider;
 mod settings;

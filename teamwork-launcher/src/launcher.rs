@@ -1,11 +1,18 @@
-use {crate::models::IpPort, std::error::Error};
+use {
+    crate::{models::IpPort, process_detection::ProcessDetection},
+    std::error::Error,
+};
 
 #[derive(thiserror::Error, Debug)]
-#[error("Failed to start executable: {message}")]
-pub struct LaunchError {
-    pub message: String,
-    pub origin: Option<Box<dyn Error>>,
-    pub params: IpPort,
+
+pub enum LaunchError {
+    #[error("Failed to start executable: {executable_path}.\n{origin}")]
+    CantStartProcess {
+        executable_path: String,
+        origin: Box<dyn Error>,
+    },
+    #[error("The game is already started. You can copy the connection string then paste it in the console in game.")]
+    AlreadyStarted,
 }
 
 trait Launcher {
@@ -18,7 +25,9 @@ trait Launcher {
 }
 
 #[derive(Default)]
-struct GameLauncher;
+struct GameLauncher {
+    process_detection: ProcessDetection,
+}
 
 impl Launcher for GameLauncher {
     fn launch_game(
@@ -29,13 +38,16 @@ impl Launcher for GameLauncher {
     ) -> Result<(), LaunchError> {
         use std::process::Command;
 
+        if self.process_detection.is_game_detected() {
+            return Err(LaunchError::AlreadyStarted);
+        }
+
         Command::new(executable_path)
             .args(arguments.iter().map(|arg| arg.format_to_string(params)))
             .output()
-            .map_err(|error| LaunchError {
-                message: format!("Cannot start executable '{0}'", executable_path),
-                origin: Some(Box::new(error)),
-                params: params.clone(),
+            .map_err(|error| LaunchError::CantStartProcess {
+                executable_path: executable_path.to_string(),
+                origin: Box::new(error),
             })?;
 
         Ok(())
