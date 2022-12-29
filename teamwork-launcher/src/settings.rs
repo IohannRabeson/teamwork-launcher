@@ -1,4 +1,7 @@
-use crate::{advanced_filter::AdvancedServerFilter, directories, text_filter::TextFilter};
+use {
+    crate::{advanced_filter::AdvancedServerFilter, directories, text_filter::TextFilter},
+    iced::window,
+};
 
 use {
     crate::{
@@ -57,6 +60,31 @@ struct InnerUserSettings {
     pub quit_on_launch: bool,
     #[serde(default)]
     quit_on_copy: bool,
+    #[serde(default)]
+    window_settings: WindowSettings,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WindowSettings {
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub is_fullscreen: bool,
+}
+
+impl Default for WindowSettings {
+    fn default() -> Self {
+        let default_settings = window::Settings::default();
+
+        Self {
+            x: 0,
+            y: 0,
+            width: default_settings.size.0,
+            height: default_settings.size.1,
+            is_fullscreen: false,
+        }
+    }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug)]
@@ -106,6 +134,7 @@ impl Default for InnerUserSettings {
             servers_filter: Default::default(),
             quit_on_launch: false,
             quit_on_copy: false,
+            window_settings: Default::default(),
         }
     }
 }
@@ -276,6 +305,28 @@ impl UserSettings {
         let mut inner = self.storage.try_write().unwrap();
 
         inner.auto_refresh_favorite = value;
+    }
+
+    pub fn set_window_settings(&mut self, settings: WindowSettings) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.window_settings = settings;
+
+        println!("{:?}", inner.window_settings);
+    }
+
+    pub fn set_window_fullscreen(&mut self, fullscreen: bool) {
+        let mut inner = self.storage.try_write().unwrap();
+
+        inner.window_settings.is_fullscreen = fullscreen;
+
+        println!("{:?}", inner.window_settings);
+    }
+
+    pub fn get_window_settings(&self) -> WindowSettings {
+        let inner = self.storage.try_read().unwrap();
+
+        inner.window_settings.clone()
     }
 
     pub fn save_settings(settings: &UserSettings) -> Result<(), Error> {

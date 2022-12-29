@@ -58,11 +58,15 @@ fn main() -> anyhow::Result<()> {
         warn!("Integration test mode enabled!");
     }
 
-    Application::run(Settings::with_flags(Flags {
+    let mut settings = Settings::with_flags(Flags {
         cli_params,
         settings: load_user_settings(),
         launcher: ExecutableLauncher::new(false),
-    }))?;
+    });
+
+    settings.exit_on_close_request = false;
+
+    Application::run(settings)?;
 
     Ok(())
 }
