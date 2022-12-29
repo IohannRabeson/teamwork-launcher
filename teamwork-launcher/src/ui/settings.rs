@@ -39,6 +39,14 @@ pub fn settings_view<'a>(settings: &'a UserSettings, servers_provider: &'a Serve
                 .password()
             ),
             field(
+                Some("Server sources:"),
+                Some(
+                    "For each source the Teamwork API will be queried. \
+                     Remember the count of query per minutes is limited."
+                ),
+                sources_list_view(settings.source_filter(servers_provider))
+            ),
+            field(
                 Some("Auto refresh favorite servers:"),
                 Some("If enabled, the favorites servers data will be refreshed every 5 minutes."),
                 checkbox("Auto refresh", settings.auto_refresh_favorite(), |checked| {
@@ -48,14 +56,6 @@ pub fn settings_view<'a>(settings: &'a UserSettings, servers_provider: &'a Serve
 
                     Messages::SettingsChanged(new_settings)
                 })
-            ),
-            field(
-                Some("Server sources:"),
-                Some(
-                    "For each source the Teamwork API will be queried. \
-                     Remember the count of query per minutes is limited."
-                ),
-                sources_list_view(settings.source_filter(servers_provider))
             ),
             section_title("Auto quit:"),
             column![
