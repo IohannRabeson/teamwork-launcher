@@ -78,8 +78,7 @@ where
                     .width(Length::Fill)
                     .padding([0, VISUAL_SPACING_MEDIUM, 0, 0]),
             )
-            .scrollbar_width(8)
-            .scroller_width(8)
+            .vertical_scroll(scrollable::Properties::new().width(8).scroller_width(8))
         )
         .width(Length::FillPortion(4)),
         advanced_filter_view(settings).width(Length::FillPortion(1))
