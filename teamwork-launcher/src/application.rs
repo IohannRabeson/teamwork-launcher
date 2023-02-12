@@ -114,14 +114,12 @@ pub struct Application {
     servers_provider: Arc<ServersProvider>,
     ip_geoloc_service: IpGeolocationService,
     ping_service: PingService,
-    should_exit: bool,
 }
 
 impl Application {
     pub(crate) fn request_quit(&mut self, force: bool) -> Command<Messages> {
         if force {
-            self.should_exit = true;
-            return Command::none();
+            return iced::window::close();
         }
 
         let commands = vec![
@@ -152,7 +150,6 @@ impl IcedApplication for Application {
         flags.settings.set_available_sources(servers_provider.get_sources());
 
         let mut application = Self {
-            should_exit: false,
             servers_provider,
             settings: flags.settings,
             launcher: flags.launcher,
@@ -271,10 +268,6 @@ impl IcedApplication for Application {
         "Teamwork Launcher".to_string()
     }
 
-    fn should_exit(&self) -> bool {
-        self.should_exit
-    }
-
     fn theme(&self) -> Theme {
         self.theme.clone()
     }
@@ -374,7 +367,7 @@ impl Application {
         match self.launcher.launch(&self.settings.game_executable_path(), ip_port) {
             Ok(_) => {
                 if self.settings.quit_on_launch() {
-                    self.should_exit = true;
+                    return iced::window::close();
                 }
             }
             Err(LaunchError::CantStartProcess { executable_path, origin }) => {
