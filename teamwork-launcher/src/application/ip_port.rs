@@ -1,7 +1,8 @@
 use std::net::Ipv4Addr;
+use serde::{Serialize, Deserialize};
 
 /// The unique key identifying a server.
-#[derive(Debug, Hash, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Hash, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct IpPort {
     ip: Ipv4Addr,
     port: u16,

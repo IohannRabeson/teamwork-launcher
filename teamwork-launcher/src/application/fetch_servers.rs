@@ -1,8 +1,7 @@
 use {
     crate::application::server::Server,
     async_stream::stream,
-    futures::stream::FuturesUnordered,
-    iced::futures::{Stream, StreamExt},
+    iced::futures::{stream::FuturesUnordered, Stream, StreamExt},
     std::sync::Arc,
     teamwork::{Error, UrlWithKey},
 };

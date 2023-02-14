@@ -1,5 +1,8 @@
 use {
-    crate::application::{country::Country, CountryServiceMessage, Message},
+    crate::application::{
+        country::Country,
+        message::{CountryServiceMessage, Message},
+    },
     async_stream::stream,
     iced::{
         futures::{

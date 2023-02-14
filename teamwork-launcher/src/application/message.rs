@@ -1,0 +1,93 @@
+use {
+    crate::application::{geolocation, ping, Country, FetchServersEvent, IpPort, Server},
+    iced::{futures::channel::mpsc::UnboundedSender, widget::image},
+    std::{net::Ipv4Addr, sync::Arc, time::Duration},
+};
+
+#[derive(Debug, Clone)]
+pub enum FetchServersMessage {
+    FetchServersStart,
+    FetchServersFinish,
+    FetchServersError(Arc<teamwork::Error>),
+    NewServers(Vec<Server>),
+}
+
+#[derive(Debug, Clone)]
+pub enum CountryServiceMessage {
+    Started(UnboundedSender<Ipv4Addr>),
+    CountryFound(Ipv4Addr, Country),
+    Error(geolocation::Error),
+}
+
+#[derive(Debug, Clone)]
+pub enum PingServiceMessage {
+    Started(UnboundedSender<Ipv4Addr>),
+    Answer(Ipv4Addr, Duration),
+    Error(Ipv4Addr, ping::Error),
+}
+
+#[derive(Debug, Clone)]
+pub enum ThumbnailMessage {
+    Started(UnboundedSender<String>),
+    Thumbnail(String, image::Handle),
+    Error(String, Arc<teamwork::Error>),
+}
+
+#[derive(Debug, Clone)]
+pub enum FilterMessage {
+    CountryChecked(Country, bool),
+    NoCountryChecked(bool),
+    TextChanged(String),
+    BookmarkedOnlyChecked(bool),
+}
+
+#[derive(Debug, Clone)]
+pub enum SettingsMessage {
+    TeamworkApiKeyChanged(String),
+    SteamExecutableChanged(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum Message {
+    Servers(FetchServersMessage),
+    Country(CountryServiceMessage),
+    Ping(PingServiceMessage),
+    Thumbnail(ThumbnailMessage),
+    Filter(FilterMessage),
+    Settings(SettingsMessage),
+    RefreshServers,
+    ShowSettings,
+    LaunchGame(IpPort),
+    Bookmarked(IpPort, bool),
+    CopyToClipboard(String),
+    Back,
+}
+
+impl From<FetchServersEvent> for Message {
+    fn from(value: FetchServersEvent) -> Self {
+        match value {
+            FetchServersEvent::Start => Message::Servers(FetchServersMessage::FetchServersStart),
+            FetchServersEvent::Finish => Message::Servers(FetchServersMessage::FetchServersFinish),
+            FetchServersEvent::Servers(servers) => Message::Servers(FetchServersMessage::NewServers(servers)),
+            FetchServersEvent::Error(error) => Message::Servers(FetchServersMessage::FetchServersError(error)),
+        }
+    }
+}
+
+impl From<CountryServiceMessage> for Message {
+    fn from(value: CountryServiceMessage) -> Self {
+        Message::Country(value)
+    }
+}
+
+impl From<PingServiceMessage> for Message {
+    fn from(message: PingServiceMessage) -> Self {
+        Message::Ping(message)
+    }
+}
+
+impl From<ThumbnailMessage> for Message {
+    fn from(value: ThumbnailMessage) -> Self {
+        Message::Thumbnail(value)
+    }
+}

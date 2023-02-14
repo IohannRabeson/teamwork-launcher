@@ -1,5 +1,5 @@
 use {
-    crate::application::PingServiceMessage,
+    crate::application::message::PingServiceMessage,
     iced::{
         futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
         subscription, Subscription,

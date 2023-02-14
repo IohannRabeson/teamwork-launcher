@@ -4,21 +4,32 @@ pub mod fetch_servers;
 pub mod filter_servers;
 mod geolocation;
 pub mod ip_port;
+mod launcher;
+mod message;
 mod ping;
+mod process_detection;
 pub mod promised_value;
 pub mod server;
 mod text_filter;
 mod thumbnail;
 mod views;
+mod bookmarks;
+mod user_settings;
+
+use std::cmp::Ordering;
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 
 use {
     crate::{application::views::Views, ui},
-    futures::{FutureExt, SinkExt, TryFutureExt},
     iced::{
-        futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
-        subscription,
-        widget::image,
-        Command, Element, Renderer, Subscription,
+        Command,
+        Element,
+        futures::{
+            channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+            FutureExt, SinkExt, TryFutureExt,
+        },
+        Renderer, subscription, Subscription, widget::image,
     },
     itertools::Itertools,
     std::{
@@ -30,111 +41,77 @@ use {
     teamwork::UrlWithKey,
 };
 
+use crate::application::launcher::{ExecutableLauncher, LaunchError};
 pub use {
+    bookmarks::Bookmarks,
     country::Country,
     fetch_servers::{fetch_servers, FetchServersEvent},
     filter_servers::Filter,
     ip_port::IpPort,
+    message::{
+        CountryServiceMessage, FetchServersMessage, FilterMessage, Message, PingServiceMessage, SettingsMessage,
+        ThumbnailMessage,
+    },
     promised_value::PromisedValue,
     server::Server,
 };
+pub use crate::application::user_settings::UserSettings;
 
-#[derive(Debug, Clone)]
-pub enum FetchServersMessage {
-    FetchServersStart,
-    FetchServersFinish,
-    FetchServersError(Arc<teamwork::Error>),
-    NewServers(Vec<Server>),
-}
-
-#[derive(Debug, Clone)]
-pub enum CountryServiceMessage {
-    Started(UnboundedSender<Ipv4Addr>),
-    CountryFound(Ipv4Addr, Country),
-    Error(geolocation::Error),
-}
-
-#[derive(Debug, Clone)]
-pub enum PingServiceMessage {
-    Started(UnboundedSender<Ipv4Addr>),
-    Answer(Ipv4Addr, Duration),
-    Error(Ipv4Addr, ping::Error),
-}
-
-#[derive(Debug, Clone)]
-pub enum ThumbnailMessage {
-    Started(UnboundedSender<String>),
-    Thumbnail(String, image::Handle),
-    Error(String, Arc<teamwork::Error>),
-}
-
-#[derive(Debug, Clone)]
-pub enum FilterMessage {
-    CountryChecked(Country, bool),
-    NoCountryChecked(bool),
-    TextChanged(String),
-}
-
-#[derive(Debug, Clone)]
-pub enum Message {
-    Servers(FetchServersMessage),
-    Country(CountryServiceMessage),
-    Ping(PingServiceMessage),
-    Thumbnail(ThumbnailMessage),
-    Filter(FilterMessage),
-    RefreshServers,
-}
-
-impl From<FetchServersEvent> for Message {
-    fn from(value: FetchServersEvent) -> Self {
-        match value {
-            FetchServersEvent::Start => Message::Servers(FetchServersMessage::FetchServersStart),
-            FetchServersEvent::Finish => Message::Servers(FetchServersMessage::FetchServersFinish),
-            FetchServersEvent::Servers(servers) => Message::Servers(FetchServersMessage::NewServers(servers)),
-            FetchServersEvent::Error(error) => Message::Servers(FetchServersMessage::FetchServersError(error)),
-        }
-    }
-}
-
-impl From<CountryServiceMessage> for Message {
-    fn from(value: CountryServiceMessage) -> Self {
-        Message::Country(value)
-    }
-}
-
-impl From<PingServiceMessage> for Message {
-    fn from(message: PingServiceMessage) -> Self {
-        Message::Ping(message)
-    }
-}
-
-impl From<ThumbnailMessage> for Message {
-    fn from(value: ThumbnailMessage) -> Self {
-        Message::Thumbnail(value)
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum SettingsError {
+    #[error("JSON error: {0}")]
+    Json(#[from] Arc<serde_json::Error>),
+    #[error("IO error: {0}")]
+    Io(#[from] Arc<std::io::Error>),
 }
 
 pub enum Screens {
     Main(MainView),
+    Settings,
 }
 
 pub struct MainView {
     pub servers: Vec<Server>,
     pub filter: Filter,
-    pub fetch_servers_subscription_id: u64,
-}
-
-struct Settings {
-    teamwork_api_key: String,
-    server_urls: Vec<String>,
 }
 
 pub struct TeamworkLauncher {
     views: Views<Screens>,
-    settings: Settings,
+    user_settings: UserSettings,
+    server_urls: Vec<String>,
+    launcher: ExecutableLauncher,
+    bookmarks: Bookmarks,
     country_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_sender: Option<UnboundedSender<Ipv4Addr>>,
     thumbnail_sender: Option<UnboundedSender<String>>,
+    fetch_servers_subscription_id: u64,
+}
+
+impl TeamworkLauncher {
+    fn process_filter_message(&mut self, message: FilterMessage) {
+        match message {
+            FilterMessage::CountryChecked(country, checked) => {
+                if let Some(Screens::Main(view)) = self.views.current_mut() {
+                    view.filter.country.set_checked(&country, checked);
+                }
+            }
+            FilterMessage::NoCountryChecked(checked) => {
+                if let Some(Screens::Main(view)) = self.views.current_mut() {
+                    view.filter.country.set_accept_no_country(checked);
+                }
+            }
+            FilterMessage::TextChanged(text) => {
+                if let Some(Screens::Main(view)) = self.views.current_mut() {
+                    view.filter.text.set_text(&text);
+                }
+            }
+            FilterMessage::BookmarkedOnlyChecked(checked) => {
+                if let Some(Screens::Main(view)) = self.views.current_mut() {
+                    view.filter.bookmarked_only = checked;
+                }
+            }
+        }
+    }
 }
 
 impl TeamworkLauncher {
@@ -144,14 +121,14 @@ impl TeamworkLauncher {
                 if let Some(country_sender) = &mut self.country_sender {
                     country_sender
                         .send(ip.clone())
-                        .unwrap_or_else(|e| eprintln!("country_sender {}", e))
+                        .unwrap_or_else(|e| eprintln!("country sender {}", e))
                         .now_or_never();
                 }
 
                 if let Some(ping_sender) = &mut self.ping_sender {
                     ping_sender
                         .send(ip.clone())
-                        .unwrap_or_else(|e| eprintln!("ping_sender {}", e))
+                        .unwrap_or_else(|e| eprintln!("ping sender {}", e))
                         .now_or_never();
                 }
             }
@@ -160,7 +137,7 @@ impl TeamworkLauncher {
                 if let Some(thumbnail_sender) = &mut self.thumbnail_sender {
                     thumbnail_sender
                         .send(map_name.clone())
-                        .unwrap_or_else(|e| eprintln!("thumbnail_sender {}", e))
+                        .unwrap_or_else(|e| eprintln!("thumbnail sender {}", e))
                         .now_or_never();
                 }
             }
@@ -171,19 +148,23 @@ impl TeamworkLauncher {
                 .unique()
                 .cloned()
                 .collect();
-            view.filter.country.extend_available(&countries);
 
+            view.filter.country.extend_available(&countries);
             view.servers.extend(new_servers.into_iter());
-            view.servers.sort_by(|l, r| l.ip_port.cmp(&r.ip_port));
+            view.servers.sort_by(Self::sort_servers);
         }
+    }
+
+    fn sort_servers(l: &Server, r: &Server) -> Ordering {
+        l.ip_port.cmp(&r.ip_port)
     }
 
     fn refresh_servers(&mut self) {
         if let Some(Screens::Main(view)) = self.views.current_mut() {
             view.servers.clear();
             view.filter.country.clear_available();
-            view.fetch_servers_subscription_id = view.fetch_servers_subscription_id.wrapping_add(1);
         }
+        self.fetch_servers_subscription_id += 1;
     }
 
     fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
@@ -210,6 +191,38 @@ impl TeamworkLauncher {
             }
         }
     }
+
+    fn process_settings_message(&mut self, message: SettingsMessage) {
+        match message {
+            SettingsMessage::TeamworkApiKeyChanged(key) => {
+                self.user_settings.teamwork_api_key = key;
+            }
+            SettingsMessage::SteamExecutableChanged(executable_path) => {
+                self.user_settings.steam_executable_path = executable_path;
+            }
+        }
+    }
+}
+
+const APPLICATION_NAME: &str = "teamwork-launcher2";
+
+pub fn get_configuration_directory() -> PathBuf {
+    platform_dirs::AppDirs::new(APPLICATION_NAME.into(), false)
+        .map(|dirs| dirs.config_dir)
+        .expect("config directory path")
+}
+
+impl Drop for TeamworkLauncher {
+    fn drop(&mut self) {
+        let configuration_directory = get_configuration_directory();
+
+        if !configuration_directory.is_dir() {
+            std::fs::create_dir_all(&configuration_directory).unwrap_or_else(|e|eprintln!("Failed to create configuration directory '{}': {}", configuration_directory.display(), e));
+        }
+
+        self.bookmarks.write_file(&configuration_directory.join("bookmarks.json")).unwrap_or_else(|e|eprintln!("Failed to write bookmarks: {}", e));
+        self.user_settings.write_file(&configuration_directory.join("settings.json")).unwrap_or_else(|e|eprintln!("Failed to write settings: {}", e));
+    }
 }
 
 impl iced::Application for TeamworkLauncher {
@@ -219,24 +232,28 @@ impl iced::Application for TeamworkLauncher {
     type Flags = ();
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let configuration_directory = get_configuration_directory();
+        let bookmarks = Bookmarks::read_file(&configuration_directory.join("bookmarks.json")).unwrap_or_default();
+        let user_settings = UserSettings::read_file(&configuration_directory.join("settings.json")).unwrap_or_default();
+
         (
             Self {
                 views: Views::new(Screens::Main(MainView {
                     servers: Vec::new(),
                     filter: Filter::new(),
-                    fetch_servers_subscription_id: 0u64,
                 })),
-                settings: Settings {
-                    teamwork_api_key: std::env::var("TEST_TEAMWORK_API_KEY").unwrap(),
-                    server_urls: vec![
-                        String::from("https://teamwork.tf/api/v1/quickplay/payload/servers"),
-                        String::from("https://teamwork.tf/api/v1/quickplay/koth/servers"),
-                        String::from("https://teamwork.tf/api/v1/quickplay/ctf/servers"),
-                    ],
-                },
+                user_settings,
+                server_urls: vec![
+                    String::from("https://teamwork.tf/api/v1/quickplay/payload/servers"),
+                    String::from("https://teamwork.tf/api/v1/quickplay/koth/servers"),
+                    String::from("https://teamwork.tf/api/v1/quickplay/ctf/servers"),
+                ],
+                launcher: ExecutableLauncher::new(true),
+                bookmarks,
                 country_sender: None,
                 ping_sender: None,
                 thumbnail_sender: None,
+                fetch_servers_subscription_id: 0,
             },
             Command::none(),
         )
@@ -291,20 +308,31 @@ impl iced::Application for TeamworkLauncher {
                 self.thumbnail_ready(map_name, None);
                 eprintln!("Error: {}", error);
             }
-            Message::Filter(FilterMessage::CountryChecked(country, checked)) => {
-                if let Some(Screens::Main(view)) = self.views.current_mut() {
-                    view.filter.country.set_checked(&country, checked);
+            Message::Filter(message) => {
+                self.process_filter_message(message);
+            }
+            Message::Back => {
+                self.views.pop();
+            }
+            Message::ShowSettings => {
+                self.views.push(Screens::Settings);
+            }
+            Message::LaunchGame(ip_port) => {
+                if let Err(error) = self.launcher.launch(&self.user_settings.steam_executable_path, &ip_port) {
+                    eprintln!("Error: {}", error);
                 }
             }
-            Message::Filter(FilterMessage::NoCountryChecked(checked)) => {
-                if let Some(Screens::Main(view)) = self.views.current_mut() {
-                    view.filter.country.set_accept_no_country(checked);
+            Message::Settings(settings_message) => {
+                self.process_settings_message(settings_message);
+            }
+            Message::Bookmarked(ip_port, bookmarked) => {
+                match bookmarked {
+                    true => self.bookmarks.add(ip_port),
+                    false => self.bookmarks.remove(&ip_port),
                 }
             }
-            Message::Filter(FilterMessage::TextChanged(text)) => {
-                if let Some(Screens::Main(view)) = self.views.current_mut() {
-                    view.filter.text.set_text(&text);
-                }
+            Message::CopyToClipboard(connection_string) => {
+                return iced::clipboard::write(connection_string)
             }
         }
 
@@ -313,7 +341,8 @@ impl iced::Application for TeamworkLauncher {
 
     fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
         match self.views.current().expect("valid view") {
-            Screens::Main(view) => ui::main_view(view),
+            Screens::Main(view) => ui::main::view(view, &self.bookmarks),
+            Screens::Settings => ui::settings::view(&self.user_settings),
         }
         .into()
     }
@@ -325,24 +354,18 @@ impl iced::Application for TeamworkLauncher {
     fn subscription(&self) -> Subscription<Self::Message> {
         use iced::futures::StreamExt;
 
-        match self.views.current().expect("valid view") {
-            Screens::Main(view) => {
-                let subscription_id = view.fetch_servers_subscription_id;
-                let urls = self
-                    .settings
-                    .server_urls
-                    .iter()
-                    .map(|server_url| UrlWithKey::new(server_url, &self.settings.teamwork_api_key))
-                    .collect();
-                let server_stream = fetch_servers(urls).map(|event| Message::from(event));
+        let urls = self
+            .server_urls
+            .iter()
+            .map(|server_url| UrlWithKey::new(server_url, &self.user_settings.teamwork_api_key))
+            .collect();
+        let server_stream = fetch_servers(urls).map(|event| Message::from(event));
 
-                Subscription::batch([
-                    subscription::run(subscription_id, server_stream),
-                    geolocation::subscription().map(Message::from),
-                    ping::subscription().map(Message::from),
-                    thumbnail::subscription(&self.settings.teamwork_api_key).map(Message::from),
-                ])
-            }
-        }
+        Subscription::batch([
+            subscription::run(self.fetch_servers_subscription_id, server_stream),
+            geolocation::subscription().map(Message::from),
+            ping::subscription().map(Message::from),
+            thumbnail::subscription(&self.user_settings.teamwork_api_key).map(Message::from),
+        ])
     }
 }
