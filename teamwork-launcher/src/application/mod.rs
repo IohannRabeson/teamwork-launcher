@@ -246,6 +246,9 @@ impl TeamworkLauncher {
             FilterMessage::MaxPingChanged(max_ping) => {
                 self.filter.max_ping = max_ping;
             }
+            FilterMessage::AcceptPingTimeoutChanged(checked) => {
+                self.filter.accept_ping_timeout = checked;
+            }
         }
     }
 

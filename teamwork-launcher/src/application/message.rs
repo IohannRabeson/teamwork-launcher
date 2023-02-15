@@ -44,6 +44,7 @@ pub enum FilterMessage {
     IgnoreCaseChanged(bool),
     IgnoreAccentChanged(bool),
     MaxPingChanged(u32),
+    AcceptPingTimeoutChanged(bool),
 }
 
 #[derive(Debug, Clone)]

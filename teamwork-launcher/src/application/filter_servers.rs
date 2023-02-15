@@ -7,12 +7,25 @@ use {
     std::collections::BTreeSet,
 };
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct Filter {
     pub text: TextFilter,
     pub country: CountryFilter,
     pub bookmarked_only: bool,
     pub max_ping: u32,
+    pub accept_ping_timeout: bool,
+}
+
+impl Default for Filter {
+    fn default() -> Self {
+        Filter {
+            text: TextFilter::default(),
+            country: CountryFilter::default(),
+            bookmarked_only: false,
+            max_ping: 150,
+            accept_ping_timeout: true,
+        }
+    }
 }
 
 impl Filter {
@@ -22,6 +35,7 @@ impl Filter {
             country: CountryFilter::new(),
             bookmarked_only: false,
             max_ping: 500,
+            accept_ping_timeout: false,
         }
     }
 
@@ -45,7 +59,7 @@ impl Filter {
         match server.ping {
             PromisedValue::Ready(ping) => { ping.as_millis() <= self.max_ping as u128 }
             PromisedValue::Loading => { true }
-            PromisedValue::None => { true }
+            PromisedValue::None => { self.accept_ping_timeout }
         }
     }
 }

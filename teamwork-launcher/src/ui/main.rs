@@ -23,38 +23,6 @@ use {
     iced_lazy::responsive,
 };
 
-#[derive(Default)]
-struct SectionContainer;
-
-impl container::StyleSheet for SectionContainer {
-    type Style = Theme;
-
-    fn appearance(&self, style: &Self::Style) -> container::Appearance {
-        container::Appearance {
-            text_color: Theme::Dark.palette().text.clone().into(),
-            background: Theme::Dark.palette().background.into(),
-            border_radius: 2.0,
-            border_width: 1.0,
-            border_color: Color::from([0.5, 0.5, 0.5]),
-        }
-    }
-}
-
-fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Message>>) -> Container<'l, Message> {
-    container(match title {
-        None => { column![content.into()] }
-        Some(title) => {
-            column![
-                text(title),
-                content.into()
-            ]
-        }
-    }.spacing(8))
-    .width(Length::Fill)
-    .style(theme::Container::Custom(Box::<SectionContainer>::default()))
-    .padding(8)
-}
-
 pub fn view<'l>(
     view: &'l MainView,
     servers: &'l [Server],
@@ -155,7 +123,7 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter) -> Element<'l, Messag
         column![
             filter_section(None, ui::filter::bookmark_filter(filter)),
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
-            filter_section(Some("Text"), ui::filter::advanced_text_filter(filter)),
+            filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
             filter_section(Some("Countries"), ui::filter::country_filter(filter)),
         ]
         .padding([0, 14, 0, 0])
@@ -164,6 +132,38 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter) -> Element<'l, Messag
     .padding(4);
 
     filter_panel.into()
+}
+
+#[derive(Default)]
+struct FilterSectionContainer;
+
+impl container::StyleSheet for FilterSectionContainer {
+    type Style = Theme;
+
+    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            text_color: Theme::Dark.palette().text.clone().into(),
+            background: Theme::Dark.palette().background.into(),
+            border_radius: 2.0,
+            border_width: 1.0,
+            border_color: Color::from([0.5, 0.5, 0.5]),
+        }
+    }
+}
+
+fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Message>>) -> Container<'l, Message> {
+    container(match title {
+        None => { column![content.into()] }
+        Some(title) => {
+            column![
+                text(title),
+                content.into()
+            ]
+        }
+    }.spacing(8))
+        .width(Length::Fill)
+        .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
+        .padding(8)
 }
 
 mod thumbnail {

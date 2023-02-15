@@ -4,6 +4,7 @@ use {
 };
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct Country {
     code: String,
 }
