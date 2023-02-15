@@ -104,7 +104,6 @@ impl MainView {
 pub struct TeamworkLauncher {
     views: Views<Screens>,
     servers: Vec<Server>,
-    sources_order: BTreeMap<SourceKey, usize>,
     user_settings: UserSettings,
     filter: Filter,
     servers_sources: Vec<ServersSource>,
@@ -118,14 +117,29 @@ pub struct TeamworkLauncher {
 
 impl TeamworkLauncher {
     fn new_servers(&mut self, mut new_servers: Vec<Server>) {
-        new_servers.sort_by(|l, r| {
-            let left_bookmarked = self.bookmarks.is_bookmarked(&l.ip_port);
-            let right_bookmarked = self.bookmarks.is_bookmarked(&l.ip_port);
+        let countries: Vec<Country> = new_servers
+            .iter()
+            .filter_map(|server| server.country.get())
+            .unique()
+            .cloned()
+            .collect();
 
-            right_bookmarked.cmp(&left_bookmarked)
+        self.filter.country.extend_available(&countries);
+        self.servers.extend(new_servers.into_iter());
+        self.servers.sort_by(Self::sort_servers);
+    }
+
+    fn on_finish(&mut self) {
+        let mut servers_refs: Vec<&Server> = self.servers.iter().collect();
+
+        servers_refs.sort_by(|l, r| {
+            let left = self.bookmarks.is_bookmarked(&l.ip_port);
+            let right = self.bookmarks.is_bookmarked(&r.ip_port);
+
+            right.cmp(&left)
         });
 
-        for map_name in new_servers.iter().map(|server| server.map.clone()).unique() {
+        for map_name in servers_refs.iter().map(|server| server.map.clone()).unique() {
             if let Some(thumbnail_sender) = &mut self.thumbnail_sender {
                 thumbnail_sender
                     .send(map_name.clone())
@@ -134,7 +148,7 @@ impl TeamworkLauncher {
             }
         }
 
-        for ip in new_servers.iter().map(|server| server.ip_port.ip()).unique().cloned() {
+        for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique().cloned() {
             if let Some(country_sender) = &mut self.country_sender {
                 country_sender
                     .send(ip.clone())
@@ -149,19 +163,6 @@ impl TeamworkLauncher {
                     .now_or_never();
             }
         }
-
-        let countries: Vec<Country> = new_servers
-            .iter()
-            .filter_map(|server| server.country.get())
-            .unique()
-            .cloned()
-            .collect();
-
-        self.filter.country.extend_available(&countries);
-        self.servers.extend(new_servers.into_iter());
-        self.servers.sort_by(Self::sort_servers);
-
-        self.update_sources_urls_cache();
     }
 
     fn sort_servers(l: &Server, r: &Server) -> Ordering {
@@ -239,28 +240,6 @@ impl TeamworkLauncher {
         }
     }
 
-    fn update_sources_urls_cache(&mut self) {
-        let mut counts: BTreeMap<SourceKey, usize> = BTreeMap::new();
-
-        for source_key in self
-            .servers
-            .iter()
-            .filter(|server| self.bookmarks.is_bookmarked(&server.ip_port))
-            .filter_map(|server| server.source_key.as_ref())
-        {
-            match counts.entry(source_key.clone()) {
-                Vacant(vacant) => {
-                    vacant.insert(1);
-                }
-                Occupied(mut occupied) => {
-                    *occupied.get_mut() += 1;
-                }
-            };
-        }
-
-        self.sources_order = counts;
-    }
-
     /// Get the list of URLS to get the servers information.
     ///
     /// The order is specified by the bookmarks. The rule is
@@ -269,12 +248,6 @@ impl TeamworkLauncher {
         let urls = self
             .servers_sources
             .iter()
-            .sorted_by(|l, r| {
-                let left_count = self.sources_order.get(l.key());
-                let right_count = self.sources_order.get(r.key());
-
-                right_count.cmp(&left_count)
-            })
             .filter_map(|source| match source.enabled() {
                 true => Some((
                     source.key().clone(),
@@ -379,7 +352,7 @@ impl iced::Application for TeamworkLauncher {
     type Theme = iced::Theme;
     type Flags = ();
 
-    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let configuration_directory = get_configuration_directory();
         let bookmarks: Bookmarks = read_file(&configuration_directory.join("bookmarks.json")).unwrap_or_default();
         let user_settings: UserSettings = read_file(&configuration_directory.join("settings.json")).unwrap_or_default();
@@ -401,7 +374,6 @@ impl iced::Application for TeamworkLauncher {
             Self {
                 views: Views::new(Screens::Main(MainView::new(user_settings.servers_filter_pane_ratio))),
                 servers: Vec::new(),
-                sources_order: BTreeMap::new(),
                 user_settings,
                 filter,
                 servers_sources,
@@ -427,6 +399,7 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::Servers(FetchServersMessage::FetchServersFinish) => {
                 println!("Finish");
+                self.on_finish();
             }
             Message::Servers(FetchServersMessage::FetchServersError(error)) => {
                 eprintln!("Error: {}", error);
