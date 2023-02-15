@@ -1,3 +1,6 @@
+use iced::{Length, theme, Theme};
+use iced::widget::{container, slider, toggler};
+
 use {
     crate::{
         application::{Filter, FilterMessage, Message},
@@ -5,7 +8,7 @@ use {
         ui::buttons::svg_button,
     },
     iced::{
-        widget::{button, checkbox, column, row, text_input},
+        widget::{button, checkbox, column, row, text_input, text},
         Element,
     },
 };
@@ -21,6 +24,17 @@ pub fn text_filter(filter: &Filter) -> Element<Message> {
     .into()
 }
 
+pub fn advanced_text_filter(filter: &Filter) -> Element<Message> {
+    column![
+        checkbox("Ignore case", filter.text.ignore_case, |checked|{
+            Message::Filter(FilterMessage::IgnoreCaseChanged(checked))
+        }),
+        checkbox("Ignore accents", filter.text.ignore_accents, |checked|{
+            Message::Filter(FilterMessage::IgnoreAccentChanged(checked))
+        })
+    ].spacing(4).into()
+}
+
 pub fn country_filter(filter: &Filter) -> Element<Message> {
     filter
         .country
@@ -34,4 +48,20 @@ pub fn country_filter(filter: &Filter) -> Element<Message> {
             Message::Filter(FilterMessage::NoCountryChecked(checked))
         }))
         .into()
+}
+
+pub fn bookmark_filter(filter: &Filter) -> Element<Message> {
+    checkbox("Bookmarks only", filter.bookmarked_only, |checked| {
+        Message::Filter(FilterMessage::BookmarkedOnlyChecked(checked))
+    })
+    .into()
+}
+
+pub fn ping_filter(filter: &Filter) -> Element<Message> {
+    row![
+        slider(1u32..=500u32, filter.max_ping, |value|Message::Filter(FilterMessage::MaxPingChanged(value))),
+        text(format!("{}ms", filter.max_ping))
+    ]
+    .spacing(8)
+    .into()
 }

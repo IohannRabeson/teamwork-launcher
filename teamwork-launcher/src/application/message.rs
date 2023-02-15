@@ -41,6 +41,9 @@ pub enum FilterMessage {
     NoCountryChecked(bool),
     TextChanged(String),
     BookmarkedOnlyChecked(bool),
+    IgnoreCaseChanged(bool),
+    IgnoreAccentChanged(bool),
+    MaxPingChanged(u32),
 }
 
 #[derive(Debug, Clone)]

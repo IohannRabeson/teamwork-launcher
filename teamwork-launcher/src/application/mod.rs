@@ -237,6 +237,15 @@ impl TeamworkLauncher {
             FilterMessage::BookmarkedOnlyChecked(checked) => {
                 self.filter.bookmarked_only = checked;
             }
+            FilterMessage::IgnoreCaseChanged(checked) => {
+                self.filter.text.ignore_case = checked;
+            }
+            FilterMessage::IgnoreAccentChanged(checked) => {
+                self.filter.text.ignore_accents = checked;
+            }
+            FilterMessage::MaxPingChanged(max_ping) => {
+                self.filter.max_ping = max_ping;
+            }
         }
     }
 

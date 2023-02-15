@@ -12,9 +12,9 @@ pub struct TextFilter {
     /// Terms parsed from the input text.
     terms: Vec<String>,
     /// Ignore the case when filtering
-    ignore_case: bool,
+    pub ignore_case: bool,
     /// Ignore the case when filtering
-    ignore_accents: bool,
+    pub ignore_accents: bool,
 }
 
 impl TextFilter {
