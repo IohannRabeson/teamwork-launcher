@@ -8,7 +8,7 @@ use {
 /// It contains all the SVG files for country flags.
 /// Mind to update it sometimes.
 /// Also, it's not that huge, only ~3.3Mo for the whole directory.
-static FLAGS_SVG_ICONS: Dir<'_> = include_dir!("teamwork-launcher-old/src/icons/flag-icons/flags/1x1");
+static FLAGS_SVG_ICONS: Dir<'_> = include_dir!("teamwork-launcher/src/icons/flag-icons/flags/1x1");
 
 use lazy_static::lazy_static;
 
