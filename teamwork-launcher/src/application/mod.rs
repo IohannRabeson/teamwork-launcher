@@ -16,6 +16,7 @@ mod text_filter;
 mod thumbnail;
 mod user_settings;
 mod views;
+mod map;
 
 use {
     iced::widget::{
@@ -71,6 +72,7 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
+use crate::application::map::MapName;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -109,9 +111,9 @@ pub struct TeamworkLauncher {
     servers_sources: Vec<ServersSource>,
     launcher: ExecutableLauncher,
     bookmarks: Bookmarks,
-    country_sender: Option<UnboundedSender<Ipv4Addr>>,
-    ping_sender: Option<UnboundedSender<Ipv4Addr>>,
-    thumbnail_sender: Option<UnboundedSender<String>>,
+    country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
+    ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
+    map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
     fetch_servers_subscription_id: u64,
 }
 
@@ -140,7 +142,7 @@ impl TeamworkLauncher {
         });
 
         for map_name in servers_refs.iter().map(|server| server.map.clone()).unique() {
-            if let Some(thumbnail_sender) = &mut self.thumbnail_sender {
+            if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
                 thumbnail_sender
                     .send(map_name.clone())
                     .unwrap_or_else(|e| eprintln!("thumbnail sender {}", e))
@@ -149,14 +151,14 @@ impl TeamworkLauncher {
         }
 
         for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique().cloned() {
-            if let Some(country_sender) = &mut self.country_sender {
+            if let Some(country_sender) = &mut self.country_request_sender {
                 country_sender
                     .send(ip.clone())
                     .unwrap_or_else(|e| eprintln!("country sender {}", e))
                     .now_or_never();
             }
 
-            if let Some(ping_sender) = &mut self.ping_sender {
+            if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
                     .send(ip.clone())
                     .unwrap_or_else(|e| eprintln!("ping sender {}", e))
@@ -190,7 +192,7 @@ impl TeamworkLauncher {
         }
     }
 
-    fn thumbnail_ready(&mut self, map_name: String, thumbnail: Option<image::Handle>) {
+    fn thumbnail_ready(&mut self, map_name: MapName, thumbnail: Option<image::Handle>) {
         for server in self.servers.iter_mut().filter(|server| server.map == map_name) {
             server.map_thumbnail = thumbnail.clone().into();
         }
@@ -391,9 +393,9 @@ impl iced::Application for TeamworkLauncher {
                 servers_sources,
                 launcher: ExecutableLauncher::new(true),
                 bookmarks,
-                country_sender: None,
-                ping_sender: None,
-                thumbnail_sender: None,
+                country_request_sender: None,
+                ping_request_sender: None,
+                map_thumbnail_request_sender: None,
                 fetch_servers_subscription_id: 0,
             },
             Command::none(),
@@ -419,7 +421,7 @@ impl iced::Application for TeamworkLauncher {
             Message::Servers(FetchServersMessage::NewServers(new_servers)) => self.new_servers(new_servers),
             Message::RefreshServers => self.refresh_servers(),
             Message::Country(CountryServiceMessage::Started(country_sender)) => {
-                self.country_sender = Some(country_sender);
+                self.country_request_sender = Some(country_sender);
                 eprintln!("country service started");
             }
             Message::Country(CountryServiceMessage::CountryFound(ip, country)) => {
@@ -429,7 +431,7 @@ impl iced::Application for TeamworkLauncher {
                 eprintln!("Error: {}", error);
             }
             Message::Ping(PingServiceMessage::Started(sender)) => {
-                self.ping_sender = Some(sender);
+                self.ping_request_sender = Some(sender);
                 eprintln!("ping service started");
             }
             Message::Ping(PingServiceMessage::Answer(ip, duration)) => {
@@ -440,7 +442,7 @@ impl iced::Application for TeamworkLauncher {
                 self.ping_found(ip, None);
             }
             Message::Thumbnail(ThumbnailMessage::Started(sender)) => {
-                self.thumbnail_sender = Some(sender);
+                self.map_thumbnail_request_sender = Some(sender);
                 eprintln!("thumbnail service started");
             }
             Message::Thumbnail(ThumbnailMessage::Thumbnail(map_name, thumbnail)) => {

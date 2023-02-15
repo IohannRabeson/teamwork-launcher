@@ -21,7 +21,7 @@ impl Default for Filter {
             text: TextFilter::default(),
             country: CountryFilter::default(),
             bookmarked_only: false,
-            max_ping: 150,
+            max_ping: 50,
             accept_ping_timeout: true,
         }
     }

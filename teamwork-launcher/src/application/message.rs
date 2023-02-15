@@ -5,6 +5,7 @@ use {
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
+use crate::application::map::MapName;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -30,9 +31,9 @@ pub enum PingServiceMessage {
 
 #[derive(Debug, Clone)]
 pub enum ThumbnailMessage {
-    Started(UnboundedSender<String>),
-    Thumbnail(String, image::Handle),
-    Error(String, Arc<teamwork::Error>),
+    Started(UnboundedSender<MapName>),
+    Thumbnail(MapName, image::Handle),
+    Error(MapName, Arc<teamwork::Error>),
 }
 
 #[derive(Debug, Clone)]

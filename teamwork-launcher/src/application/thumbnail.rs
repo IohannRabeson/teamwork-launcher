@@ -11,6 +11,7 @@ use {
         sync::Arc,
     },
 };
+use crate::application::map::MapName;
 
 enum State {
     Starting { api_key: String },
@@ -18,10 +19,10 @@ enum State {
 }
 
 struct Context {
-    requests_receiver: UnboundedReceiver<String>,
+    requests_receiver: UnboundedReceiver<MapName>,
     client: teamwork::Client,
     teamwork_api_key: String,
-    cache: BTreeMap<String, image::Handle>,
+    cache: BTreeMap<MapName, image::Handle>,
 }
 
 pub fn subscription(api_key: &str) -> Subscription<ThumbnailMessage> {
@@ -52,7 +53,7 @@ pub fn subscription(api_key: &str) -> Subscription<ThumbnailMessage> {
                         Entry::Vacant(vacant) => {
                             match context
                                 .client
-                                .get_map_thumbnail(&context.teamwork_api_key, &map_name, image::Handle::from_memory)
+                                .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
                                 .await
                             {
                                 Ok(thumbnail) => {

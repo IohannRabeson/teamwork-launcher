@@ -1,3 +1,4 @@
+use itertools::{chain, Itertools};
 use {
     crate::application::{Country, PromisedValue},
     serde::{Deserialize, Serialize},
@@ -33,7 +34,9 @@ impl CountryFilter {
     }
 
     pub fn available_countries(&self) -> impl Iterator<Item = &Country> {
-        self.available_countries.iter()
+        chain!(self.available_countries.iter(), self.countries.keys().into_iter()).unique().sorted_by(|l, r|{
+            l.name().cmp(&r.name())
+        })
     }
 
     pub fn add_available(&mut self, country: Country) {
