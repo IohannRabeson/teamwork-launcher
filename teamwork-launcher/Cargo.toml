@@ -3,6 +3,7 @@ name = "teamwork-launcher"
 version = "0.1.0"
 edition = "2021"
 default-run = "teamwork-launcher"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -30,3 +31,8 @@ platform-dirs = "0.3.0"
 [dev-dependencies]
 tokio = { version = "1.25.0", features = ["macros"] }
 test-case = "3.0.0"
+
+[build-dependencies]
+anyhow = "1.0"
+vergen = { version = "7", default-features = false, features = ["build", "rustc", "git"] }
+

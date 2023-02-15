@@ -1,6 +1,7 @@
 use {
     super::{buttons::svg_button, widgets::tooltip},
     crate::{
+        APPLICATION_VERSION, GIT_SHA_SHORT,
         application::{Message, Screens},
         icons,
     },
@@ -16,9 +17,6 @@ const SUBTITLE_FONT_SIZE: u16 = 32;
 const BIG_BUTTON_SIZE: u16 = 26;
 const VERSION_FONT_SIZE: u16 = 16;
 const VISUAL_SPACING_SMALL: u16 = 4;
-
-const APPLICATION_VERSION: &str = "1.2.3.4";
-const GIT_SHA_SHORT: &str = "abcdef";
 
 pub fn header_view<'a>(title: &str, view: &Screens) -> Element<'a, Message> {
     let title_widget = title_widget(title);

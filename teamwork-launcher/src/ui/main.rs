@@ -21,6 +21,24 @@ use {
     iced_lazy::responsive,
 };
 
+pub fn view<'l>(
+    view: &'l MainView,
+    servers: &'l [Server],
+    bookmarks: &'l Bookmarks,
+    filter: &'l Filter,
+) -> Element<'l, Message> {
+    let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
+    let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
+        pane_grid::Content::new(responsive(move |size| match &pane.id {
+            PaneId::Servers => servers_view(servers, bookmarks, filter),
+            PaneId::Filters => filter_view(view, filter),
+        }))
+    })
+    .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
+
+    column![textual_filters, pane_grid,].padding([8, 0]).spacing(4).into()
+}
+
 fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Message> {
     match &server.country {
         PromisedValue::Ready(country) => row![
@@ -47,6 +65,7 @@ fn ping<'a>(server: &Server) -> Element<'a, Message> {
 
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
+    let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
 
     container(
         row![
@@ -62,7 +81,11 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, 
                 .spacing(4),
                 row![
                     column![
-                        text(&format!("{}:{}", server.ip_port.ip(), server.ip_port.port())),
+                        row![
+                            text(&ip_port_text),
+                            svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
+                        ]
+                        .spacing(4),
                         text(&server.map),
                         text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
                     ]
@@ -107,24 +130,6 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter) -> Element<'l, Messag
     .padding(4);
 
     filter_panel.into()
-}
-
-pub fn view<'l>(
-    view: &'l MainView,
-    servers: &'l [Server],
-    bookmarks: &'l Bookmarks,
-    filter: &'l Filter,
-) -> Element<'l, Message> {
-    let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
-    let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
-        pane_grid::Content::new(responsive(move |size| match &pane.id {
-            PaneId::Servers => servers_view(servers, bookmarks, filter),
-            PaneId::Filters => filter_view(view, filter),
-        }))
-    })
-    .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
-
-    column![textual_filters, pane_grid,].padding([8, 0]).spacing(4).into()
 }
 
 mod thumbnail {
