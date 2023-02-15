@@ -1,10 +1,9 @@
-use std::time::Duration;
 use {
     crate::application::{
         country_filter::CountryFilter, text_filter::TextFilter, Bookmarks, Country, PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
-    std::collections::BTreeSet,
+    std::{collections::BTreeSet, time::Duration},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -57,9 +56,9 @@ impl Filter {
     }
     fn filter_by_ping(&self, server: &Server) -> bool {
         match server.ping {
-            PromisedValue::Ready(ping) => { ping.as_millis() <= self.max_ping as u128 }
-            PromisedValue::Loading => { true }
-            PromisedValue::None => { self.accept_ping_timeout }
+            PromisedValue::Ready(ping) => ping.as_millis() <= self.max_ping as u128,
+            PromisedValue::Loading => true,
+            PromisedValue::None => self.accept_ping_timeout,
         }
     }
 }

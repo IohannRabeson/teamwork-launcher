@@ -1,5 +1,3 @@
-use iced::{Color, theme, Theme};
-use iced::widget::Container;
 use {
     crate::{
         application::{
@@ -13,12 +11,13 @@ use {
         },
     },
     iced::{
+        theme,
         widget::{
             button, column, container, horizontal_space,
             pane_grid::{self, Pane},
-            row, scrollable, text, text_input, toggler, PaneGrid,
+            row, scrollable, text, text_input, toggler, Container, PaneGrid,
         },
-        Alignment, Element, Length,
+        Alignment, Color, Element, Length, Theme,
     },
     iced_lazy::responsive,
 };
@@ -75,10 +74,10 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, 
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
-                    svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
+                    favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), 20)
                         .on_press(Message::CopyToClipboard(server.ip_port.steam_connection_string())),
-                    favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                    svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
                 ]
                 .spacing(4),
                 row![
@@ -152,18 +151,20 @@ impl container::StyleSheet for FilterSectionContainer {
 }
 
 fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Message>>) -> Container<'l, Message> {
-    container(match title {
-        None => { column![content.into()] }
-        Some(title) => {
-            column![
-                text(title),
-                content.into()
-            ]
+    container(
+        match title {
+            None => {
+                column![content.into()]
+            }
+            Some(title) => {
+                column![text(title), content.into()]
+            }
         }
-    }.spacing(8))
-        .width(Length::Fill)
-        .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
-        .padding(8)
+        .spacing(8),
+    )
+    .width(Length::Fill)
+    .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
+    .padding(8)
 }
 
 mod thumbnail {

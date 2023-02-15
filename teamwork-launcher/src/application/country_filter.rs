@@ -1,8 +1,10 @@
-use std::collections::btree_map::Entry::Vacant;
 use {
     crate::application::{Country, PromisedValue},
     serde::{Deserialize, Serialize},
-    std::collections::{btree_map::Entry, BTreeMap, BTreeSet},
+    std::collections::{
+        btree_map::{Entry, Entry::Vacant},
+        BTreeMap, BTreeSet,
+    },
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -24,9 +26,7 @@ impl CountryFilter {
 
     pub fn accept(&self, country: &PromisedValue<Country>) -> bool {
         match country {
-            PromisedValue::Ready(country) => {
-                self.available_countries.contains(country) && self.is_checked(country)
-            }
+            PromisedValue::Ready(country) => self.available_countries.contains(country) && self.is_checked(country),
             PromisedValue::Loading => true,
             PromisedValue::None => self.no_countries,
         }
@@ -58,7 +58,7 @@ impl CountryFilter {
     }
 
     pub fn is_checked(&self, country: &Country) -> bool {
-        self.countries.get(&country).map(|v|*v).unwrap_or_default()
+        self.countries.get(&country).map(|v| *v).unwrap_or_default()
     }
 
     pub fn accept_no_country(&self) -> bool {

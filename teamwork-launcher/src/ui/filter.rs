@@ -1,5 +1,8 @@
-use iced::{Length, theme, Theme};
-use iced::widget::{container, slider, toggler};
+use iced::{
+    theme,
+    widget::{container, slider, toggler},
+    Length, Theme,
+};
 
 use {
     crate::{
@@ -8,7 +11,7 @@ use {
         ui::buttons::svg_button,
     },
     iced::{
-        widget::{button, checkbox, column, row, text_input, text},
+        widget::{button, checkbox, column, row, text, text_input},
         Element,
     },
 };
@@ -26,13 +29,15 @@ pub fn text_filter(filter: &Filter) -> Element<Message> {
 
 pub fn advanced_text_filter(filter: &Filter) -> Element<Message> {
     column![
-        checkbox("Ignore case", filter.text.ignore_case, |checked|{
+        checkbox("Ignore case", filter.text.ignore_case, |checked| {
             Message::Filter(FilterMessage::IgnoreCaseChanged(checked))
         }),
-        checkbox("Ignore accents", filter.text.ignore_accents, |checked|{
+        checkbox("Ignore accents", filter.text.ignore_accents, |checked| {
             Message::Filter(FilterMessage::IgnoreAccentChanged(checked))
         })
-    ].spacing(4).into()
+    ]
+    .spacing(4)
+    .into()
 }
 
 pub fn country_filter(filter: &Filter) -> Element<Message> {
@@ -63,11 +68,15 @@ const MIN_PING: u32 = 5;
 pub fn ping_filter(filter: &Filter) -> Element<Message> {
     column![
         row![
-            slider(MIN_PING..=MAX_PING, filter.max_ping, |value|Message::Filter(FilterMessage::MaxPingChanged(value))),
+            slider(MIN_PING..=MAX_PING, filter.max_ping, |value| Message::Filter(
+                FilterMessage::MaxPingChanged(value)
+            )),
             text(format!("{}ms", filter.max_ping))
         ]
         .spacing(8),
-        checkbox("Timeouts", filter.accept_ping_timeout, |checked|Message::Filter(FilterMessage::AcceptPingTimeoutChanged(checked)))
+        checkbox("Timeouts", filter.accept_ping_timeout, |checked| Message::Filter(
+            FilterMessage::AcceptPingTimeoutChanged(checked)
+        ))
     ]
     .into()
 }

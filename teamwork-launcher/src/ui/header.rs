@@ -1,9 +1,8 @@
 use {
     super::{buttons::svg_button, widgets::tooltip},
     crate::{
-        APPLICATION_VERSION, GIT_SHA_SHORT,
         application::{Message, Screens},
-        icons,
+        icons, APPLICATION_VERSION, GIT_SHA_SHORT,
     },
     iced::{
         alignment::Horizontal,
