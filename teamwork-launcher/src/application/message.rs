@@ -1,5 +1,7 @@
+use iced::widget::pane_grid;
+
 use {
-    crate::application::{geolocation, ping, Country, FetchServersEvent, IpPort, Server},
+    crate::application::{geolocation, ping, servers_source::SourceKey, Country, FetchServersEvent, IpPort, Server},
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
@@ -45,6 +47,12 @@ pub enum FilterMessage {
 pub enum SettingsMessage {
     TeamworkApiKeyChanged(String),
     SteamExecutableChanged(String),
+    SourceEnabled(SourceKey, bool),
+}
+
+#[derive(Debug, Clone)]
+pub enum PaneMessage {
+    Resized(pane_grid::ResizeEvent),
 }
 
 #[derive(Debug, Clone)]
@@ -55,6 +63,7 @@ pub enum Message {
     Thumbnail(ThumbnailMessage),
     Filter(FilterMessage),
     Settings(SettingsMessage),
+    Pane(PaneMessage),
     RefreshServers,
     ShowSettings,
     LaunchGame(IpPort),
@@ -89,5 +98,11 @@ impl From<PingServiceMessage> for Message {
 impl From<ThumbnailMessage> for Message {
     fn from(value: ThumbnailMessage) -> Self {
         Message::Thumbnail(value)
+    }
+}
+
+impl From<pane_grid::ResizeEvent> for Message {
+    fn from(value: pane_grid::ResizeEvent) -> Self {
+        Message::Pane(PaneMessage::Resized(value))
     }
 }

@@ -1,7 +1,7 @@
 use {
     crate::{
-        icons,
-        ui::{styles::SvgButtonIconStyle},
+        icons::{self, SvgHandle},
+        ui::styles::SvgButtonIconStyle,
     },
     iced::{
         theme,
@@ -9,7 +9,6 @@ use {
         Length,
     },
 };
-use crate::icons::SvgHandle;
 
 pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
     button(

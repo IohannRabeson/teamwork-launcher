@@ -1,12 +1,14 @@
 use {
-    crate::application::{Filter, FilterMessage, Message},
+    crate::{
+        application::{Filter, FilterMessage, Message},
+        icons,
+        ui::buttons::svg_button,
+    },
     iced::{
         widget::{button, checkbox, column, row, text_input},
         Element,
     },
 };
-use crate::icons;
-use crate::ui::buttons::svg_button;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -20,8 +22,9 @@ pub fn text_filter(filter: &Filter) -> Element<Message> {
 }
 
 pub fn country_filter(filter: &Filter) -> Element<Message> {
-    filter.country
-         .available_countries()
+    filter
+        .country
+        .available_countries()
         .fold(column![].spacing(4), |column, country| {
             column.push(checkbox(country.name(), filter.country.is_checked(country), |checked| {
                 Message::Filter(FilterMessage::CountryChecked(country.clone(), checked))

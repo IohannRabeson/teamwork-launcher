@@ -1,6 +1,5 @@
-use crate::application::message::ThumbnailMessage;
 use {
-    //futures::StreamExt,
+    crate::application::message::ThumbnailMessage,
     iced::{
         futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
         subscription,

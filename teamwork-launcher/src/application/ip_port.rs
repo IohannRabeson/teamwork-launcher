@@ -1,5 +1,7 @@
-use std::net::Ipv4Addr;
-use serde::{Serialize, Deserialize};
+use {
+    serde::{Deserialize, Serialize},
+    std::net::Ipv4Addr,
+};
 
 /// The unique key identifying a server.
 #[derive(Debug, Hash, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

@@ -1,9 +1,12 @@
 use {
     crate::application::{Country, PromisedValue},
+    serde::{Deserialize, Serialize},
     std::collections::{btree_map::Entry, BTreeMap, BTreeSet},
 };
 
+#[derive(Serialize, Deserialize, Default)]
 pub struct CountryFilter {
+    #[serde(skip)]
     available_countries: BTreeSet<Country>,
     hidden_countries: BTreeSet<Country>,
     no_countries: bool,

@@ -1,6 +1,7 @@
 use iced::{Application, Settings};
 
 mod application;
+mod fonts;
 mod icons;
 mod ui;
 

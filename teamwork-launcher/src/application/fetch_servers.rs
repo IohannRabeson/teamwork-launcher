@@ -1,5 +1,5 @@
 use {
-    crate::application::server::Server,
+    crate::application::{server::Server, servers_source::SourceKey},
     async_stream::stream,
     iced::futures::{stream::FuturesUnordered, Stream, StreamExt},
     std::sync::Arc,
@@ -14,18 +14,33 @@ pub enum FetchServersEvent {
     Error(Arc<Error>),
 }
 
-pub fn fetch_servers(urls: Vec<UrlWithKey>) -> impl Stream<Item = FetchServersEvent> {
+async fn get_servers(client: &teamwork::Client, url: UrlWithKey, key: SourceKey) -> Result<Vec<Server>, Error> {
+    let mut servers: Vec<Server> = client
+        .get_servers(url)
+        .await?
+        .into_iter()
+        .map(std::convert::Into::<Server>::into)
+        .collect();
+
+    for server in servers.iter_mut() {
+        server.source_key = Some(key.clone());
+    }
+
+    Ok(servers)
+}
+
+pub fn fetch_servers(urls: Vec<(SourceKey, UrlWithKey)>) -> impl Stream<Item = FetchServersEvent> {
     const SERVERS_CHUNK_SIZE: usize = 50;
 
     stream! {
         yield FetchServersEvent::Start;
         let client = teamwork::Client::default();
-        let mut request_servers = FuturesUnordered::from_iter(urls.into_iter().map(|url|client.get_servers(url)));
+        let mut request_servers = FuturesUnordered::from_iter(urls.into_iter().map(|(source_key, url)| get_servers(&client, url, source_key.clone())));
 
         while let Some(result) = request_servers.next().await {
             match result {
                 Ok(servers) => {
-                    let servers: Vec<Server> = servers.into_iter().map(create_server).collect();
+                    let servers: Vec<Server> = servers.into_iter().collect();
 
                     for chunk in servers.as_slice().chunks(SERVERS_CHUNK_SIZE) {
                         yield FetchServersEvent::Servers(chunk.to_vec())
@@ -49,6 +64,7 @@ fn create_server(server: teamwork::Server) -> Server {
 mod tests {
     use {
         super::FetchServersEvent,
+        crate::application::servers_source::SourceKey,
         iced::futures::{pin_mut, StreamExt},
         teamwork::UrlWithKey,
     };
@@ -56,9 +72,9 @@ mod tests {
     #[tokio::test]
     async fn smoke_test_fetch_servers() {
         let api_key = std::env::var("TEST_TEAMWORK_API_KEY").unwrap();
-        let stream = super::fetch_servers(vec![UrlWithKey::new(
-            "https://teamwork.tf/api/v1/quickplay/payload/servers",
-            &api_key,
+        let stream = super::fetch_servers(vec![(
+            SourceKey::new("test"),
+            UrlWithKey::new("https://teamwork.tf/api/v1/quickplay/payload/servers", &api_key),
         )]);
 
         pin_mut!(stream);
@@ -72,5 +88,7 @@ mod tests {
         }
 
         assert!(results.len() > 0);
+
+        assert_eq!(Some(SourceKey::new("test")), results[0].source_key);
     }
 }

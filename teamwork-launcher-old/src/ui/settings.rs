@@ -13,7 +13,7 @@ use {
 };
 
 pub fn settings_view<'a>(settings: &'a UserSettings, servers_provider: &'a ServersProvider) -> Element<'a, Messages> {
-    column![scrollable(
+    scrollable(
         column![
             field(
                 Some("Game executable path:"),
@@ -92,7 +92,7 @@ pub fn settings_view<'a>(settings: &'a UserSettings, servers_provider: &'a Serve
         ]
         .padding(VISUAL_SPACING_BIG)
         .spacing(VISUAL_SPACING_SMALL),
-    )]
+    )
     .into()
 }
 

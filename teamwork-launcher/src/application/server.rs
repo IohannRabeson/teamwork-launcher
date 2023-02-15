@@ -1,7 +1,7 @@
 use {
-    crate::application::{country::Country, ip_port::IpPort, promised_value::PromisedValue},
+    crate::application::{country::Country, ip_port::IpPort, promised_value::PromisedValue, servers_source::SourceKey},
     iced::widget::image,
-    std::{str::FromStr, time::Duration},
+    std::{str::FromStr, sync::Arc, time::Duration},
 };
 
 /// Store information about a server.
@@ -15,6 +15,7 @@ pub struct Server {
     pub ip_port: IpPort,
     pub country: PromisedValue<Country>,
     pub ping: PromisedValue<Duration>,
+    pub source_key: Option<SourceKey>,
 }
 
 impl Default for Server {
@@ -28,6 +29,7 @@ impl Default for Server {
             ip_port: IpPort::default(),
             country: PromisedValue::None,
             ping: PromisedValue::None,
+            source_key: None,
         }
     }
 }
@@ -48,6 +50,7 @@ impl From<teamwork::Server> for Server {
             ip_port: IpPort::new(std::net::Ipv4Addr::from_str(&server.ip).expect("parse IP"), server.port),
             country: PromisedValue::Loading,
             ping: PromisedValue::Loading,
+            source_key: None,
         }
     }
 }

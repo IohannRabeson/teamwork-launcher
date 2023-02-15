@@ -1,6 +1,9 @@
-use std::{fmt::Display, str::FromStr};
+use {
+    serde::{Deserialize, Serialize},
+    std::{fmt::Display, str::FromStr},
+};
 
-#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Country {
     code: String,
 }

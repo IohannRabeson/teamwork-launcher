@@ -1,9 +1,12 @@
 use {
-    crate::application::{country_filter::CountryFilter, text_filter::TextFilter, Country, PromisedValue, Server},
+    crate::application::{
+        country_filter::CountryFilter, text_filter::TextFilter, Bookmarks, Country, PromisedValue, Server,
+    },
+    serde::{Deserialize, Serialize},
     std::collections::BTreeSet,
 };
-use crate::application::Bookmarks;
 
+#[derive(Serialize, Deserialize, Default)]
 pub struct Filter {
     pub text: TextFilter,
     pub country: CountryFilter,
@@ -15,7 +18,7 @@ impl Filter {
         Self {
             text: TextFilter::default(),
             country: CountryFilter::new(),
-            bookmarked_only: false
+            bookmarked_only: false,
         }
     }
 

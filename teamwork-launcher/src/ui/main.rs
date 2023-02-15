@@ -1,83 +1,130 @@
 use {
     crate::{
-        application::{MainView, Message, PromisedValue, Server},
-        ui,
+        application::{
+            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, PaneView, PromisedValue, Server,
+        },
+        icons,
+        ui::{
+            self,
+            buttons::{favorite_button, svg_button},
+            widgets,
+        },
     },
     iced::{
-        Alignment,
-        widget::{button, column, toggler, container, horizontal_space, row, scrollable, text, text_input},
-        Element, Length,
+        widget::{
+            button, column, container, horizontal_space,
+            pane_grid::{self, Pane},
+            row, scrollable, text, text_input, toggler, PaneGrid,
+        },
+        Alignment, Element, Length,
     },
+    iced_lazy::responsive,
 };
-use crate::application::Bookmarks;
-use crate::ui::buttons::{svg_button, favorite_button};
-use crate::application::FilterMessage;
-use crate::icons;
+
+fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Message> {
+    match &server.country {
+        PromisedValue::Ready(country) => row![
+            text("Region:".to_string()),
+            horizontal_space(Length::Units(4)),
+            widgets::country_icon(country, size, padding)
+        ]
+        .into(),
+        PromisedValue::Loading => text("Region: loading...").into(),
+        PromisedValue::None => text("Region: unknown").into(),
+    }
+}
+
+fn ping<'a>(server: &Server) -> Element<'a, Message> {
+    match &server.ping {
+        PromisedValue::Ready(duration) => row![text("Ping:"), widgets::ping_icon(duration, 20),]
+            .spacing(4)
+            .align_items(Alignment::End)
+            .into(),
+        PromisedValue::Loading => text("Ping: loading...").into(),
+        PromisedValue::None => text("Ping: timeout").into(),
+    }
+}
 
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
 
-    container(row![
-        thumbnail::thumbnail(server),
-        column![
-            row![
-                text(&server.name).width(Length::Fill),
-                svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
-                svg_button(icons::COPY_ICON.clone(), 20).on_press(Message::CopyToClipboard(server.ip_port.steam_connection_string())),
-                favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
-            ].spacing(4),
-            text(&format!("{}:{}", server.ip_port.ip(), server.ip_port.port())),
-            text(&server.map),
-            text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
-            text(match &server.country {
-                PromisedValue::None => String::from("-"),
-                PromisedValue::Loading => String::from("Waiting country"),
-                PromisedValue::Ready(country) => country.to_string(),
-            }),
-            text(match &server.ping {
-                PromisedValue::None => String::from("-"),
-                PromisedValue::Loading => String::from("Waiting ping"),
-                PromisedValue::Ready(ping) => ping.as_millis().to_string(),
-            })
-        ],
-    ]
-    .spacing(4))
+    container(
+        row![
+            thumbnail::thumbnail(server),
+            column![
+                row![
+                    text(&server.name).size(28).width(Length::Fill),
+                    svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
+                    svg_button(icons::COPY_ICON.clone(), 20)
+                        .on_press(Message::CopyToClipboard(server.ip_port.steam_connection_string())),
+                    favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                ]
+                .spacing(4),
+                row![
+                    column![
+                        text(&format!("{}:{}", server.ip_port.ip(), server.ip_port.port())),
+                        text(&server.map),
+                        text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
+                    ]
+                    .spacing(4),
+                    horizontal_space(Length::Fill),
+                    column![region(server, 20, 0), ping(server),]
+                        .padding(4)
+                        .spacing(4)
+                        .align_items(Alignment::End)
+                ]
+            ],
+        ]
+        .spacing(4),
+    )
     .padding([4, 14])
     .into()
 }
 
-pub fn view<'l>(view: &'l MainView, bookmarks: &'l Bookmarks) -> Element<'l, Message> {
-    let servers = view.servers.iter().filter(|server| view.filter.accept(*server, bookmarks));
-    let servers_list = container(scrollable(servers.fold(column![], |c, server| {
-        c.push(server_view(server, bookmarks))
-    })))
+fn servers_view<'l>(servers: &'l [Server], bookmarks: &'l Bookmarks, filter: &'l Filter) -> Element<'l, Message> {
+    let servers = servers.iter().filter(|server| filter.accept(*server, bookmarks));
+    let servers_list = container(scrollable(
+        servers.fold(column![], |c, server| c.push(server_view(server, bookmarks))),
+    ))
     .height(Length::Fill)
-    .width(Length::Fill);
+    .width(Length::Fill)
+    .padding(4);
 
+    servers_list.into()
+}
+
+fn filter_view<'l>(view: &'l MainView, filter: &'l Filter) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
-            toggler(Some(String::from("Bookmarks only")), view.filter.bookmarked_only, |checked|Message::Filter(FilterMessage::BookmarkedOnlyChecked(checked))).width(Length::Shrink),
-            ui::filter::country_filter(&view.filter)
-        ].spacing(4))).padding(4);
-    let textual_filters = container(ui::filter::text_filter(&view.filter))
-        .padding([0, 8]);
-
-    column![
-        row![
-            text("Teamwork launcher").size(48),
-            horizontal_space(Length::Fill),
-            svg_button(icons::SETTINGS_ICON.clone(), 24).on_press(Message::ShowSettings),
-            svg_button(icons::REFRESH_ICON.clone(), 24).on_press(Message::RefreshServers)
+            toggler(Some(String::from("Bookmarks only")), filter.bookmarked_only, |checked| {
+                Message::Filter(FilterMessage::BookmarkedOnlyChecked(checked))
+            })
+            .width(Length::Shrink),
+            ui::filter::country_filter(filter)
         ]
-        .align_items(Alignment::Center)
-        .spacing(4)
-        .padding([0, 8]),
-        textual_filters,
-        row![servers_list, filter_panel].spacing(4)
-    ]
-    .padding([8, 0])
-    .spacing(4)
-    .into()
+        .spacing(4),
+    ))
+    .padding(4);
+
+    filter_panel.into()
+}
+
+pub fn view<'l>(
+    view: &'l MainView,
+    servers: &'l [Server],
+    bookmarks: &'l Bookmarks,
+    filter: &'l Filter,
+) -> Element<'l, Message> {
+    let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
+    let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
+        pane_grid::Content::new(responsive(move |size| match &pane.id {
+            PaneId::Servers => servers_view(servers, bookmarks, filter),
+            PaneId::Filters => filter_view(view, filter),
+        }))
+    })
+    .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
+
+    column![textual_filters, pane_grid,].padding([8, 0]).spacing(4).into()
 }
 
 mod thumbnail {
@@ -87,19 +134,18 @@ mod thumbnail {
             icons,
         },
         iced::{
-            widget::{container, image, text},
+            widget::{container, image, text, Image},
             Element, Length,
         },
     };
 
-    const THUMBNAIL_WIDTH: u16 = 300;
-    const THUMBNAIL_HEIGHT: u16 = 150;
+    const THUMBNAIL_WIDTH: u16 = 250;
+    const THUMBNAIL_HEIGHT: u16 = 125;
 
     fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Message> {
-        image::viewer(image)
+        Image::new(image)
             .width(Length::Units(THUMBNAIL_WIDTH))
             .height(Length::Units(THUMBNAIL_HEIGHT))
-            .scale_step(0.0)
             .into()
     }
 
