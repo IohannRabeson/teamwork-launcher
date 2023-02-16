@@ -32,6 +32,22 @@ impl GameModeFilter {
         }
     }
 
+    pub fn enable_only(&mut self, enable_id: &GameModeId) {
+        for (id, enabled) in self.game_modes.iter_mut() {
+            *enabled = enable_id == id;
+        }
+    }
+
+    pub fn enable_all_excepted(&mut self, enable_id: &GameModeId) {
+        for (id, enabled) in self.game_modes.iter_mut() {
+            *enabled = enable_id != id;
+        }
+    }
+
+    pub fn is_mode_enabled(&self, id: &GameModeId) -> bool {
+        self.game_modes.get(id).copied().unwrap_or_default()
+    }
+
     pub fn game_modes(&self) -> impl Iterator<Item = (&GameModeId, &bool)> {
         self.game_modes.iter()
     }

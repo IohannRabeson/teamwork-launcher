@@ -72,6 +72,12 @@ pub enum GameModesMessage {
 }
 
 #[derive(Debug, Clone)]
+pub enum KeyboardMessage {
+    ShiftPressed,
+    ShiftReleased,
+}
+
+#[derive(Debug, Clone)]
 pub enum Message {
     Servers(FetchServersMessage),
     Country(CountryServiceMessage),
@@ -81,6 +87,7 @@ pub enum Message {
     Settings(SettingsMessage),
     Pane(PaneMessage),
     GameModes(GameModesMessage),
+    Keyboard(KeyboardMessage),
     RefreshServers,
     ShowSettings,
     LaunchGame(IpPort),
@@ -128,4 +135,8 @@ impl From<GameModesMessage> for Message {
     fn from(value: GameModesMessage) -> Self {
         Message::GameModes(value)
     }
+}
+
+impl From<KeyboardMessage> for Message {
+    fn from(value: KeyboardMessage) -> Self { Message::Keyboard(value) }
 }

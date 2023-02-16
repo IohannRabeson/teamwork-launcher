@@ -60,6 +60,7 @@ use crate::application::{
     game_mode::GameModes,
     launcher::{ExecutableLauncher, LaunchError},
     map::MapName,
+    message::KeyboardMessage,
     servers_source::{ServersSource, SourceKey},
 };
 pub use {
@@ -119,6 +120,7 @@ pub struct TeamworkLauncher {
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
     fetch_servers_subscription_id: u64,
+    shift_pressed: bool,
 }
 
 impl TeamworkLauncher {
@@ -258,7 +260,14 @@ impl TeamworkLauncher {
                 self.filter.accept_ping_timeout = checked;
             }
             FilterMessage::GameModeChecked(id, checked) => {
-                self.filter.game_modes.set_mode_enabled(&id, checked);
+                if self.shift_pressed {
+                    match self.filter.game_modes.is_mode_enabled(&id) {
+                        true => { self.filter.game_modes.enable_all_excepted(&id) }
+                        false => { self.filter.game_modes.enable_only(&id) }
+                    }
+                } else {
+                    self.filter.game_modes.set_mode_enabled(&id, checked);
+                }
             }
             FilterMessage::CountryFilterEnabled(checked) => {
                 self.filter.country.set_enabled(checked);
@@ -278,6 +287,13 @@ impl TeamworkLauncher {
             GameModesMessage::Error(error) => {
                 eprintln!("Failed to fetch game modes: {}", error)
             }
+        }
+    }
+
+    fn process_keyboard_message(&mut self, message: KeyboardMessage) {
+        match message {
+            KeyboardMessage::ShiftPressed => { self.shift_pressed = true; }
+            KeyboardMessage::ShiftReleased => { self.shift_pressed = false; }
         }
     }
 
@@ -425,6 +441,7 @@ impl iced::Application for TeamworkLauncher {
                 ping_request_sender: None,
                 map_thumbnail_request_sender: None,
                 fetch_servers_subscription_id: 0,
+                shift_pressed: false,
             },
             Command::none(),
         )
@@ -486,6 +503,9 @@ impl iced::Application for TeamworkLauncher {
             Message::GameModes(message) => {
                 self.process_game_modes_message(message);
             }
+            Message::Keyboard(message) => {
+                self.process_keyboard_message(message);
+            }
             Message::Back => {
                 self.views.pop();
             }
@@ -542,6 +562,42 @@ impl iced::Application for TeamworkLauncher {
             thumbnail::subscription(&self.user_settings.teamwork_api_key).map(Message::from),
             game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
                 .map(Message::from),
+            keyboard::subscription().map(Message::from),
         ])
+    }
+}
+
+mod keyboard {
+    use iced::{event, Event, keyboard, subscription};
+    use iced::keyboard::KeyCode;
+    use {crate::application::message::KeyboardMessage, iced::Subscription};
+
+    pub fn subscription() -> Subscription<KeyboardMessage> {
+        subscription::events_with(|event, status| {
+            if let event::Status::Captured = status {
+                return None;
+            }
+
+            if let Event::Keyboard(keyboard::Event::KeyPressed {
+                                       modifiers: _,
+                                       key_code,
+                                   }) = event {
+
+                if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
+                    return Some(KeyboardMessage::ShiftPressed)
+                }
+            }
+            else if let Event::Keyboard(keyboard::Event::KeyReleased {
+                                            modifiers: _,
+                                            key_code,
+                                        }) = event {
+
+                if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
+                    return Some(KeyboardMessage::ShiftReleased)
+                }
+            }
+
+            None
+        })
     }
 }

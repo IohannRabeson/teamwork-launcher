@@ -78,6 +78,10 @@ impl CountryFilter {
         self.no_countries = accept;
     }
 
-    pub fn is_enabled(&self) -> bool { self.enabled }
-    pub fn set_enabled(&mut self, enabled: bool) { self.enabled = enabled; }
+    pub fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.enabled = enabled;
+    }
 }
