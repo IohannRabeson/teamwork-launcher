@@ -98,7 +98,7 @@ impl Client {
         Ok(image_url)
     }
 
-    pub async fn get_gamemodes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
+    pub async fn get_game_modes(&self, api_key: &str) -> Result<Vec<GameMode>, Error> {
         let url = UrlWithKey::new(TEAMWORK_TF_QUICKPLAY_API, api_key);
         let modes: GameModes = self.get(&url).await?;
         let mut game_modes: Vec<GameMode> = Vec::new();
@@ -197,8 +197,10 @@ pub mod models {
         pub map_name_next: Option<String>,
         pub players: u8,
         pub max_players: u8,
-        pub gamemodes: Vec<String>,
-        pub gametype: String,
+        #[serde(rename = "gamemodes")]
+        pub game_modes: Vec<String>,
+        #[serde(rename = "gametype")]
+        pub game_type: String,
         pub has_password: Option<bool>,
         /// RTD means "Role The Dice", it's a command that gives a random ability to the player.
         pub has_rtd: Option<bool>,

@@ -1,12 +1,12 @@
 use iced::{
     theme,
-    widget::{container, slider, toggler},
+    widget::{container, slider, toggler, Column},
     Length, Theme,
 };
 
 use {
     crate::{
-        application::{Filter, FilterMessage, Message},
+        application::{game_mode::GameModes, Filter, FilterMessage, Message},
         icons,
         ui::buttons::svg_button,
     },
@@ -79,4 +79,17 @@ pub fn ping_filter(filter: &Filter) -> Element<Message> {
         ))
     ]
     .into()
+}
+
+pub fn game_modes_filter<'l>(filter: &'l Filter, game_modes: &'l GameModes) -> Element<'l, Message> {
+    filter
+        .game_modes
+        .game_modes()
+        .filter_map(|(id, enabled)| game_modes.get(&id).map(|mode| (id, mode, enabled)))
+        .fold(column![].spacing(4), |column, (id, mode, enabled)| {
+            column.push(checkbox(&mode.title, *enabled, |checked| {
+                Message::Filter(FilterMessage::GameModeChecked(id.clone(), checked))
+            }))
+        })
+        .into()
 }

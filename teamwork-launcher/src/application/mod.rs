@@ -3,9 +3,12 @@ pub mod country;
 mod country_filter;
 pub mod fetch_servers;
 pub mod filter_servers;
+pub mod game_mode;
+mod game_mode_filter;
 mod geolocation;
 pub mod ip_port;
 mod launcher;
+mod map;
 mod message;
 mod ping;
 mod process_detection;
@@ -16,7 +19,6 @@ mod text_filter;
 mod thumbnail;
 mod user_settings;
 mod views;
-mod map;
 
 use {
     iced::widget::{
@@ -55,7 +57,9 @@ use {
 
 use crate::application::{
     bookmarks::{read_file, write_file},
+    game_mode::GameModes,
     launcher::{ExecutableLauncher, LaunchError},
+    map::MapName,
     servers_source::{ServersSource, SourceKey},
 };
 pub use {
@@ -66,13 +70,12 @@ pub use {
     filter_servers::Filter,
     ip_port::IpPort,
     message::{
-        CountryServiceMessage, FetchServersMessage, FilterMessage, Message, PaneMessage, PingServiceMessage,
-        SettingsMessage, ThumbnailMessage,
+        CountryServiceMessage, FetchServersMessage, FilterMessage, GameModesMessage, Message, PaneMessage,
+        PingServiceMessage, SettingsMessage, ThumbnailMessage,
     },
     promised_value::PromisedValue,
     server::Server,
 };
-use crate::application::map::MapName;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -111,6 +114,7 @@ pub struct TeamworkLauncher {
     servers_sources: Vec<ServersSource>,
     launcher: ExecutableLauncher,
     bookmarks: Bookmarks,
+    game_modes: GameModes,
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
@@ -194,7 +198,9 @@ impl TeamworkLauncher {
 
     fn thumbnail_ready(&mut self, map_name: MapName, thumbnail: Option<image::Handle>) {
         for server in self.servers.iter_mut().filter(|server| server.map == map_name) {
-            server.map_thumbnail = thumbnail.clone().into();
+            if !server.map_thumbnail.is_ready() {
+                server.map_thumbnail = thumbnail.clone().into();
+            }
         }
     }
 
@@ -250,6 +256,21 @@ impl TeamworkLauncher {
             }
             FilterMessage::AcceptPingTimeoutChanged(checked) => {
                 self.filter.accept_ping_timeout = checked;
+            }
+            FilterMessage::GameModeChecked(id, checked) => {
+                self.filter.game_modes.set_enabled(&id, checked);
+            }
+        }
+    }
+
+    fn process_game_modes_message(&mut self, message: GameModesMessage) {
+        match message {
+            GameModesMessage::GameModes(game_modes) => {
+                self.game_modes.reset(&game_modes);
+                self.filter.game_modes.reset(&game_modes);
+            }
+            GameModesMessage::Error(error) => {
+                eprintln!("Failed to fetch game modes: {}", error)
             }
         }
     }
@@ -393,6 +414,7 @@ impl iced::Application for TeamworkLauncher {
                 servers_sources,
                 launcher: ExecutableLauncher::new(true),
                 bookmarks,
+                game_modes: GameModes::new(),
                 country_request_sender: None,
                 ping_request_sender: None,
                 map_thumbnail_request_sender: None,
@@ -455,6 +477,9 @@ impl iced::Application for TeamworkLauncher {
             Message::Filter(message) => {
                 self.process_filter_message(message);
             }
+            Message::GameModes(message) => {
+                self.process_game_modes_message(message);
+            }
             Message::Back => {
                 self.views.pop();
             }
@@ -487,7 +512,7 @@ impl iced::Application for TeamworkLauncher {
         column![
             ui::header::header_view("Teamwork Launcher", current),
             match current {
-                Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter),
+                Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
         ]
@@ -509,6 +534,8 @@ impl iced::Application for TeamworkLauncher {
             geolocation::subscription().map(Message::from),
             ping::subscription().map(Message::from),
             thumbnail::subscription(&self.user_settings.teamwork_api_key).map(Message::from),
+            game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
+                .map(Message::from),
         ])
     }
 }

@@ -1,9 +1,11 @@
 use {
-    crate::application::{country::Country, ip_port::IpPort, promised_value::PromisedValue, servers_source::SourceKey},
+    crate::application::{
+        country::Country, game_mode::GameModeId, ip_port::IpPort, map::MapName, promised_value::PromisedValue,
+        servers_source::SourceKey,
+    },
     iced::widget::image,
-    std::{str::FromStr, sync::Arc, time::Duration},
+    std::{collections::BTreeSet, str::FromStr, sync::Arc, time::Duration},
 };
-use crate::application::map::MapName;
 
 /// Store information about a server.
 #[derive(Debug, Hash, Clone)]
@@ -17,6 +19,7 @@ pub struct Server {
     pub country: PromisedValue<Country>,
     pub ping: PromisedValue<Duration>,
     pub source_key: Option<SourceKey>,
+    pub game_modes: Vec<GameModeId>,
 }
 
 impl Default for Server {
@@ -31,6 +34,7 @@ impl Default for Server {
             country: PromisedValue::None,
             ping: PromisedValue::None,
             source_key: None,
+            game_modes: Vec::new(),
         }
     }
 }
@@ -52,6 +56,7 @@ impl From<teamwork::Server> for Server {
             country: PromisedValue::Loading,
             ping: PromisedValue::Loading,
             source_key: None,
+            game_modes: server.game_modes.iter().map(GameModeId::new).collect(),
         }
     }
 }

@@ -1,11 +1,13 @@
 use iced::widget::pane_grid;
 
 use {
-    crate::application::{geolocation, ping, servers_source::SourceKey, Country, FetchServersEvent, IpPort, Server},
+    crate::application::{
+        game_mode::GameModeId, geolocation, map::MapName, ping, servers_source::SourceKey, Country, FetchServersEvent,
+        IpPort, Server,
+    },
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
-use crate::application::map::MapName;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -46,6 +48,7 @@ pub enum FilterMessage {
     IgnoreAccentChanged(bool),
     MaxPingChanged(u32),
     AcceptPingTimeoutChanged(bool),
+    GameModeChecked(GameModeId, bool),
 }
 
 #[derive(Debug, Clone)]
@@ -61,6 +64,12 @@ pub enum PaneMessage {
 }
 
 #[derive(Debug, Clone)]
+pub enum GameModesMessage {
+    GameModes(Vec<teamwork::GameMode>),
+    Error(Arc<teamwork::Error>),
+}
+
+#[derive(Debug, Clone)]
 pub enum Message {
     Servers(FetchServersMessage),
     Country(CountryServiceMessage),
@@ -69,6 +78,7 @@ pub enum Message {
     Filter(FilterMessage),
     Settings(SettingsMessage),
     Pane(PaneMessage),
+    GameModes(GameModesMessage),
     RefreshServers,
     ShowSettings,
     LaunchGame(IpPort),
@@ -109,5 +119,11 @@ impl From<ThumbnailMessage> for Message {
 impl From<pane_grid::ResizeEvent> for Message {
     fn from(value: pane_grid::ResizeEvent) -> Self {
         Message::Pane(PaneMessage::Resized(value))
+    }
+}
+
+impl From<GameModesMessage> for Message {
+    fn from(value: GameModesMessage) -> Self {
+        Message::GameModes(value)
     }
 }

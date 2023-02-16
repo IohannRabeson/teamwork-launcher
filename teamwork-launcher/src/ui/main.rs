@@ -1,13 +1,14 @@
 use {
     crate::{
         application::{
+            game_mode::{GameMode, GameModeId, GameModes},
             Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, PaneView, PromisedValue, Server,
         },
         icons,
         ui::{
             self,
             buttons::{favorite_button, svg_button},
-            widgets,
+            widgets::{self, tooltip},
         },
     },
     iced::{
@@ -15,9 +16,12 @@ use {
         widget::{
             button, column, container, horizontal_space,
             pane_grid::{self, Pane},
-            row, scrollable, text, text_input, toggler, Container, PaneGrid,
+            row, scrollable, text, text_input, toggler,
+            tooltip::Position,
+            Container, PaneGrid, Text,
         },
-        Alignment, Color, Element, Length, Theme,
+        Alignment, Color, Element, Length,
+        Theme::{self, Dark},
     },
     iced_lazy::responsive,
 };
@@ -27,12 +31,13 @@ pub fn view<'l>(
     servers: &'l [Server],
     bookmarks: &'l Bookmarks,
     filter: &'l Filter,
+    game_modes: &'l GameModes,
 ) -> Element<'l, Message> {
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
     let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
         pane_grid::Content::new(responsive(move |size| match &pane.id {
-            PaneId::Servers => servers_view(servers, bookmarks, filter),
-            PaneId::Filters => filter_view(view, filter),
+            PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
+            PaneId::Filters => filter_view(view, filter, game_modes),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -64,9 +69,62 @@ fn ping<'a>(server: &Server) -> Element<'a, Message> {
     }
 }
 
-fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, Message> {
+fn game_mode_view_inner(game_mode: &GameMode) -> Element<Message> {
+    match game_mode.color {
+        Some(color) => text(&game_mode.title),
+        None => text(&game_mode.title),
+    }
+    .size(16)
+    .into()
+}
+
+struct GameModeStyle {
+    color: Color,
+}
+
+impl GameModeStyle {
+    pub fn new(color: Option<Color>) -> Self {
+        Self {
+            color: color.unwrap_or(Dark.palette().text),
+        }
+    }
+}
+
+impl container::StyleSheet for GameModeStyle {
+    type Style = Theme;
+
+    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            border_radius: 4.0,
+            border_width: 1.0,
+            border_color: self.color.clone(),
+            ..Default::default()
+        }
+    }
+}
+
+fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -> Element<'l, Message> {
+    match game_modes.get(&game_mode_id) {
+        None => text(game_mode_id.to_string()).into(),
+        Some(game_mode) => {
+            let inner = container(game_mode_view_inner(game_mode))
+                .style(theme::Container::Custom(Box::new(GameModeStyle::new(game_mode.color))))
+                .padding([2, 4]);
+
+            match game_mode.description.is_empty() {
+                false => tooltip(inner, &game_mode.description, Position::Bottom).into(),
+                true => inner.into(),
+            }
+        }
+    }
+}
+
+fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
+    let game_modes = server.game_modes.iter().fold(row![].spacing(4), |row, game_mode_id| {
+        row.push(game_mode_view(game_mode_id, game_modes))
+    });
 
     container(
         row![
@@ -92,7 +150,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, 
                     ]
                     .spacing(4),
                     horizontal_space(Length::Fill),
-                    column![region(server, 20, 0), ping(server),]
+                    column![region(server, 20, 0), ping(server), game_modes]
                         .padding(4)
                         .spacing(4)
                         .align_items(Alignment::End)
@@ -105,10 +163,15 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks) -> Element<'l, 
     .into()
 }
 
-fn servers_view<'l>(servers: &'l [Server], bookmarks: &'l Bookmarks, filter: &'l Filter) -> Element<'l, Message> {
+fn servers_view<'l>(
+    servers: &'l [Server],
+    bookmarks: &'l Bookmarks,
+    filter: &'l Filter,
+    game_modes: &'l GameModes,
+) -> Element<'l, Message> {
     let servers = servers.iter().filter(|server| filter.accept(*server, bookmarks));
     let servers_list = container(scrollable(
-        servers.fold(column![], |c, server| c.push(server_view(server, bookmarks))),
+        servers.fold(column![], |c, server| c.push(server_view(server, bookmarks, game_modes))),
     ))
     .height(Length::Fill)
     .width(Length::Fill)
@@ -117,12 +180,13 @@ fn servers_view<'l>(servers: &'l [Server], bookmarks: &'l Bookmarks, filter: &'l
     servers_list.into()
 }
 
-fn filter_view<'l>(view: &'l MainView, filter: &'l Filter) -> Element<'l, Message> {
+fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameModes) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter)),
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
+            filter_section(Some("Game modes"), ui::filter::game_modes_filter(filter, game_modes)),
             filter_section(Some("Countries"), ui::filter::country_filter(filter)),
         ]
         .padding([0, 14, 0, 0])
@@ -139,7 +203,7 @@ struct FilterSectionContainer;
 impl container::StyleSheet for FilterSectionContainer {
     type Style = Theme;
 
-    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
             text_color: Theme::Dark.palette().text.clone().into(),
             background: Theme::Dark.palette().background.into(),

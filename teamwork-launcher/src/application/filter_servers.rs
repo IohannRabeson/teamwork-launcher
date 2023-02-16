@@ -1,6 +1,7 @@
 use {
     crate::application::{
-        country_filter::CountryFilter, text_filter::TextFilter, Bookmarks, Country, PromisedValue, Server,
+        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks, Country,
+        PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
     std::{collections::BTreeSet, time::Duration},
@@ -10,6 +11,7 @@ use {
 pub struct Filter {
     pub text: TextFilter,
     pub country: CountryFilter,
+    pub game_modes: GameModeFilter,
     pub bookmarked_only: bool,
     pub max_ping: u32,
     pub accept_ping_timeout: bool,
@@ -20,6 +22,7 @@ impl Default for Filter {
         Filter {
             text: TextFilter::default(),
             country: CountryFilter::default(),
+            game_modes: GameModeFilter::new(),
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
@@ -32,6 +35,7 @@ impl Filter {
         Self {
             text: TextFilter::default(),
             country: CountryFilter::new(),
+            game_modes: GameModeFilter::new(),
             bookmarked_only: false,
             max_ping: 500,
             accept_ping_timeout: false,
@@ -43,6 +47,7 @@ impl Filter {
             && self.filter_by_text(&server)
             && self.filter_by_countries(&server)
             && self.filter_by_ping(&server)
+            && self.filter_by_game_mode(&server)
     }
 
     fn filter_by_countries(&self, server: &Server) -> bool {
@@ -60,5 +65,8 @@ impl Filter {
             PromisedValue::Loading => true,
             PromisedValue::None => self.accept_ping_timeout,
         }
+    }
+    fn filter_by_game_mode(&self, server: &Server) -> bool {
+        self.game_modes.accept(server)
     }
 }

@@ -1,5 +1,5 @@
 use {
-    crate::application::message::ThumbnailMessage,
+    crate::application::{map::MapName, message::ThumbnailMessage},
     iced::{
         futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
         subscription,
@@ -11,7 +11,6 @@ use {
         sync::Arc,
     },
 };
-use crate::application::map::MapName;
 
 enum State {
     Starting { api_key: String },
