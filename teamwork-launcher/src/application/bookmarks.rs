@@ -1,5 +1,5 @@
 use {
-    crate::application::{IpPort, servers_source::SourceKey},
+    crate::application::{servers_source::SourceKey, IpPort},
     serde::{Deserialize, Serialize},
     std::collections::BTreeSet,
 };

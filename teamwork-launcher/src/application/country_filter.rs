@@ -2,10 +2,7 @@ use {
     crate::application::{Country, PromisedValue},
     itertools::{chain, Itertools},
     serde::{Deserialize, Serialize},
-    std::collections::{
-        btree_map::Entry::Vacant,
-        BTreeMap, BTreeSet,
-    },
+    std::collections::{btree_map::Entry::Vacant, BTreeMap, BTreeSet},
 };
 
 #[derive(Serialize, Deserialize)]

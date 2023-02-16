@@ -1,27 +1,20 @@
-use iced::widget::tooltip::Position;
 use {
-    iced::
-
-        widget::slider,
+    iced::widget::{slider, tooltip::Position},
     itertools::Itertools,
     std::collections::{btree_map, BTreeMap},
 };
 
 use {
     crate::{
-        application::{
-            game_mode::GameModes,
-            Filter, FilterMessage, Message, Server,
-        },
+        application::{game_mode::GameModes, Filter, FilterMessage, Message, Server},
         icons,
-        ui::buttons::svg_button,
+        ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
         widget::{checkbox, column, row, text, text_input},
         Element,
     },
 };
-use crate::ui::widgets::tooltip;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -111,6 +104,9 @@ pub fn game_modes_filter<'l>(filter: &'l Filter, game_modes: &'l GameModes, serv
         .into()
 }
 
+/// Count each element.
+/// For example with this collection `[3, 3, 3, 2, 2, 1]`
+/// The result will be: `3 -> 3, 2 -> 2, 1 -> 1`
 fn histogram<'l, T: Ord>(values: impl Iterator<Item = &'l T> + 'l) -> BTreeMap<&'l T, usize> {
     values.fold(BTreeMap::new(), |mut count, value| {
         match count.entry(value) {
@@ -124,4 +120,20 @@ fn histogram<'l, T: Ord>(values: impl Iterator<Item = &'l T> + 'l) -> BTreeMap<&
 
         count
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ui::filter::histogram;
+
+    #[test]
+    fn test_histogram() {
+        let numbers = vec![3, 3, 3, 2, 2, 1];
+        let h = histogram(numbers.iter());
+
+        assert_eq!(h.get(&3), Some(&3));
+        assert_eq!(h.get(&2), Some(&2));
+        assert_eq!(h.get(&1), Some(&1));
+        assert_eq!(h.get(&0), None);
+    }
 }

@@ -1,8 +1,5 @@
 use {
-    crate::application::{
-        country::Country,
-        message::CountryServiceMessage,
-    },
+    crate::application::{country::Country, message::CountryServiceMessage},
     iced::{
         futures::{
             channel::mpsc::{unbounded, UnboundedReceiver},

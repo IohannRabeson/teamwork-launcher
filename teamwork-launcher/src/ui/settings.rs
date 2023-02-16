@@ -39,9 +39,16 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
             Some("Auto quit"),
             None,
             column![
-                checkbox("Quit when the game is launched", settings.quit_on_launch, |checked| Message::Settings(SettingsMessage::QuitWhenLaunchChecked(checked))),
-                checkbox("Quit when the connection string is copied", settings.quit_on_copy, |checked| Message::Settings(SettingsMessage::QuitWhenCopyChecked(checked))),
-            ].spacing(4)
+                checkbox("Quit when the game is launched", settings.quit_on_launch, |checked| {
+                    Message::Settings(SettingsMessage::QuitWhenLaunchChecked(checked))
+                }),
+                checkbox(
+                    "Quit when the connection string is copied",
+                    settings.quit_on_copy,
+                    |checked| Message::Settings(SettingsMessage::QuitWhenCopyChecked(checked))
+                ),
+            ]
+            .spacing(4)
         )
     ]
     .padding(8)

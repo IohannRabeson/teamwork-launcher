@@ -1,9 +1,7 @@
 use {
     crate::application::GameModesMessage,
     async_stream::stream,
-    iced::{
-        subscription, Color, Subscription,
-    },
+    iced::{subscription, Color, Subscription},
     serde::{Deserialize, Serialize},
     std::{
         collections::BTreeMap,

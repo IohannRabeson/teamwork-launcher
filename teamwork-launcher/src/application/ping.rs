@@ -48,7 +48,9 @@ impl Default for PingService {
     fn default() -> Self {
         let config = Config::default();
 
-        Self { client: Client::new(&config).ok() }
+        Self {
+            client: Client::new(&config).ok(),
+        }
     }
 }
 

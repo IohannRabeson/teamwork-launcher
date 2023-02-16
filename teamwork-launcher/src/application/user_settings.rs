@@ -1,6 +1,4 @@
-use {
-    serde::{Deserialize, Serialize},
-};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct UserSettings {

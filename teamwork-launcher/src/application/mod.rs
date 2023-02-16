@@ -1,4 +1,5 @@
 mod bookmarks;
+mod common_settings;
 pub mod country;
 mod country_filter;
 pub mod fetch_servers;
@@ -19,50 +20,32 @@ mod text_filter;
 mod thumbnail;
 mod user_settings;
 mod views;
-mod common_settings;
 
 use {
     iced::widget::{
         column,
         pane_grid::{self, Axis},
     },
-    std::{
-        cmp::Ordering,
-        path::PathBuf,
-    },
+    std::{cmp::Ordering, path::PathBuf},
 };
 
 use {
     crate::{application::views::Views, ui},
     iced::{
-        Command,
-        Element,
-        futures::{
-            channel::mpsc::UnboundedSender,
-            FutureExt, SinkExt, TryFutureExt,
-        },
-        Renderer, subscription, Subscription, widget::image,
+        futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
+        subscription,
+        widget::image,
+        Command, Element, Renderer, Subscription,
     },
     itertools::Itertools,
-    std::{
-        net::Ipv4Addr,
-        sync::Arc,
-        time::Duration,
-    },
+    std::{net::Ipv4Addr, sync::Arc, time::Duration},
     teamwork::UrlWithKey,
 };
 
-use crate::application::{
-    game_mode::GameModes,
-    launcher::ExecutableLauncher,
-    map::MapName,
-    message::KeyboardMessage,
-    servers_source::{ServersSource, SourceKey},
-};
 pub use {
+    crate::application::user_settings::UserSettings,
     bookmarks::Bookmarks,
     country::Country,
-    crate::application::user_settings::UserSettings,
     fetch_servers::{fetch_servers, FetchServersEvent},
     filter_servers::Filter,
     ip_port::IpPort,
@@ -73,7 +56,16 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
-use common_settings::{read_file, write_file};
+use {
+    crate::application::{
+        game_mode::GameModes,
+        launcher::ExecutableLauncher,
+        map::MapName,
+        message::KeyboardMessage,
+        servers_source::{ServersSource, SourceKey},
+    },
+    common_settings::{read_file, write_file},
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -128,7 +120,7 @@ impl TeamworkLauncher {
             }
             Ok(()) => {
                 if self.user_settings.quit_on_launch {
-                    return iced::window::close()
+                    return iced::window::close();
                 }
             }
         }
@@ -141,7 +133,7 @@ impl TeamworkLauncher {
 
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
-            true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()])
+            true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
         }
     }
 }
@@ -569,7 +561,7 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::CopyToClipboard(text) => {
                 return iced::clipboard::write(text);
-            },
+            }
         }
 
         Command::none()
@@ -615,8 +607,8 @@ mod keyboard {
         crate::application::message::KeyboardMessage,
         iced::{
             event,
-            Event,
-            keyboard::{self, KeyCode}, subscription, Subscription,
+            keyboard::{self, KeyCode},
+            subscription, Event, Subscription,
         },
     };
 

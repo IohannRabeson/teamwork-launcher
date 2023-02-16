@@ -1,11 +1,11 @@
-use serde::Serialize;
-use std::path::Path;
-use serde::de::DeserializeOwned;
-use crate::application::SettingsError;
+use {
+    crate::application::SettingsError,
+    serde::{de::DeserializeOwned, Serialize},
+    std::path::Path,
+};
 
 pub fn write_file(settings: &impl Serialize, file_path: impl AsRef<Path>) -> Result<(), SettingsError> {
-    use std::io::Write;
-    use std::sync::Arc;
+    use std::{io::Write, sync::Arc};
 
     let json = serde_json::to_string(settings).map_err(|e| SettingsError::Json(Arc::new(e)))?;
     let mut file = std::fs::File::create(file_path).map_err(|e| SettingsError::Io(Arc::new(e)))?;

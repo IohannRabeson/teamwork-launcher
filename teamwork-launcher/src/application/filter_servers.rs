@@ -1,7 +1,7 @@
 use {
     crate::application::{
-        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks,
-        PromisedValue, Server,
+        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks, PromisedValue,
+        Server,
     },
     serde::{Deserialize, Serialize},
 };

@@ -14,11 +14,8 @@ use {
     iced::{
         theme,
         widget::{
-            column, container, horizontal_space,
-            pane_grid::self,
-            row, scrollable, text, toggler,
-            tooltip::Position,
-            Container, PaneGrid,
+            column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, tooltip::Position, Container,
+            PaneGrid,
         },
         Alignment, Color, Element, Length,
         Theme::{self, Dark},
@@ -180,11 +177,7 @@ fn servers_view<'l>(
     servers_list.into()
 }
 
-fn filter_view<'l>(
-    filter: &'l Filter,
-    game_modes: &'l GameModes,
-    servers: &'l [Server],
-) -> Element<'l, Message> {
+fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server]) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter)),
