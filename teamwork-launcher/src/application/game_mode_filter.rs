@@ -79,10 +79,14 @@ impl GameModeFilter {
 
 #[cfg(test)]
 mod tests {
-    use std::net::Ipv4Addr;
-    use crate::application::game_mode::{GameMode, GameModeId};
-    use crate::application::game_mode_filter::GameModeFilter;
-    use crate::application::{IpPort, Server};
+    use {
+        crate::application::{
+            game_mode::{GameMode, GameModeId},
+            game_mode_filter::GameModeFilter,
+            IpPort, Server,
+        },
+        std::net::Ipv4Addr,
+    };
 
     #[test]
     fn test_accept() {

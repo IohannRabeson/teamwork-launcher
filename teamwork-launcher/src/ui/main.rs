@@ -180,7 +180,12 @@ fn servers_view<'l>(
     servers_list.into()
 }
 
-fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server]) -> Element<'l, Message> {
+fn filter_view<'l>(
+    view: &'l MainView,
+    filter: &'l Filter,
+    game_modes: &'l GameModes,
+    servers: &'l [Server],
+) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter)),

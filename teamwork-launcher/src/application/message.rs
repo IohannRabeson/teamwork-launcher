@@ -138,5 +138,7 @@ impl From<GameModesMessage> for Message {
 }
 
 impl From<KeyboardMessage> for Message {
-    fn from(value: KeyboardMessage) -> Self { Message::Keyboard(value) }
+    fn from(value: KeyboardMessage) -> Self {
+        Message::Keyboard(value)
+    }
 }

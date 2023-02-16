@@ -238,8 +238,8 @@ impl TeamworkLauncher {
             FilterMessage::CountryChecked(country, checked) => {
                 if self.shift_pressed {
                     match self.filter.country.is_checked(&country) {
-                        false => { self.filter.country.check_all_excepted(&country) }
-                        true => { self.filter.country.check_only(&country) }
+                        false => self.filter.country.check_all_excepted(&country),
+                        true => self.filter.country.check_only(&country),
                     }
                 } else {
                     self.filter.country.set_checked(&country, checked);
@@ -269,8 +269,8 @@ impl TeamworkLauncher {
             FilterMessage::GameModeChecked(id, checked) => {
                 if self.shift_pressed {
                     match self.filter.game_modes.is_mode_enabled(&id) {
-                        false => { self.filter.game_modes.enable_all_excepted(&id) }
-                        true => { self.filter.game_modes.enable_only(&id) }
+                        false => self.filter.game_modes.enable_all_excepted(&id),
+                        true => self.filter.game_modes.enable_only(&id),
                     }
                 } else {
                     self.filter.game_modes.set_mode_enabled(&id, checked);
@@ -299,8 +299,12 @@ impl TeamworkLauncher {
 
     fn process_keyboard_message(&mut self, message: KeyboardMessage) {
         match message {
-            KeyboardMessage::ShiftPressed => { self.shift_pressed = true; }
-            KeyboardMessage::ShiftReleased => { self.shift_pressed = false; }
+            KeyboardMessage::ShiftPressed => {
+                self.shift_pressed = true;
+            }
+            KeyboardMessage::ShiftReleased => {
+                self.shift_pressed = false;
+            }
         }
     }
 
@@ -575,9 +579,14 @@ impl iced::Application for TeamworkLauncher {
 }
 
 mod keyboard {
-    use iced::{event, Event, keyboard, subscription};
-    use iced::keyboard::KeyCode;
-    use {crate::application::message::KeyboardMessage, iced::Subscription};
+    use {
+        crate::application::message::KeyboardMessage,
+        iced::{
+            event,
+            keyboard::{self, KeyCode},
+            subscription, Event, Subscription,
+        },
+    };
 
     pub fn subscription() -> Subscription<KeyboardMessage> {
         subscription::events_with(|event, status| {
@@ -585,22 +594,13 @@ mod keyboard {
                 return None;
             }
 
-            if let Event::Keyboard(keyboard::Event::KeyPressed {
-                                       modifiers: _,
-                                       key_code,
-                                   }) = event {
-
+            if let Event::Keyboard(keyboard::Event::KeyPressed { modifiers: _, key_code }) = event {
                 if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
-                    return Some(KeyboardMessage::ShiftPressed)
+                    return Some(KeyboardMessage::ShiftPressed);
                 }
-            }
-            else if let Event::Keyboard(keyboard::Event::KeyReleased {
-                                            modifiers: _,
-                                            key_code,
-                                        }) = event {
-
+            } else if let Event::Keyboard(keyboard::Event::KeyReleased { modifiers: _, key_code }) = event {
                 if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
-                    return Some(KeyboardMessage::ShiftReleased)
+                    return Some(KeyboardMessage::ShiftReleased);
                 }
             }
 
