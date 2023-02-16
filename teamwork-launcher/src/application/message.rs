@@ -58,6 +58,8 @@ pub enum SettingsMessage {
     TeamworkApiKeyChanged(String),
     SteamExecutableChanged(String),
     SourceEnabled(SourceKey, bool),
+    QuitWhenLaunchChecked(bool),
+    QuitWhenCopyChecked(bool),
 }
 
 #[derive(Debug, Clone)]

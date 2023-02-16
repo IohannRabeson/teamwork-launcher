@@ -124,6 +124,30 @@ pub struct TeamworkLauncher {
 }
 
 impl TeamworkLauncher {
+    fn launch_game(&self, ip_port: &IpPort) -> Command<Message> {
+        match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
+            Err(error) => {
+                eprintln!("Error: {}", error);
+            }
+            Ok(()) => {
+                if self.user_settings.quit_on_launch {
+                    return iced::window::close()
+                }
+            }
+        }
+
+        Command::none()
+    }
+
+    fn copy_connection_string(&self, connection_string: String) -> Command<Message> {
+        match self.user_settings.quit_on_copy {
+            false => Command::batch([iced::clipboard::write(connection_string)]),
+            true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()])
+        }
+    }
+}
+
+impl TeamworkLauncher {
     fn new_servers(&mut self, mut new_servers: Vec<Server>) {
         let countries: Vec<Country> = new_servers
             .iter()
@@ -229,6 +253,12 @@ impl TeamworkLauncher {
                 if let Some(source) = self.servers_sources.iter_mut().find(|source| source.key() == &source_key) {
                     source.set_enabled(enabled);
                 }
+            }
+            SettingsMessage::QuitWhenLaunchChecked(checked) => {
+                self.user_settings.quit_on_launch = checked;
+            }
+            SettingsMessage::QuitWhenCopyChecked(checked) => {
+                self.user_settings.quit_on_copy = checked;
             }
         }
     }
@@ -445,7 +475,7 @@ impl iced::Application for TeamworkLauncher {
                 user_settings,
                 filter,
                 servers_sources,
-                launcher: ExecutableLauncher::new(true),
+                launcher: ExecutableLauncher::new(false),
                 bookmarks,
                 game_modes: GameModes::new(),
                 country_request_sender: None,
@@ -524,9 +554,7 @@ impl iced::Application for TeamworkLauncher {
                 self.views.push(Screens::Settings);
             }
             Message::LaunchGame(ip_port) => {
-                if let Err(error) = self.launcher.launch(&self.user_settings.steam_executable_path, &ip_port) {
-                    eprintln!("Error: {}", error);
-                }
+                return self.launch_game(&ip_port);
             }
             Message::Settings(settings_message) => {
                 self.process_settings_message(settings_message);
@@ -537,7 +565,9 @@ impl iced::Application for TeamworkLauncher {
             Message::Bookmarked(ip_port, bookmarked) => {
                 self.bookmark(ip_port, bookmarked);
             }
-            Message::CopyToClipboard(connection_string) => return iced::clipboard::write(connection_string),
+            Message::CopyToClipboard(connection_string) => {
+                return self.copy_connection_string(connection_string);
+            },
         }
 
         Command::none()
