@@ -1,3 +1,4 @@
+use iced::widget::tooltip::Position;
 use {
     iced::
 
@@ -20,6 +21,7 @@ use {
         Element,
     },
 };
+use crate::ui::widgets::tooltip;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -100,10 +102,11 @@ pub fn game_modes_filter<'l>(filter: &'l Filter, game_modes: &'l GameModes, serv
         .sorted_by(|(_, l, _), (_, r, _)| l.title.cmp(&r.title))
         .fold(column![].spacing(4), |column, (id, mode, enabled)| {
             let label = format!("{} ({})", mode.title, counts.get(id).unwrap_or(&0));
-
-            column.push(checkbox(&label, *enabled, |checked| {
+            let check_box = checkbox(&label, *enabled, |checked| {
                 Message::Filter(FilterMessage::GameModeChecked(id.clone(), checked))
-            }))
+            });
+
+            column.push(tooltip(check_box, &mode.description, Position::Bottom))
         })
         .into()
 }
