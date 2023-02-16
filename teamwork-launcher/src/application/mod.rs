@@ -236,7 +236,14 @@ impl TeamworkLauncher {
     fn process_filter_message(&mut self, message: FilterMessage) {
         match message {
             FilterMessage::CountryChecked(country, checked) => {
-                self.filter.country.set_checked(&country, checked);
+                if self.shift_pressed {
+                    match self.filter.country.is_checked(&country) {
+                        true => { self.filter.country.check_all_excepted(&country) }
+                        false => { self.filter.country.check_only(&country) }
+                    }
+                } else {
+                    self.filter.country.set_checked(&country, checked);
+                }
             }
             FilterMessage::NoCountryChecked(checked) => {
                 self.filter.country.set_accept_no_country(checked);

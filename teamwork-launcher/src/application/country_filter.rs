@@ -70,6 +70,18 @@ impl CountryFilter {
         self.countries.get(&country).map(|v| *v).unwrap_or_default()
     }
 
+    pub fn check_only(&mut self, country_to_check: &Country) {
+        for (country, enabled) in self.countries.iter_mut() {
+            *enabled = country == country_to_check;
+        }
+    }
+
+    pub fn check_all_excepted(&mut self, excluded_country: &Country) {
+        for (country, enabled) in self.countries.iter_mut() {
+            *enabled = country != excluded_country;
+        }
+    }
+
     pub fn accept_no_country(&self) -> bool {
         self.no_countries
     }
