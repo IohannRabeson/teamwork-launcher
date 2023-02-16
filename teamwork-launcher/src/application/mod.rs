@@ -136,7 +136,9 @@ impl TeamworkLauncher {
         Command::none()
     }
 
-    fn copy_connection_string(&self, connection_string: String) -> Command<Message> {
+    fn copy_connection_string(&self, ip_port: IpPort) -> Command<Message> {
+        let connection_string = ip_port.steam_connection_string();
+
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()])
@@ -553,6 +555,9 @@ impl iced::Application for TeamworkLauncher {
             Message::LaunchGame(ip_port) => {
                 return self.launch_game(&ip_port);
             }
+            Message::CopyConnectionString(ip_port) => {
+                return self.copy_connection_string(ip_port);
+            }
             Message::Settings(settings_message) => {
                 self.process_settings_message(settings_message);
             }
@@ -562,8 +567,8 @@ impl iced::Application for TeamworkLauncher {
             Message::Bookmarked(ip_port, bookmarked) => {
                 self.bookmark(ip_port, bookmarked);
             }
-            Message::CopyToClipboard(connection_string) => {
-                return self.copy_connection_string(connection_string);
+            Message::CopyToClipboard(text) => {
+                return iced::clipboard::write(text);
             },
         }
 

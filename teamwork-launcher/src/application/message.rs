@@ -93,6 +93,7 @@ pub enum Message {
     RefreshServers,
     ShowSettings,
     LaunchGame(IpPort),
+    CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
     Back,
