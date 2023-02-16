@@ -1,7 +1,5 @@
 use {
-    crate::application::SettingsError,
     serde::{Deserialize, Serialize},
-    std::sync::Arc,
 };
 
 #[derive(Serialize, Deserialize)]

@@ -4,7 +4,7 @@ use {
         ui::SettingsMessage,
     },
     iced::{
-        widget::{button, checkbox, column, container, horizontal_space, row, text, text_input, vertical_space},
+        widget::{checkbox, column, container, text, text_input, vertical_space},
         Element, Length,
     },
 };

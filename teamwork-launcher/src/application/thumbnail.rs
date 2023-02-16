@@ -1,7 +1,7 @@
 use {
     crate::application::{map::MapName, message::ThumbnailMessage},
     iced::{
-        futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+        futures::channel::mpsc::{unbounded, UnboundedReceiver},
         subscription,
         widget::image,
         Subscription,

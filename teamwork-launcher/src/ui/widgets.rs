@@ -1,13 +1,13 @@
 use {
     crate::{
-        application::{Country, Message, PromisedValue, Server},
-        fonts, icons,
+        application::{Country, Message},
+        icons,
         ui::{styles, styles::ColoredPingIndicatorStyle},
     },
     iced::{
         theme,
-        widget::{container, row, svg, text, tooltip::Position},
-        Alignment, Element, Length,
+        widget::{container, svg, text, tooltip::Position},
+        Element, Length,
     },
     std::time::Duration,
 };

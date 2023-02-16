@@ -19,17 +19,15 @@ mod text_filter;
 mod thumbnail;
 mod user_settings;
 mod views;
+mod common_settings;
 
 use {
     iced::widget::{
         column,
-        pane_grid::{self, Axis, Pane},
+        pane_grid::{self, Axis},
     },
-    serde::{Deserialize, Serialize},
     std::{
         cmp::Ordering,
-        collections::btree_map::Entry::{Occupied, Vacant},
-        ops::Add,
         path::PathBuf,
     },
 };
@@ -37,17 +35,16 @@ use {
 use {
     crate::{application::views::Views, ui},
     iced::{
+        Command,
+        Element,
         futures::{
-            channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+            channel::mpsc::UnboundedSender,
             FutureExt, SinkExt, TryFutureExt,
         },
-        subscription,
-        widget::image,
-        Command, Element, Renderer, Subscription,
+        Renderer, subscription, Subscription, widget::image,
     },
     itertools::Itertools,
     std::{
-        collections::{btree_map::Entry, BTreeMap, BTreeSet},
         net::Ipv4Addr,
         sync::Arc,
         time::Duration,
@@ -56,17 +53,16 @@ use {
 };
 
 use crate::application::{
-    bookmarks::{read_file, write_file},
     game_mode::GameModes,
-    launcher::{ExecutableLauncher, LaunchError},
+    launcher::ExecutableLauncher,
     map::MapName,
     message::KeyboardMessage,
     servers_source::{ServersSource, SourceKey},
 };
 pub use {
-    crate::application::user_settings::UserSettings,
     bookmarks::Bookmarks,
     country::Country,
+    crate::application::user_settings::UserSettings,
     fetch_servers::{fetch_servers, FetchServersEvent},
     filter_servers::Filter,
     ip_port::IpPort,
@@ -77,6 +73,7 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
+use common_settings::{read_file, write_file};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -148,7 +145,7 @@ impl TeamworkLauncher {
 }
 
 impl TeamworkLauncher {
-    fn new_servers(&mut self, mut new_servers: Vec<Server>) {
+    fn new_servers(&mut self, new_servers: Vec<Server>) {
         let countries: Vec<Country> = new_servers
             .iter()
             .filter_map(|server| server.country.get())
@@ -202,10 +199,8 @@ impl TeamworkLauncher {
     }
 
     fn refresh_servers(&mut self) {
-        if let Some(Screens::Main(view)) = self.views.current_mut() {
-            self.servers.clear();
-            self.filter.country.clear_available();
-        }
+        self.servers.clear();
+        self.filter.country.clear_available();
         self.fetch_servers_subscription_id += 1;
     }
 
@@ -457,6 +452,8 @@ impl iced::Application for TeamworkLauncher {
         let filter: Filter = read_file(&configuration_directory.join("filters.json")).unwrap_or_default();
         let servers_sources: Vec<ServersSource> =
             read_file(&configuration_directory.join("sources.json")).unwrap_or_else(|error| {
+                eprintln!("Failed to read sources.json: {}", error);
+
                 vec![
                     ServersSource::new("Payload", "https://teamwork.tf/api/v1/quickplay/payload/servers"),
                     ServersSource::new("Payload Race", "https://teamwork.tf/api/v1/quickplay/payload-race/servers"),
@@ -613,8 +610,8 @@ mod keyboard {
         crate::application::message::KeyboardMessage,
         iced::{
             event,
-            keyboard::{self, KeyCode},
-            subscription, Event, Subscription,
+            Event,
+            keyboard::{self, KeyCode}, subscription, Subscription,
         },
     };
 

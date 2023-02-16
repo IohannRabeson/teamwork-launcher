@@ -2,17 +2,14 @@ use {
     crate::application::GameModesMessage,
     async_stream::stream,
     iced::{
-        futures::{stream, Stream},
-        subscription, Color, Command, Subscription,
+        subscription, Color, Subscription,
     },
     serde::{Deserialize, Serialize},
     std::{
         collections::BTreeMap,
         fmt::{Display, Formatter},
         sync::Arc,
-        time::Duration,
     },
-    teamwork::Error,
 };
 
 #[derive(Clone, Debug, Hash, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
@@ -70,12 +67,6 @@ impl GameModes {
     pub fn get(&self, id: &GameModeId) -> Option<&GameMode> {
         self.game_modes_info.get(id)
     }
-}
-
-async fn fetch_game_modes_impl(teamwork_api_key: String) -> Result<Vec<teamwork::GameMode>, teamwork::Error> {
-    let client = teamwork::Client::default();
-
-    client.get_game_modes(&teamwork_api_key).await
 }
 
 pub fn subscription(id: u64, teamwork_api_key: &str) -> Subscription<GameModesMessage> {

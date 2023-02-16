@@ -3,12 +3,12 @@ use {
     itertools::{chain, Itertools},
     serde::{Deserialize, Serialize},
     std::collections::{
-        btree_map::{Entry, Entry::Vacant},
+        btree_map::Entry::Vacant,
         BTreeMap, BTreeSet,
     },
 };
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct CountryFilter {
     #[serde(skip)]
     available_countries: BTreeSet<Country>,
@@ -17,8 +17,8 @@ pub struct CountryFilter {
     enabled: bool,
 }
 
-impl CountryFilter {
-    pub fn new() -> Self {
+impl Default for CountryFilter {
+    fn default() -> Self {
         Self {
             available_countries: BTreeSet::new(),
             countries: BTreeMap::new(),
@@ -26,7 +26,9 @@ impl CountryFilter {
             enabled: false,
         }
     }
+}
 
+impl CountryFilter {
     pub fn accept(&self, country: &PromisedValue<Country>) -> bool {
         if !self.enabled {
             return true;
@@ -47,7 +49,7 @@ impl CountryFilter {
 
     pub fn add_available(&mut self, country: Country) {
         self.available_countries.insert(country.clone());
-        if let Vacant(mut vacant) = self.countries.entry(country) {
+        if let Vacant(vacant) = self.countries.entry(country) {
             vacant.insert(true);
         }
     }

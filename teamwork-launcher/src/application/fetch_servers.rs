@@ -56,10 +56,6 @@ pub fn fetch_servers(urls: Vec<(SourceKey, UrlWithKey)>) -> impl Stream<Item = F
     }
 }
 
-fn create_server(server: teamwork::Server) -> Server {
-    server.into()
-}
-
 #[cfg(test)]
 mod tests {
     use {

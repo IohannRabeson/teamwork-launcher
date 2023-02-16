@@ -1,9 +1,7 @@
 use {
-    iced::{
-        theme,
-        widget::{container, slider, toggler, Column},
-        Length, Theme,
-    },
+    iced::
+
+        widget::slider,
     itertools::Itertools,
     std::collections::{btree_map, BTreeMap},
 };
@@ -11,14 +9,14 @@ use {
 use {
     crate::{
         application::{
-            game_mode::{GameModeId, GameModes},
+            game_mode::GameModes,
             Filter, FilterMessage, Message, Server,
         },
         icons,
         ui::buttons::svg_button,
     },
     iced::{
-        widget::{button, checkbox, column, row, text, text_input},
+        widget::{checkbox, column, row, text, text_input},
         Element,
     },
 };

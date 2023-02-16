@@ -5,14 +5,12 @@ use {
         icons, APPLICATION_VERSION, GIT_SHA_SHORT,
     },
     iced::{
-        alignment::Horizontal,
-        widget::{container, horizontal_space, row, text},
-        Alignment, Element, Length,
+        widget::{horizontal_space, row, text},
+        Alignment, Element,
     },
 };
 
 const TITLE_FONT_SIZE: u16 = 44;
-const SUBTITLE_FONT_SIZE: u16 = 32;
 const BIG_BUTTON_SIZE: u16 = 26;
 const VERSION_FONT_SIZE: u16 = 16;
 const VISUAL_SPACING_SMALL: u16 = 4;
@@ -32,17 +30,6 @@ pub fn header_view<'a>(title: &str, view: &Screens) -> Element<'a, Message> {
         Screens::Settings => {
             row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
         }
-        Screens::Settings => {
-            row![
-                horizontal_space(iced::Length::Units(VISUAL_SPACING_SMALL)),
-                title_widget,
-                subtitle_widget("Settings"),
-                back_button(),
-            ]
-        }
-        _ => {
-            row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
-        }
     }
     .align_items(Alignment::Center)
     .padding([8, 8, 0, 8])
@@ -56,16 +43,6 @@ fn title_widget<'a>(title: &str) -> Element<'a, Message> {
         text(format!("{}-{}", APPLICATION_VERSION, GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
     ]
     .into()
-}
-
-fn subtitle_widget<'a>(title: &str) -> Element<'a, Message> {
-    container(text(title).font(crate::fonts::TF2_SECONDARY).size(SUBTITLE_FONT_SIZE))
-        .padding([0, 0, 0, 16])
-        .center_y()
-        .align_x(Horizontal::Left)
-        .height(Length::Units(TITLE_FONT_SIZE))
-        .width(Length::Fill)
-        .into()
 }
 
 fn back_button<'a>() -> Element<'a, Message> {

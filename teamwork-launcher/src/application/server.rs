@@ -4,7 +4,7 @@ use {
         servers_source::SourceKey,
     },
     iced::widget::image,
-    std::{collections::BTreeSet, str::FromStr, sync::Arc, time::Duration},
+    std::{str::FromStr, time::Duration},
 };
 
 /// Store information about a server.

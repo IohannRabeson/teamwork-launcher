@@ -2,7 +2,7 @@ use {
     crate::{
         application::{
             game_mode::{GameMode, GameModeId, GameModes},
-            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, PaneView, PromisedValue, Server,
+            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, PromisedValue, Server,
         },
         icons,
         ui::{
@@ -14,11 +14,11 @@ use {
     iced::{
         theme,
         widget::{
-            button, column, container, horizontal_space,
-            pane_grid::{self, Pane},
-            row, scrollable, text, text_input, toggler,
+            column, container, horizontal_space,
+            pane_grid::self,
+            row, scrollable, text, toggler,
             tooltip::Position,
-            Container, PaneGrid, Text,
+            Container, PaneGrid,
         },
         Alignment, Color, Element, Length,
         Theme::{self, Dark},
@@ -34,10 +34,10 @@ pub fn view<'l>(
     game_modes: &'l GameModes,
 ) -> Element<'l, Message> {
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
-    let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
-        pane_grid::Content::new(responsive(move |size| match &pane.id {
+    let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
+        pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
-            PaneId::Filters => filter_view(view, filter, game_modes, servers),
+            PaneId::Filters => filter_view(filter, game_modes, servers),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -71,7 +71,7 @@ fn ping<'a>(server: &Server) -> Element<'a, Message> {
 
 fn game_mode_view_inner(game_mode: &GameMode) -> Element<Message> {
     match game_mode.color {
-        Some(color) => text(&game_mode.title),
+        Some(_color) => text(&game_mode.title),
         None => text(&game_mode.title),
     }
     .size(16)
@@ -93,7 +93,7 @@ impl GameModeStyle {
 impl container::StyleSheet for GameModeStyle {
     type Style = Theme;
 
-    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
             border_radius: 4.0,
             border_width: 1.0,
@@ -181,7 +181,6 @@ fn servers_view<'l>(
 }
 
 fn filter_view<'l>(
-    view: &'l MainView,
     filter: &'l Filter,
     game_modes: &'l GameModes,
     servers: &'l [Server],

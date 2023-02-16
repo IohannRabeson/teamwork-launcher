@@ -1,12 +1,11 @@
 use {
     crate::application::{
         country::Country,
-        message::{CountryServiceMessage, Message},
+        message::CountryServiceMessage,
     },
-    async_stream::stream,
     iced::{
         futures::{
-            channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+            channel::mpsc::{unbounded, UnboundedReceiver},
             StreamExt,
         },
         subscription, Subscription,
@@ -74,8 +73,6 @@ pub fn subscription() -> Subscription<CountryServiceMessage> {
                 )
             }
             State::Ready(mut receiver, mut cache) => {
-                use iced::futures::StreamExt;
-
                 let ip = receiver.select_next_some().await;
 
                 match cache.entry(ip) {

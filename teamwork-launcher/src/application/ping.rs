@@ -1,7 +1,7 @@
 use {
     crate::application::message::PingServiceMessage,
     iced::{
-        futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+        futures::channel::mpsc::{unbounded, UnboundedReceiver},
         subscription, Subscription,
     },
     std::{
@@ -27,10 +27,6 @@ pub enum Error {
 }
 
 impl PingService {
-    pub fn is_enabled(&self) -> bool {
-        self.client.is_some()
-    }
-
     pub async fn ping(&self, ip: &Ipv4Addr) -> Result<Duration, Error> {
         if let Some(client) = self.client.as_ref() {
             let mut pinger = client.pinger(IpAddr::from(*ip), PingIdentifier(111)).await;
@@ -40,7 +36,7 @@ impl PingService {
             match pinger.ping(PingSequence(0), PAYLOAD).await {
                 Ok((IcmpPacket::V4(_reply), dur)) => Ok(dur),
                 Ok((IcmpPacket::V6(_reply), dur)) => Ok(dur),
-                Err(e) => Err(Error::Timeout),
+                Err(_e) => Err(Error::Timeout),
             }
         } else {
             Err(Error::ClientDisabled)
@@ -51,12 +47,8 @@ impl PingService {
 impl Default for PingService {
     fn default() -> Self {
         let config = Config::default();
-        let client = match Client::new(&config) {
-            Ok(client) => Some(client),
-            Err(error) => None,
-        };
 
-        Self { client }
+        Self { client: Client::new(&config).ok() }
     }
 }
 

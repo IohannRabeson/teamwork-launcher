@@ -1,10 +1,9 @@
 use {
     crate::application::{
-        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks, Country,
+        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks,
         PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
-    std::{collections::BTreeSet, time::Duration},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -22,7 +21,7 @@ impl Default for Filter {
         Filter {
             text: TextFilter::default(),
             country: CountryFilter::default(),
-            game_modes: GameModeFilter::new(),
+            game_modes: GameModeFilter::default(),
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
@@ -31,17 +30,6 @@ impl Default for Filter {
 }
 
 impl Filter {
-    pub fn new() -> Self {
-        Self {
-            text: TextFilter::default(),
-            country: CountryFilter::new(),
-            game_modes: GameModeFilter::new(),
-            bookmarked_only: false,
-            max_ping: 500,
-            accept_ping_timeout: false,
-        }
-    }
-
     pub fn accept(&self, server: &Server, bookmarks: &Bookmarks) -> bool {
         self.filter_by_bookmark(server, bookmarks)
             && self.filter_by_text(&server)

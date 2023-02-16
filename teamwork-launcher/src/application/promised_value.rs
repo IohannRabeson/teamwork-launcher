@@ -8,9 +8,6 @@ pub enum PromisedValue<T: Clone + Hash + Debug> {
 }
 
 impl<T: Clone + Hash + Debug> PromisedValue<T> {
-    pub fn is_none(&self) -> bool {
-        matches!(self, PromisedValue::None)
-    }
     pub fn is_ready(&self) -> bool {
         matches!(self, PromisedValue::Ready(_))
     }

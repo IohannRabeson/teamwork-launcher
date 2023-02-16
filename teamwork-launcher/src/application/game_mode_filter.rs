@@ -11,13 +11,6 @@ pub struct GameModeFilter {
 }
 
 impl GameModeFilter {
-    pub fn new() -> Self {
-        Self {
-            game_modes: BTreeMap::new(),
-            enabled: false,
-        }
-    }
-
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     }
@@ -81,7 +74,7 @@ impl GameModeFilter {
 mod tests {
     use {
         crate::application::{
-            game_mode::{GameMode, GameModeId},
+            game_mode::GameModeId,
             game_mode_filter::GameModeFilter,
             IpPort, Server,
         },
@@ -90,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_accept() {
-        let mut filter = GameModeFilter::new();
+        let mut filter = GameModeFilter::default();
         let gma = teamwork::GameMode {
             id: "a".to_string(),
             title: "A".to_string(),
@@ -99,8 +92,8 @@ mod tests {
         };
         let gmb = teamwork::GameMode {
             id: "b".to_string(),
-            title: "A".to_string(),
-            description: "A desc".to_string(),
+            title: "B".to_string(),
+            description: "B desc".to_string(),
             color: None,
         };
 
