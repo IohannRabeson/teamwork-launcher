@@ -258,10 +258,13 @@ impl TeamworkLauncher {
                 self.filter.accept_ping_timeout = checked;
             }
             FilterMessage::GameModeChecked(id, checked) => {
-                self.filter.game_modes.set_enabled(&id, checked);
+                self.filter.game_modes.set_mode_enabled(&id, checked);
             }
             FilterMessage::CountryFilterEnabled(checked) => {
                 self.filter.country.set_enabled(checked);
+            }
+            FilterMessage::GameModeFilterEnabled(checked) => {
+                self.filter.game_modes.set_enabled(checked);
             }
         }
     }

@@ -50,6 +50,7 @@ pub enum FilterMessage {
     AcceptPingTimeoutChanged(bool),
     GameModeChecked(GameModeId, bool),
     CountryFilterEnabled(bool),
+    GameModeFilterEnabled(bool),
 }
 
 #[derive(Debug, Clone)]

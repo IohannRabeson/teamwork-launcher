@@ -186,7 +186,7 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameM
             filter_section(None, ui::filter::bookmark_filter(filter)),
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
-            filter_section(Some("Game modes"), ui::filter::game_modes_filter(filter, game_modes)),
+            filter_section_with_switch(Some("Game modes"), ui::filter::game_modes_filter(filter, game_modes), filter.game_modes.is_enabled(), |checked|Message::Filter(FilterMessage::GameModeFilterEnabled(checked))),
             filter_section_with_switch(Some("Countries"), ui::filter::country_filter(filter), filter.country.is_enabled(), |checked|Message::Filter(FilterMessage::CountryFilterEnabled(checked))),
         ]
         .padding([0, 14, 0, 0])
