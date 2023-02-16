@@ -14,6 +14,7 @@ pub struct CountryFilter {
     available_countries: BTreeSet<Country>,
     countries: BTreeMap<Country, bool>,
     no_countries: bool,
+    enabled: bool,
 }
 
 impl CountryFilter {
@@ -22,10 +23,15 @@ impl CountryFilter {
             available_countries: BTreeSet::new(),
             countries: BTreeMap::new(),
             no_countries: true,
+            enabled: false,
         }
     }
 
     pub fn accept(&self, country: &PromisedValue<Country>) -> bool {
+        if !self.enabled {
+            return true;
+        }
+
         match country {
             PromisedValue::Ready(country) => self.available_countries.contains(country) && self.is_checked(country),
             PromisedValue::Loading => true,
@@ -71,4 +77,7 @@ impl CountryFilter {
     pub fn set_accept_no_country(&mut self, accept: bool) {
         self.no_countries = accept;
     }
+
+    pub fn is_enabled(&self) -> bool { self.enabled }
+    pub fn set_enabled(&mut self, enabled: bool) { self.enabled = enabled; }
 }

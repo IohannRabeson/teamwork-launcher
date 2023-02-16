@@ -260,6 +260,9 @@ impl TeamworkLauncher {
             FilterMessage::GameModeChecked(id, checked) => {
                 self.filter.game_modes.set_enabled(&id, checked);
             }
+            FilterMessage::CountryFilterEnabled(checked) => {
+                self.filter.country.set_enabled(checked);
+            }
         }
     }
 

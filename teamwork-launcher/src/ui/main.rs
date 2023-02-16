@@ -187,7 +187,7 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameM
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
             filter_section(Some("Game modes"), ui::filter::game_modes_filter(filter, game_modes)),
-            filter_section(Some("Countries"), ui::filter::country_filter(filter)),
+            filter_section_with_switch(Some("Countries"), ui::filter::country_filter(filter), filter.country.is_enabled(), |checked|Message::Filter(FilterMessage::CountryFilterEnabled(checked))),
         ]
         .padding([0, 14, 0, 0])
         .spacing(4),
@@ -225,6 +225,28 @@ fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Messag
             }
         }
         .spacing(8),
+    )
+    .width(Length::Fill)
+    .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
+    .padding(8)
+}
+
+
+fn filter_section_with_switch<'l>(title: Option<&str>,
+                                  content: impl Into<Element<'l, Message>>,
+                                enabled: bool,
+                                f: impl Fn(bool) -> Message + 'l
+
+) -> Container<'l, Message> {
+    let switch = toggler(title.map(|s|s.to_string()), enabled, f);
+    let mut main_column = column![switch];
+
+    if enabled {
+        main_column = main_column.push(content.into());
+    }
+
+    container(
+    main_column.spacing(8),
     )
     .width(Length::Fill)
     .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))

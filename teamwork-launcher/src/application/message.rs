@@ -49,6 +49,7 @@ pub enum FilterMessage {
     MaxPingChanged(u32),
     AcceptPingTimeoutChanged(bool),
     GameModeChecked(GameModeId, bool),
+    CountryFilterEnabled(bool),
 }
 
 #[derive(Debug, Clone)]
