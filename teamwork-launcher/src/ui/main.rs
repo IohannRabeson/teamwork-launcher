@@ -37,7 +37,7 @@ pub fn view<'l>(
     let pane_grid = PaneGrid::new(&view.panes, |id, pane, is_maximized| {
         pane_grid::Content::new(responsive(move |size| match &pane.id {
             PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
-            PaneId::Filters => filter_view(view, filter, game_modes),
+            PaneId::Filters => filter_view(view, filter, game_modes, servers),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -180,7 +180,7 @@ fn servers_view<'l>(
     servers_list.into()
 }
 
-fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameModes) -> Element<'l, Message> {
+fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server]) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter)),
@@ -188,13 +188,13 @@ fn filter_view<'l>(view: &'l MainView, filter: &'l Filter, game_modes: &'l GameM
             filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
             filter_section_with_switch(
                 Some("Game modes"),
-                ui::filter::game_modes_filter(filter, game_modes),
+                ui::filter::game_modes_filter(filter, game_modes, servers),
                 filter.game_modes.is_enabled(),
                 |checked| Message::Filter(FilterMessage::GameModeFilterEnabled(checked))
             ),
             filter_section_with_switch(
                 Some("Countries"),
-                ui::filter::country_filter(filter),
+                ui::filter::country_filter(filter, servers),
                 filter.country.is_enabled(),
                 |checked| Message::Filter(FilterMessage::CountryFilterEnabled(checked))
             ),
