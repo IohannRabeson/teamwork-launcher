@@ -67,12 +67,72 @@ impl GameModeFilter {
 
         for id in &server.game_modes {
             if let Some(accepted) = self.game_modes.get(id) {
-                if !accepted {
-                    return false;
+                if *accepted {
+                    return true;
                 }
             }
         }
 
-        true
+        false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::Ipv4Addr;
+    use crate::application::game_mode::{GameMode, GameModeId};
+    use crate::application::game_mode_filter::GameModeFilter;
+    use crate::application::{IpPort, Server};
+
+    #[test]
+    fn test_accept() {
+        let mut filter = GameModeFilter::new();
+        let gma = teamwork::GameMode {
+            id: "a".to_string(),
+            title: "A".to_string(),
+            description: "A desc".to_string(),
+            color: None,
+        };
+        let gmb = teamwork::GameMode {
+            id: "b".to_string(),
+            title: "A".to_string(),
+            description: "A desc".to_string(),
+            color: None,
+        };
+
+        filter.reset(&vec![gma.clone(), gmb.clone()]);
+
+        let server_gma = Server {
+            name: "hey".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(127, 0, 0, 1), 12345),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![GameModeId::new(gma.id.clone())],
+        };
+
+        let server_gmb = Server {
+            name: "hoy".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(127, 0, 0, 1), 567),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![GameModeId::new(gmb.id.clone())],
+        };
+
+        filter.set_enabled(true);
+        filter.set_mode_enabled(&GameModeId::new(gma.id.clone()), true);
+        filter.set_mode_enabled(&GameModeId::new(gmb.id.clone()), false);
+
+        assert_eq!(filter.accept(&server_gma), true);
+        assert_eq!(filter.accept(&server_gmb), false);
     }
 }

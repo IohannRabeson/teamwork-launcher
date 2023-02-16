@@ -238,8 +238,8 @@ impl TeamworkLauncher {
             FilterMessage::CountryChecked(country, checked) => {
                 if self.shift_pressed {
                     match self.filter.country.is_checked(&country) {
-                        true => { self.filter.country.check_all_excepted(&country) }
-                        false => { self.filter.country.check_only(&country) }
+                        false => { self.filter.country.check_all_excepted(&country) }
+                        true => { self.filter.country.check_only(&country) }
                     }
                 } else {
                     self.filter.country.set_checked(&country, checked);
@@ -269,8 +269,8 @@ impl TeamworkLauncher {
             FilterMessage::GameModeChecked(id, checked) => {
                 if self.shift_pressed {
                     match self.filter.game_modes.is_mode_enabled(&id) {
-                        true => { self.filter.game_modes.enable_all_excepted(&id) }
-                        false => { self.filter.game_modes.enable_only(&id) }
+                        false => { self.filter.game_modes.enable_all_excepted(&id) }
+                        true => { self.filter.game_modes.enable_only(&id) }
                     }
                 } else {
                     self.filter.game_modes.set_mode_enabled(&id, checked);
