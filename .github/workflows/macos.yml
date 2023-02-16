@@ -22,7 +22,7 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       env:
-        TEST_TEAMWORK_API_KEY: {{ secrets.TEAMWORK_API_KEY }}
+        TEST_TEAMWORK_API_KEY: { { secrets.TEAMWORK_API_KEY } }
       run: cargo test --verbose
 #    Currently disabled on OSX
 #    When running on the Github Action runner, the application crashes with this error:
