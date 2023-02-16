@@ -82,6 +82,7 @@ pub fn ping_filter(filter: &Filter) -> Element<Message> {
             FilterMessage::AcceptPingTimeoutChanged(checked)
         ))
     ]
+    .spacing(4)
     .into()
 }
 
