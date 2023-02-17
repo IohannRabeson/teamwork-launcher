@@ -123,6 +123,16 @@ fn histogram<'l, T: Ord>(values: impl Iterator<Item = &'l T> + 'l) -> BTreeMap<&
     })
 }
 
+pub fn server_properties_filter(filter: &Filter) -> Element<Message> {
+    column![
+        checkbox("With RTD", filter.with_rtd_only, |checked|Message::Filter(FilterMessage::WithRtdOnlyChanged(checked))),
+        checkbox("With all talk", filter.with_all_talk_only, |checked|Message::Filter(FilterMessage::WithAllTalkOnlyChanged(checked))),
+        checkbox("With no respawn time", filter.with_no_respawn_time_only, |checked|Message::Filter(FilterMessage::WithNoRespawnTimeOnlyChanged(checked))),
+        checkbox("Without password", filter.exclude_password, |checked|Message::Filter(FilterMessage::ExcludePasswordChanged(checked))),
+        checkbox("With VAC", filter.vac_secured_only, |checked|Message::Filter(FilterMessage::VacSecuredOnlyChanged(checked))),
+    ].spacing(4).into()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::ui::filter::histogram;

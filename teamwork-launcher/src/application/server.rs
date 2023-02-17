@@ -20,6 +20,13 @@ pub struct Server {
     pub ping: PromisedValue<Duration>,
     pub source_key: Option<SourceKey>,
     pub game_modes: Vec<GameModeId>,
+    pub vac_secured: bool,
+    pub has_rtd: bool,
+    pub has_no_respawn_time: bool,
+    pub has_all_talk: bool,
+    pub has_random_crits: bool,
+    pub need_password: bool,
+
 }
 
 impl Default for Server {
@@ -35,6 +42,12 @@ impl Default for Server {
             ping: PromisedValue::None,
             source_key: None,
             game_modes: Vec::new(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
         }
     }
 }
@@ -57,6 +70,12 @@ impl From<teamwork::Server> for Server {
             ping: PromisedValue::Loading,
             source_key: None,
             game_modes: server.game_modes.iter().map(GameModeId::new).collect(),
+            vac_secured: server.valve_secure,
+            has_all_talk: server.has_alltalk.unwrap_or_default(),
+            has_rtd: server.has_rtd.unwrap_or_default(),
+            has_no_respawn_time: server.has_norespawntime.unwrap_or_default(),
+            has_random_crits: server.has_randomcrits.unwrap_or_default(),
+            need_password: server.has_password.unwrap_or_default(),
         }
     }
 }

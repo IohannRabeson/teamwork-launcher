@@ -51,6 +51,11 @@ pub enum FilterMessage {
     GameModeChecked(GameModeId, bool),
     CountryFilterEnabled(bool),
     GameModeFilterEnabled(bool),
+    VacSecuredOnlyChanged(bool),
+    WithRtdOnlyChanged(bool),
+    WithAllTalkOnlyChanged(bool),
+    WithNoRespawnTimeOnlyChanged(bool),
+    ExcludePasswordChanged(bool),
 }
 
 #[derive(Debug, Clone)]

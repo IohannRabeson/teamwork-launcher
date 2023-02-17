@@ -183,6 +183,7 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [
             filter_section(None, ui::filter::bookmark_filter(filter)),
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
+            filter_section(None, ui::filter::server_properties_filter(filter)),
             filter_section_with_switch(
                 Some("Game modes"),
                 ui::filter::game_modes_filter(filter, game_modes, servers),

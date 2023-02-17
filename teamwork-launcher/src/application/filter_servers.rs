@@ -14,6 +14,12 @@ pub struct Filter {
     pub bookmarked_only: bool,
     pub max_ping: u32,
     pub accept_ping_timeout: bool,
+    pub vac_secured_only: bool,
+    pub with_rtd_only: bool,
+    pub with_all_talk_only: bool,
+    pub with_no_respawn_time_only: bool,
+    pub with_random_crits: bool,
+    pub exclude_password: bool,
 }
 
 impl Default for Filter {
@@ -25,6 +31,12 @@ impl Default for Filter {
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
+            vac_secured_only: true,
+            with_rtd_only: false,
+            with_all_talk_only: false,
+            with_no_respawn_time_only: false,
+            with_random_crits: false,
+            exclude_password: false,
         }
     }
 }
@@ -36,6 +48,8 @@ impl Filter {
             && self.filter_by_countries(&server)
             && self.filter_by_ping(&server)
             && self.filter_by_game_mode(&server)
+            && self.filter_by_vac(&server)
+            && self.filter_by_properties(&server)
     }
 
     fn filter_by_countries(&self, server: &Server) -> bool {
@@ -56,5 +70,15 @@ impl Filter {
     }
     fn filter_by_game_mode(&self, server: &Server) -> bool {
         self.game_modes.accept(server)
+    }
+    fn filter_by_vac(&self, server: &Server) -> bool {
+        !self.vac_secured_only || server.vac_secured
+    }
+    fn filter_by_properties(&self, server: &Server) -> bool {
+        (!self.with_all_talk_only || server.has_all_talk)
+        && (!self.with_random_crits || server.has_random_crits)
+        && (!self.with_rtd_only || server.has_rtd)
+        && (!self.with_no_respawn_time_only || server.has_no_respawn_time)
+        && (!self.exclude_password || !server.need_password)
     }
 }

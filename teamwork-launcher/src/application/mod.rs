@@ -301,6 +301,21 @@ impl TeamworkLauncher {
             FilterMessage::GameModeFilterEnabled(checked) => {
                 self.filter.game_modes.set_enabled(checked);
             }
+            FilterMessage::VacSecuredOnlyChanged(checked) => {
+                self.filter.vac_secured_only = checked;
+            }
+            FilterMessage::WithRtdOnlyChanged(checked) => {
+                self.filter.with_rtd_only = checked;
+            }
+            FilterMessage::WithAllTalkOnlyChanged(checked) => {
+                self.filter.with_all_talk_only = checked;
+            }
+            FilterMessage::WithNoRespawnTimeOnlyChanged(checked) => {
+                self.filter.with_no_respawn_time_only = checked;
+            }
+            FilterMessage::ExcludePasswordChanged(checked) => {
+                self.filter.exclude_password = checked;
+            }
         }
     }
 
