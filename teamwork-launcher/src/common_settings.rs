@@ -1,8 +1,10 @@
+use std::path::PathBuf;
 use {
     crate::application::SettingsError,
     serde::{de::DeserializeOwned, Serialize},
     std::path::Path,
 };
+use crate::APPLICATION_NAME;
 
 pub fn write_file(settings: &impl Serialize, file_path: impl AsRef<Path>) -> Result<(), SettingsError> {
     use std::{io::Write, sync::Arc};
@@ -23,4 +25,10 @@ where
     let file = std::fs::File::open(file_path).map_err(|e| SettingsError::Io(Arc::new(e)))?;
 
     Ok(serde_json::from_reader(file).map_err(|e| SettingsError::Json(Arc::new(e)))?)
+}
+
+pub fn get_configuration_directory() -> PathBuf {
+    platform_dirs::AppDirs::new(APPLICATION_NAME.into(), false)
+        .map(|dirs| dirs.config_dir)
+        .expect("config directory path")
 }
