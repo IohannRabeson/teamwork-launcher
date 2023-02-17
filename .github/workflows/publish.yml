@@ -16,7 +16,7 @@ jobs:
             artifact_name: teamwork-launcher.exe
             asset_name: teamwork-launcher-windows
           - os: macos-latest
-            artifact_name: teamwork-launcher
+            artifact_name: bundle/osx/teamwork-launcher.app
             asset_name: teamwork-launcher-macos
 
     steps:
@@ -27,6 +27,14 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.8
         run: cargo build --release --locked
+
+      - name: Bundle
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          cd teamwork-launcher
+          cargo install cargo-bundle
+          cargo bundle --release
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
