@@ -22,8 +22,8 @@ jobs:
     - name: Build
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.8
-      run: cargo build
+      run: cargo build --locked
     - name: Run tests
       env:
         TEST_TEAMWORK_API_KEY: ${{ secrets.TEAMWORK_API_KEY }}
-      run: cargo test --verbose
+      run: cargo test --locked --verbose
