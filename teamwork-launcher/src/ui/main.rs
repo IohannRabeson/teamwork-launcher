@@ -1,20 +1,20 @@
 use {
     crate::{
         application::{
-            game_mode::{GameMode, GameModeId, GameModes},
+            game_mode::GameModes,
             Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, Server,
         },
         icons,
         ui::{
             self,
             buttons::{favorite_button, svg_button},
-            widgets::{self, ping, region, thumbnail, tooltip},
+            widgets::{self, ping, region, thumbnail},
         },
     },
     iced::{
         theme,
         widget::{
-            button, column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, tooltip::Position,
+            button, column, container, horizontal_space, pane_grid, row, scrollable, text, toggler,
             Container, PaneGrid,
         },
         Alignment, Color, Element, Length,
@@ -56,7 +56,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                     svg_button(icons::INFO_ICON.clone(), 20).on_press(Message::ShowServer(server.ip_port.clone())),
                     favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), 20)
-                        .on_press(Message::CopyToClipboard(server.ip_port.steam_connection_string())),
+                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
                     svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
                 ]
                 .spacing(4),

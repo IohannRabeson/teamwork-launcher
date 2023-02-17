@@ -18,7 +18,6 @@ pub mod server {
             widget::{column, horizontal_space, row, text},
             Alignment, Element, Length,
         },
-        std::fmt::{Display, Formatter},
     };
 
     fn yes_no(value: bool) -> &'static str {
@@ -42,7 +41,7 @@ pub mod server {
         .padding(4)
         .spacing(4);
         if let Some(map) = &server.next_map {
-            c = c.push(text(format!("Next map: {}", server.map)));
+            c = c.push(text(format!("Next map: {}", map)));
         }
         let c = c.push(row![text("Game modes:"), widgets::game_modes(game_modes, &server.game_modes)].spacing(4));
         let c = c.push(text(format!("Valve secure: {}", yes_no(server.vac_secured))));

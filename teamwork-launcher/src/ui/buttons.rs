@@ -6,7 +6,6 @@ use {
     iced::{
         theme,
         widget::{button, Button, Svg},
-        Length,
     },
 };
 
