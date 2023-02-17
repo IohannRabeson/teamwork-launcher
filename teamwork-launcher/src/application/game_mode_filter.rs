@@ -106,6 +106,7 @@ mod tests {
             ping: Default::default(),
             source_key: None,
             game_modes: vec![GameModeId::new(gma.id.clone())],
+            ..Default::default()
         };
 
         let server_gmb = Server {
@@ -119,6 +120,7 @@ mod tests {
             ping: Default::default(),
             source_key: None,
             game_modes: vec![GameModeId::new(gmb.id.clone())],
+            ..Default::default()
         };
 
         filter.set_enabled(true);
