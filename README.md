@@ -1,8 +1,7 @@
 # tf2-launcher
+Launcher for Team Fortress 2 that uses Teamwork.tf as data source.  
 
-## MSRV 1.65
-Rust 1.65 or greater (for generic associated type needed by iced_graphics).  
-Minimal supported version for OSX: 10.8 (see .cargo/config.toml, also .github/rust.yml)  
+![Main view screenshot](/screenshots/main_view.png?raw=true)
 
 ## How to run tests
-You must define an environment variable TEST_TEAMWORK_API_KEY containing you API key.
+You must define an environment variable TEST_TEAMWORK_API_KEY containing you API key.  
