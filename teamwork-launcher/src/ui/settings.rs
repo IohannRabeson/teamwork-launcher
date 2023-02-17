@@ -67,7 +67,7 @@ fn field<'a>(
     field: impl Into<Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let mut content = match label {
-        Some(label) => column![section_title(label), vertical_space(Length::Units(4)),],
+        Some(label) => column![section_title(label), vertical_space(Length::Fixed(4.0)),],
         None => column![],
     };
 
