@@ -9,8 +9,7 @@ use {
     },
     iced::{
         theme,
-        widget::{container, horizontal_space, image, row, svg, text, tooltip::Position, Image},
-        Alignment, Color, Element, Length,
+        widget::{container, row, svg, text, tooltip::Position, Image}, Color, Element, Length,
         Theme::{self, Dark},
     },
     std::time::Duration,
