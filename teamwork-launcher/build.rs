@@ -1,8 +1,7 @@
 ///! See https://docs.rs/vergen/latest/vergen/ for more info
-use anyhow::Result;
 use vergen::{vergen, Config, ShaKind};
 
-fn main() -> Result<()> {
+fn main() -> anyhow::Result<()> {
     let mut config = Config::default();
 
     *config.git_mut().sha_kind_mut() = ShaKind::Short;

@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
-#[derive(Debug, Hash, Clone)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum PromisedValue<T: Clone + Hash + Debug> {
     Ready(T),
     Loading,
@@ -8,8 +8,14 @@ pub enum PromisedValue<T: Clone + Hash + Debug> {
 }
 
 impl<T: Clone + Hash + Debug> PromisedValue<T> {
-    pub fn is_none(&self) -> bool {
-        matches!(self, PromisedValue::None)
+    pub fn is_ready(&self) -> bool {
+        matches!(self, PromisedValue::Ready(_))
+    }
+    pub fn get(&self) -> Option<&T> {
+        match self {
+            PromisedValue::Ready(value) => Some(value),
+            _ => None,
+        }
     }
 }
 

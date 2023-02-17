@@ -1,5 +1,5 @@
 use {
-    crate::{models::IpPort, process_detection::ProcessDetection},
+    crate::application::{process_detection::ProcessDetection, IpPort},
     std::error::Error,
 };
 
@@ -114,7 +114,7 @@ impl ExecutableLauncher {
         }
     }
 
-    pub fn launch(&self, executable_path: &str, params: &IpPort) -> Result<(), LaunchError> {
-        self.launcher.launch_game(executable_path, params, &self.arguments)
+    pub fn launch(&self, executable_path: &str, ip_port: &IpPort) -> Result<(), LaunchError> {
+        self.launcher.launch_game(executable_path, ip_port, &self.arguments)
     }
 }

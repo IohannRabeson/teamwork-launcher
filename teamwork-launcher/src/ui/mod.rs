@@ -1,70 +1,67 @@
-pub use {
-    self::buttons::{favorite_button, svg_button},
-    announces::{Announce, AnnounceQueue},
-    header::header_view,
-    servers::{servers_view, servers_view_edit_favorites},
-    settings::settings_view,
-};
-use {
-    crate::{application::Messages, fonts, icons::SvgHandle},
-    iced::{
-        alignment::{Horizontal, Vertical},
-        widget::{button, column, text},
-        Element, Length,
-    },
-};
+use crate::application::SettingsMessage;
 
-mod advanced_filter;
-mod announces;
-mod buttons;
-mod header;
-mod server;
-mod servers;
-mod settings;
-mod styles;
-mod widgets;
+pub mod buttons;
+pub mod filter;
+pub mod header;
+pub mod main;
+pub mod settings;
+pub mod styles;
+pub mod widgets;
+pub mod server {
+    use {
+        super::widgets::{ping, region, thumbnail},
+        crate::{
+            application::{game_mode::GameModes, IpPort, Message, Server},
+            ui::widgets,
+        },
+        iced::{
+            widget::{column, horizontal_space, row, text},
+            Alignment, Element, Length,
+        },
+        std::fmt::{Display, Formatter},
+    };
 
-pub const VISUAL_SPACING_SMALL: u16 = 4;
-pub const VISUAL_SPACING_MEDIUM: u16 = 8;
-pub const VISUAL_SPACING_BIG: u16 = 12;
-pub const BIG_BUTTON_SIZE: u16 = 26;
-pub const SMALL_BUTTON_SIZE: u16 = 20;
+    fn yes_no(value: bool) -> &'static str {
+        match value {
+            true => "Yes",
+            false => "No",
+        }
+    }
 
-use iced::{widget::container, Alignment};
-
-pub fn refresh_view<'a>() -> Element<'a, Messages> {
-    text("Reloading...")
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .horizontal_alignment(Horizontal::Center)
-        .vertical_alignment(Vertical::Center)
-        .font(fonts::TF2_SECONDARY)
-        .size(fonts::TITLE_FONT_SIZE)
-        .into()
-}
-
-pub fn error_view<'a>(message: &str) -> Element<'a, Messages> {
-    column![
-        text("Error").font(fonts::TF2_SECONDARY).size(fonts::SUBTITLE_FONT_SIZE),
-        text(message)
-    ]
-    .padding(12)
-    .into()
-}
-
-pub fn no_favorite_servers_view<'a>() -> Element<'a, Messages> {
-    container(
-        column![
-            text("No favorite servers!").font(fonts::TF2_SECONDARY).size(36),
-            text("You can edit the list of your favorite servers by clicking on the star button on the top right of the window."),
-            button("Edit favorite servers").on_press(Messages::EditFavorites),
+    pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l IpPort) -> Element<'l, Message> {
+        let server = servers.iter().find(|s| &s.ip_port == ip_port).expect("find server");
+        let mut c = column![
+            row![text("Ping:"), ping(&server.ping)].spacing(4),
+            region(server, 20, 0),
+            text(&format!(
+                "Players: {} / {}",
+                server.current_players_count, server.max_players_count
+            )),
+            text(format!("Map: {}", server.map)),
         ]
-        .align_items(Alignment::Center)
-        .spacing(12),
-    )
-    .width(Length::Fill)
-    .height(Length::Fill)
-    .center_x()
-    .center_y()
-    .into()
+        .padding(4)
+        .spacing(4);
+        if let Some(map) = &server.next_map {
+            c = c.push(text(format!("Next map: {}", server.map)));
+        }
+        let c = c.push(row![text("Game modes:"), widgets::game_modes(game_modes, &server.game_modes)].spacing(4));
+        let c = c.push(text(format!("Valve secure: {}", yes_no(server.vac_secured))));
+        let c = c.push(text(format!("Role the dice: {}", yes_no(server.has_rtd))));
+        let c = c.push(text(format!("Password protected: {}", yes_no(server.need_password))));
+        let c = c.push(text(format!("Has \"all talk\" command: {}", yes_no(server.has_all_talk))));
+        let c = c.push(text(format!("No respawn time: {}", yes_no(server.has_no_respawn_time))));
+
+        column![
+            text(&server.name).size(28),
+            row![
+                thumbnail(server, Length::Units(500), Length::Units(250)),
+                c,
+                horizontal_space(Length::Fill),
+            ]
+            .align_items(Alignment::Start)
+        ]
+        .spacing(4)
+        .padding(4)
+        .into()
+    }
 }

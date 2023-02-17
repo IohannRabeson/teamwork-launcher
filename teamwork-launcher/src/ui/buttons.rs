@@ -1,7 +1,7 @@
 use {
     crate::{
-        icons,
-        ui::{styles::SvgButtonIconStyle, SvgHandle},
+        icons::{self, SvgHandle},
+        ui::styles::SvgButtonIconStyle,
     },
     iced::{
         theme,
