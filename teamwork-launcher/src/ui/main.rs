@@ -1,3 +1,4 @@
+use iced::Background;
 use {
     crate::{
         application::{
@@ -84,8 +85,25 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
         ]
         .spacing(4),
     )
-    .padding([4, 14])
+    .padding(8)
+    .style(theme::Container::Custom(Box::new(ServerViewStyle{})))
     .into()
+}
+
+struct ServerViewStyle;
+
+impl container::StyleSheet for ServerViewStyle {
+    type Style = Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            text_color: None,
+            background: Some(Background::Color(Color::from([0.15, 0.15, 0.15]))),
+            border_radius: 6.0,
+            border_width: 1.0,
+            border_color: Color::from([0.30, 0.30, 0.30]),
+        }
+    }
 }
 
 fn servers_view<'l>(
@@ -96,11 +114,14 @@ fn servers_view<'l>(
 ) -> Element<'l, Message> {
     let servers = servers.iter().filter(|server| filter.accept(*server, bookmarks));
     let servers_list = container(scrollable(
-        servers.fold(column![], |c, server| c.push(server_view(server, bookmarks, game_modes))),
+        servers.fold(column![], |c, server| {
+            c.push(container(
+                server_view(server, bookmarks, game_modes))
+                .padding([4, 24 /* THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]))
+        }),
     ))
     .height(Length::Fill)
-    .width(Length::Fill)
-    .padding(4);
+    .width(Length::Fill);
 
     servers_list.into()
 }
