@@ -14,10 +14,10 @@ jobs:
         include:
           - os: windows-latest
             artifact_name: teamwork-launcher.exe
-            asset_name: teamwork-launcher
+            asset_name: teamwork-launcher-windows
           - os: macos-latest
             artifact_name: teamwork-launcher
-            asset_name: teamwork-launcher
+            asset_name: teamwork-launcher-osx
 
     steps:
       - uses: actions/checkout@v3
