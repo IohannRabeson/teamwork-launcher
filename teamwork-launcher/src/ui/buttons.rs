@@ -14,8 +14,8 @@ pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M>
     button(
         Svg::new(svg)
             .style(theme::Svg::Custom(Box::<SvgButtonIconStyle>::default()))
-            .width(Length::Units(size))
-            .height(Length::Units(size)),
+            .width(size)
+            .height(size),
     )
 }
 

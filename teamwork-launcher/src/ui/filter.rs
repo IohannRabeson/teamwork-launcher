@@ -182,7 +182,7 @@ fn property_switch<'l>(
     let selector = pick_list(PROPERTY_FILTER_VALUES.as_slice(), Some(property), f)
         .text_size(16)
         .padding([2, 4])
-        .width(Length::Units(80));
+        .width(80);
 
     row![text(label), horizontal_space(Length::Fill), selector].spacing(8).into()
 }

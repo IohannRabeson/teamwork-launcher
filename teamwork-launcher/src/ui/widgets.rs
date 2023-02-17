@@ -17,11 +17,11 @@ use {
 };
 
 pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'a, Message> {
-    let size = size - (padding * 2);
+    let size = Length::Fixed((size - (padding * 2)) as f32);
 
     match icons::flag(country.code()) {
         Some(icon) => tooltip(
-            container(svg(icon).width(Length::Units(size)).height(Length::Units(size))).padding(padding),
+            container(svg(icon).width(size).height(size)).padding(padding),
             country,
             iced::widget::tooltip::Position::Right,
         ),
@@ -39,9 +39,10 @@ pub fn ping_icon<'a>(duration: &Duration, size: u16) -> Element<'a, Message> {
     } else {
         svg(icons::RECEPTION_VERY_BAD.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::VeryBad)))
     };
+    let size = Length::Fixed(size as f32);
 
     tooltip(
-        container(icon.width(Length::Units(size)).height(Length::Units(size))),
+        container(icon.width(size).height(size)),
         format!("{}ms", duration.as_millis()),
         Position::Bottom,
     )
