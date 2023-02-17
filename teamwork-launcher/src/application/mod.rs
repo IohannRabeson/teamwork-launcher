@@ -113,32 +113,6 @@ pub struct TeamworkLauncher {
 }
 
 impl TeamworkLauncher {
-    fn launch_game(&self, ip_port: &IpPort) -> Command<Message> {
-        match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
-            Err(error) => {
-                eprintln!("Error: {}", error);
-            }
-            Ok(()) => {
-                if self.user_settings.quit_on_launch {
-                    return iced::window::close();
-                }
-            }
-        }
-
-        Command::none()
-    }
-
-    fn copy_connection_string(&self, ip_port: IpPort) -> Command<Message> {
-        let connection_string = ip_port.steam_connection_string();
-
-        match self.user_settings.quit_on_copy {
-            false => Command::batch([iced::clipboard::write(connection_string)]),
-            true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
-        }
-    }
-}
-
-impl TeamworkLauncher {
     fn new_servers(&mut self, new_servers: Vec<Server>) {
         let countries: Vec<Country> = new_servers
             .iter()
@@ -301,6 +275,21 @@ impl TeamworkLauncher {
             FilterMessage::GameModeFilterEnabled(checked) => {
                 self.filter.game_modes.set_enabled(checked);
             }
+            FilterMessage::VacSecuredChanged(checked) => {
+                self.filter.vac_secured = checked;
+            }
+            FilterMessage::RtdChanged(checked) => {
+                self.filter.rtd = checked;
+            }
+            FilterMessage::AllTalkChanged(checked) => {
+                self.filter.all_talk = checked;
+            }
+            FilterMessage::NoRespawnTimeChanged(checked) => {
+                self.filter.no_respawn_time = checked;
+            }
+            FilterMessage::PasswordChanged(checked) => {
+                self.filter.password = checked;
+            }
         }
     }
 
@@ -371,6 +360,30 @@ impl TeamworkLauncher {
                     self.bookmarks.remove(&ip_port, source_key);
                 }
             }
+        }
+    }
+
+    fn launch_game(&self, ip_port: &IpPort) -> Command<Message> {
+        match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
+            Err(error) => {
+                eprintln!("Error: {}", error);
+            }
+            Ok(()) => {
+                if self.user_settings.quit_on_launch {
+                    return iced::window::close();
+                }
+            }
+        }
+
+        Command::none()
+    }
+
+    fn copy_connection_string(&self, ip_port: IpPort) -> Command<Message> {
+        let connection_string = ip_port.steam_connection_string();
+
+        match self.user_settings.quit_on_copy {
+            false => Command::batch([iced::clipboard::write(connection_string)]),
+            true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
         }
     }
 }

@@ -8,6 +8,7 @@ use {
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
+use crate::application::filter_servers::PropertyFilterSwitch;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -51,6 +52,11 @@ pub enum FilterMessage {
     GameModeChecked(GameModeId, bool),
     CountryFilterEnabled(bool),
     GameModeFilterEnabled(bool),
+    VacSecuredChanged(PropertyFilterSwitch),
+    RtdChanged(PropertyFilterSwitch),
+    AllTalkChanged(PropertyFilterSwitch),
+    NoRespawnTimeChanged(PropertyFilterSwitch),
+    PasswordChanged(PropertyFilterSwitch),
 }
 
 #[derive(Debug, Clone)]

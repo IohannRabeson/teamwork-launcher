@@ -1,3 +1,6 @@
+use std::collections::btree_map::Entry;
+use iced::Length;
+use iced::widget::pick_list;
 use {
     iced::widget::{slider, tooltip::Position},
     itertools::Itertools,
@@ -11,10 +14,11 @@ use {
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{checkbox, column, row, text, text_input},
+        widget::{checkbox, column, row, text, text_input, horizontal_space},
         Element,
     },
 };
+use crate::application::filter_servers::PropertyFilterSwitch;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -121,6 +125,71 @@ fn histogram<'l, T: Ord>(values: impl Iterator<Item = &'l T> + 'l) -> BTreeMap<&
 
         count
     })
+}
+
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+enum Property {
+    Rtd,
+    AllTalk,
+    NoRespawnTime,
+    Password,
+    VacSecured
+}
+
+fn increment_count(count: &mut BTreeMap<Property, usize>, property: Property) {
+    match count.entry(property) {
+        Entry::Vacant(vacant) => { vacant.insert(1usize); }
+        Entry::Occupied(mut occupied) => { *occupied.get_mut() += 1; }
+    }
+}
+
+/// Count how many servers with each properties.
+/// I can't use `histogram`.
+fn count_properties(servers: &[Server]) -> BTreeMap<Property, usize> {
+    let mut count = BTreeMap::new();
+
+    for server in servers {
+        if server.need_password {
+            increment_count(&mut count, Property::Password);
+        } else if server.has_no_respawn_time {
+            increment_count(&mut count, Property::NoRespawnTime);
+        } else if server.has_rtd {
+            increment_count(&mut count, Property::Rtd);
+        } else if server.has_all_talk {
+            increment_count(&mut count, Property::AllTalk);
+        } else if server.vac_secured {
+            increment_count(&mut count, Property::VacSecured);
+        }
+    }
+
+    count
+}
+
+const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
+    PropertyFilterSwitch::With,
+    PropertyFilterSwitch::Without,
+    PropertyFilterSwitch::Ignore,
+];
+
+fn property_switch<'l>(label: String, property: PropertyFilterSwitch, f: impl Fn(PropertyFilterSwitch) -> Message + 'l) -> Element<'l, Message> {
+    let selector = pick_list(PROPERTY_FILTER_VALUES.as_slice(), Some(property), f)
+        .text_size(16)
+        .padding([2, 4])
+        .width(Length::Units(80));
+
+    row![text(label), horizontal_space(Length::Fill), selector].spacing(8).into()
+}
+
+pub fn server_properties_filter<'l>(filter: &'l Filter, servers: &'l [Server]) -> Element<'l, Message> {
+    let counts = count_properties(servers);
+
+    column![
+        property_switch(format!("Valve secured ({})", counts.get(&Property::VacSecured).unwrap_or(&0)), filter.vac_secured, |checked|Message::Filter(FilterMessage::VacSecuredChanged(checked))),
+        property_switch(format!("Roll the dice ({})", counts.get(&Property::Rtd).unwrap_or(&0)), filter.rtd, |checked|Message::Filter(FilterMessage::RtdChanged(checked))),
+        property_switch(format!("All talk ({})", counts.get(&Property::AllTalk).unwrap_or(&0)), filter.all_talk, |checked|Message::Filter(FilterMessage::AllTalkChanged(checked))),
+        property_switch(format!("No respawn time ({})", counts.get(&Property::NoRespawnTime).unwrap_or(&0)), filter.no_respawn_time, |checked|Message::Filter(FilterMessage::NoRespawnTimeChanged(checked))),
+        property_switch(format!("Password ({})", counts.get(&Property::Password).unwrap_or(&0)), filter.password, |checked|Message::Filter(FilterMessage::PasswordChanged(checked))),
+    ].spacing(4).into()
 }
 
 #[cfg(test)]
