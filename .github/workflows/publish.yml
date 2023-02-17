@@ -13,22 +13,31 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: teamwork-launcher.exe
+            artifact_path: teamwork-launcher.exe
             asset_name: teamwork-launcher-windows
           - os: macos-latest
-            artifact_name: teamwork-launcher
-            asset_name: teamwork-launcher-osx
+            artifact_path: bundle/osx/teamwork-launcher.app
+            asset_name: teamwork-launcher-macos
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+      - name: Setup
+        run: cargo install cargo-bundle
       - name: Build
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 10.8
         run: cargo build --release --locked
+
+      - name: Bundle
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: cargo bundle --release
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
+          file: target/release/${{ matrix.artifact_path }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
