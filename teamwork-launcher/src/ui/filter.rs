@@ -1,24 +1,23 @@
-use std::collections::btree_map::Entry;
-use iced::Length;
-use iced::widget::pick_list;
 use {
-    iced::widget::{slider, tooltip::Position},
+    iced::{
+        widget::{pick_list, slider, tooltip::Position},
+        Length,
+    },
     itertools::Itertools,
-    std::collections::{btree_map, BTreeMap},
+    std::collections::{btree_map, btree_map::Entry, BTreeMap},
 };
 
 use {
     crate::{
-        application::{game_mode::GameModes, Filter, FilterMessage, Message, Server},
+        application::{filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message, Server},
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{checkbox, column, row, text, text_input, horizontal_space},
+        widget::{checkbox, column, horizontal_space, row, text, text_input},
         Element,
     },
 };
-use crate::application::filter_servers::PropertyFilterSwitch;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -133,13 +132,17 @@ enum Property {
     AllTalk,
     NoRespawnTime,
     Password,
-    VacSecured
+    VacSecured,
 }
 
 fn increment_count(count: &mut BTreeMap<Property, usize>, property: Property) {
     match count.entry(property) {
-        Entry::Vacant(vacant) => { vacant.insert(1usize); }
-        Entry::Occupied(mut occupied) => { *occupied.get_mut() += 1; }
+        Entry::Vacant(vacant) => {
+            vacant.insert(1usize);
+        }
+        Entry::Occupied(mut occupied) => {
+            *occupied.get_mut() += 1;
+        }
     }
 }
 
@@ -171,7 +174,11 @@ const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
     PropertyFilterSwitch::Ignore,
 ];
 
-fn property_switch<'l>(label: String, property: PropertyFilterSwitch, f: impl Fn(PropertyFilterSwitch) -> Message + 'l) -> Element<'l, Message> {
+fn property_switch<'l>(
+    label: String,
+    property: PropertyFilterSwitch,
+    f: impl Fn(PropertyFilterSwitch) -> Message + 'l,
+) -> Element<'l, Message> {
     let selector = pick_list(PROPERTY_FILTER_VALUES.as_slice(), Some(property), f)
         .text_size(16)
         .padding([2, 4])
@@ -184,12 +191,34 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, servers: &'l [Server]) -
     let counts = count_properties(servers);
 
     column![
-        property_switch(format!("Valve secured ({})", counts.get(&Property::VacSecured).unwrap_or(&0)), filter.vac_secured, |checked|Message::Filter(FilterMessage::VacSecuredChanged(checked))),
-        property_switch(format!("Roll the dice ({})", counts.get(&Property::Rtd).unwrap_or(&0)), filter.rtd, |checked|Message::Filter(FilterMessage::RtdChanged(checked))),
-        property_switch(format!("All talk ({})", counts.get(&Property::AllTalk).unwrap_or(&0)), filter.all_talk, |checked|Message::Filter(FilterMessage::AllTalkChanged(checked))),
-        property_switch(format!("No respawn time ({})", counts.get(&Property::NoRespawnTime).unwrap_or(&0)), filter.no_respawn_time, |checked|Message::Filter(FilterMessage::NoRespawnTimeChanged(checked))),
-        property_switch(format!("Password ({})", counts.get(&Property::Password).unwrap_or(&0)), filter.password, |checked|Message::Filter(FilterMessage::PasswordChanged(checked))),
-    ].spacing(4).into()
+        property_switch(
+            format!("Valve secured ({})", counts.get(&Property::VacSecured).unwrap_or(&0)),
+            filter.vac_secured,
+            |checked| Message::Filter(FilterMessage::VacSecuredChanged(checked))
+        ),
+        property_switch(
+            format!("Roll the dice ({})", counts.get(&Property::Rtd).unwrap_or(&0)),
+            filter.rtd,
+            |checked| Message::Filter(FilterMessage::RtdChanged(checked))
+        ),
+        property_switch(
+            format!("All talk ({})", counts.get(&Property::AllTalk).unwrap_or(&0)),
+            filter.all_talk,
+            |checked| Message::Filter(FilterMessage::AllTalkChanged(checked))
+        ),
+        property_switch(
+            format!("No respawn time ({})", counts.get(&Property::NoRespawnTime).unwrap_or(&0)),
+            filter.no_respawn_time,
+            |checked| Message::Filter(FilterMessage::NoRespawnTimeChanged(checked))
+        ),
+        property_switch(
+            format!("Password ({})", counts.get(&Property::Password).unwrap_or(&0)),
+            filter.password,
+            |checked| Message::Filter(FilterMessage::PasswordChanged(checked))
+        ),
+    ]
+    .spacing(4)
+    .into()
 }
 
 #[cfg(test)]

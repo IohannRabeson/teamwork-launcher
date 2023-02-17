@@ -100,22 +100,6 @@ impl container::StyleSheet for GameModeStyle {
     }
 }
 
-fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -> Element<'l, Message> {
-    match game_modes.get(&game_mode_id) {
-        None => text(game_mode_id.to_string()).into(),
-        Some(game_mode) => {
-            let inner = container(game_mode_view_inner(game_mode))
-                .style(theme::Container::Custom(Box::new(GameModeStyle::new(game_mode.color))))
-                .padding([2, 4]);
-
-            match game_mode.description.is_empty() {
-                false => tooltip(inner, &game_mode.description, Position::Bottom).into(),
-                true => inner.into(),
-            }
-        }
-    }
-}
-
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
@@ -213,8 +197,8 @@ impl container::StyleSheet for FilterSectionContainer {
 
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
-            text_color: Theme::Dark.palette().text.clone().into(),
-            background: Theme::Dark.palette().background.into(),
+            text_color: Dark.palette().text.clone().into(),
+            background: Dark.palette().background.into(),
             border_radius: 2.0,
             border_width: 1.0,
             border_color: Color::from([0.5, 0.5, 0.5]),
@@ -256,6 +240,22 @@ fn filter_section_with_switch<'l>(
         .width(Length::Fill)
         .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
         .padding(8)
+}
+
+fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -> Element<'l, Message> {
+    match game_modes.get(&game_mode_id) {
+        None => text(game_mode_id.to_string()).into(),
+        Some(game_mode) => {
+            let inner = container(game_mode_view_inner(game_mode))
+                .style(theme::Container::Custom(Box::new(GameModeStyle::new(game_mode.color))))
+                .padding([2, 4]);
+
+            match game_mode.description.is_empty() {
+                false => tooltip(inner, &game_mode.description, Position::Bottom).into(),
+                true => inner.into(),
+            }
+        }
+    }
 }
 
 mod thumbnail {

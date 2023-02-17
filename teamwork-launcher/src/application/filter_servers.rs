@@ -1,10 +1,10 @@
-use std::fmt::{Display, Formatter};
 use {
     crate::application::{
         country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks, PromisedValue,
         Server,
     },
     serde::{Deserialize, Serialize},
+    std::fmt::{Display, Formatter},
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq)]
@@ -17,9 +17,15 @@ pub enum PropertyFilterSwitch {
 impl Display for PropertyFilterSwitch {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            PropertyFilterSwitch::With => { write!(f, "Require") }
-            PropertyFilterSwitch::Without => { write!(f, "Reject") }
-            PropertyFilterSwitch::Ignore => { write!(f, "-") }
+            PropertyFilterSwitch::With => {
+                write!(f, "Require")
+            }
+            PropertyFilterSwitch::Without => {
+                write!(f, "Reject")
+            }
+            PropertyFilterSwitch::Ignore => {
+                write!(f, "-")
+            }
         }
     }
 }
@@ -27,15 +33,9 @@ impl Display for PropertyFilterSwitch {
 impl PropertyFilterSwitch {
     pub fn accept(&self, f: impl Fn(&Server) -> bool, server: &Server) -> bool {
         match self {
-            PropertyFilterSwitch::With => {
-                (f)(server)
-            }
-            PropertyFilterSwitch::Without => {
-                !(f)(server)
-            }
-            PropertyFilterSwitch::Ignore => {
-                true
-            }
+            PropertyFilterSwitch::With => (f)(server),
+            PropertyFilterSwitch::Without => !(f)(server),
+            PropertyFilterSwitch::Ignore => true,
         }
     }
 }
@@ -105,10 +105,10 @@ impl Filter {
         self.game_modes.accept(server)
     }
     fn filter_by_properties(&self, server: &Server) -> bool {
-        self.all_talk.accept(|s|s.has_all_talk, server) &&
-        self.vac_secured.accept(|s|s.vac_secured, server) &&
-        self.rtd.accept(|s|s.has_rtd, server) &&
-        self.no_respawn_time.accept(|s|s.has_no_respawn_time, server) &&
-        self.password.accept(|s|s.need_password, server)
+        self.all_talk.accept(|s| s.has_all_talk, server)
+            && self.vac_secured.accept(|s| s.vac_secured, server)
+            && self.rtd.accept(|s| s.has_rtd, server)
+            && self.no_respawn_time.accept(|s| s.has_no_respawn_time, server)
+            && self.password.accept(|s| s.need_password, server)
     }
 }

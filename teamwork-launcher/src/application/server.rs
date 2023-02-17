@@ -26,7 +26,6 @@ pub struct Server {
     pub has_all_talk: bool,
     pub has_random_crits: bool,
     pub need_password: bool,
-
 }
 
 impl Default for Server {
