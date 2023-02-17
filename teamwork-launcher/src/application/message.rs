@@ -65,6 +65,8 @@ pub enum SettingsMessage {
     SourceEnabled(SourceKey, bool),
     QuitWhenLaunchChecked(bool),
     QuitWhenCopyChecked(bool),
+    WindowMoved{ x: i32, y: i32 },
+    WindowResized{ width: u32, height: u32 }
 }
 
 #[derive(Debug, Clone)]

@@ -1,5 +1,4 @@
 mod bookmarks;
-mod common_settings;
 pub mod country;
 mod country_filter;
 pub mod fetch_servers;
@@ -18,7 +17,7 @@ pub mod server;
 pub mod servers_source;
 mod text_filter;
 mod thumbnail;
-mod user_settings;
+pub mod user_settings;
 mod views;
 
 use {
@@ -26,7 +25,7 @@ use {
         column,
         pane_grid::{self, Axis},
     },
-    std::{cmp::Ordering, path::PathBuf},
+    std::cmp::Ordering,
 };
 
 use {
@@ -64,8 +63,10 @@ use {
         message::KeyboardMessage,
         servers_source::{ServersSource, SourceKey},
     },
-    common_settings::{read_file, write_file},
+    crate::common_settings::write_file,
 };
+use crate::ApplicationFlags;
+use crate::common_settings::get_configuration_directory;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -223,6 +224,18 @@ impl TeamworkLauncher {
             }
             SettingsMessage::QuitWhenCopyChecked(checked) => {
                 self.user_settings.quit_on_copy = checked;
+            }
+            SettingsMessage::WindowMoved { x, y } => {
+                if let Some(settings) = &mut self.user_settings.window {
+                    settings.window_x = x;
+                    settings.window_y = y;
+                }
+            }
+            SettingsMessage::WindowResized { width, height } => {
+                if let Some(settings) = &mut self.user_settings.window {
+                    settings.window_width = width;
+                    settings.window_height = height;
+                }
             }
         }
     }
@@ -389,14 +402,6 @@ impl TeamworkLauncher {
     }
 }
 
-const APPLICATION_NAME: &str = "teamwork-launcher2";
-
-pub fn get_configuration_directory() -> PathBuf {
-    platform_dirs::AppDirs::new(APPLICATION_NAME.into(), false)
-        .map(|dirs| dirs.config_dir)
-        .expect("config directory path")
-}
-
 impl Drop for TeamworkLauncher {
     fn drop(&mut self) {
         let configuration_directory = get_configuration_directory();
@@ -451,37 +456,18 @@ impl iced::Application for TeamworkLauncher {
     type Executor = iced::executor::Default;
     type Message = Message;
     type Theme = iced::Theme;
-    type Flags = ();
+    type Flags = ApplicationFlags;
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let configuration_directory = get_configuration_directory();
-        let bookmarks: Bookmarks = read_file(&configuration_directory.join("bookmarks.json")).unwrap_or_default();
-        let user_settings: UserSettings = read_file(&configuration_directory.join("settings.json")).unwrap_or_default();
-        let filter: Filter = read_file(&configuration_directory.join("filters.json")).unwrap_or_default();
-        let servers_sources: Vec<ServersSource> =
-            read_file(&configuration_directory.join("sources.json")).unwrap_or_else(|error| {
-                eprintln!("Failed to read sources.json: {}", error);
-
-                vec![
-                    ServersSource::new("Payload", "https://teamwork.tf/api/v1/quickplay/payload/servers"),
-                    ServersSource::new("Payload Race", "https://teamwork.tf/api/v1/quickplay/payload-race/servers"),
-                    ServersSource::new("King Of The Hill", "https://teamwork.tf/api/v1/quickplay/koth/servers"),
-                    ServersSource::new("Capture The Flag", "https://teamwork.tf/api/v1/quickplay/ctf/servers"),
-                    ServersSource::new("Attack/Defend", "https://teamwork.tf/api/v1/quickplay/attack-defend/servers"),
-                    ServersSource::new("Control Point", "https://teamwork.tf/api/v1/quickplay/control-point/servers"),
-                    ServersSource::new("Medieval Mode", "https://teamwork.tf/api/v1/quickplay/medieval-mode/servers"),
-                ]
-            });
-
+    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
             Self {
-                views: Views::new(Screens::Main(MainView::new(user_settings.servers_filter_pane_ratio))),
+                views: Views::new(Screens::Main(MainView::new(flags.user_settings.servers_filter_pane_ratio))),
                 servers: Vec::new(),
-                user_settings,
-                filter,
-                servers_sources,
+                user_settings: flags.user_settings,
+                filter: flags.filter,
+                servers_sources: flags.servers_sources,
+                bookmarks: flags.bookmarks,
                 launcher: ExecutableLauncher::new(false),
-                bookmarks,
                 game_modes: GameModes::new(),
                 country_request_sender: None,
                 ping_request_sender: None,
@@ -616,7 +602,38 @@ impl iced::Application for TeamworkLauncher {
             game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
                 .map(Message::from),
             keyboard::subscription().map(Message::from),
+            window::subscription(),
         ])
+    }
+}
+
+mod window {
+    use iced::{Event, event, Subscription, subscription, window};
+    use crate::application::{Message, SettingsMessage};
+
+    pub fn subscription() -> Subscription<Message> {
+        subscription::events_with(|event, status| {
+            if let event::Status::Captured = status {
+                return None;
+            }
+
+            match event {
+                Event::Window(window_event) => {
+                    match window_event {
+                        window::Event::Moved { x, y } => {
+                            return Some(Message::Settings(SettingsMessage::WindowMoved { x, y }))
+                        }
+                        window::Event::Resized {width, height } => {
+                            return Some(Message::Settings(SettingsMessage::WindowResized { width, height }))
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+
+            None
+        })
     }
 }
 
@@ -636,14 +653,18 @@ mod keyboard {
                 return None;
             }
 
-            if let Event::Keyboard(keyboard::Event::KeyPressed { modifiers: _, key_code }) = event {
-                if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
-                    return Some(KeyboardMessage::ShiftPressed);
+            match event {
+                Event::Keyboard(keyboard::Event::KeyPressed { modifiers: _, key_code }) => {
+                    if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
+                        return Some(KeyboardMessage::ShiftPressed);
+                    }
                 }
-            } else if let Event::Keyboard(keyboard::Event::KeyReleased { modifiers: _, key_code }) = event {
-                if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
-                    return Some(KeyboardMessage::ShiftReleased);
+                Event::Keyboard(keyboard::Event::KeyReleased { modifiers: _, key_code }) => {
+                    if key_code == KeyCode::LShift || key_code == KeyCode::RShift {
+                        return Some(KeyboardMessage::ShiftReleased);
+                    }
                 }
+                _ => {}
             }
 
             None
