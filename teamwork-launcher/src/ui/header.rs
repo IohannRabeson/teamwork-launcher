@@ -27,6 +27,9 @@ pub fn header_view<'a>(title: &str, view: &Screens) -> Element<'a, Message> {
                 refresh_button(Message::RefreshServers),
             ]
         }
+        Screens::Server(_) => {
+            row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
+        }
         Screens::Settings => {
             row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
         }

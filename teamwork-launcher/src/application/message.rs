@@ -97,6 +97,7 @@ pub enum Message {
     Keyboard(KeyboardMessage),
     RefreshServers,
     ShowSettings,
+    ShowServer(IpPort),
     LaunchGame(IpPort),
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),

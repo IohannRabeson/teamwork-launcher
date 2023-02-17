@@ -14,6 +14,7 @@ pub struct Server {
     pub max_players_count: u8,
     pub current_players_count: u8,
     pub map: MapName,
+    pub next_map: Option<MapName>,
     pub map_thumbnail: PromisedValue<image::Handle>,
     pub ip_port: IpPort,
     pub country: PromisedValue<Country>,
@@ -35,6 +36,7 @@ impl Default for Server {
             max_players_count: Default::default(),
             current_players_count: Default::default(),
             map: Default::default(),
+            next_map: None,
             map_thumbnail: PromisedValue::None,
             ip_port: IpPort::default(),
             country: PromisedValue::None,
@@ -61,6 +63,7 @@ impl From<teamwork::Server> for Server {
         Server {
             name: server.name,
             map: MapName::new(server.map_name),
+            next_map: server.map_name_next.map(MapName::new),
             map_thumbnail: PromisedValue::Loading,
             current_players_count: server.players,
             max_players_count: server.max_players,

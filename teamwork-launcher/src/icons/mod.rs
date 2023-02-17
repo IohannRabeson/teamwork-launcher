@@ -27,6 +27,7 @@ lazy_static! {
     pub static ref RECEPTION_BAD: SvgHandle = SvgHandle::from_memory(include_bytes!("reception-2.svg").as_slice());
     pub static ref RECEPTION_OK: SvgHandle = SvgHandle::from_memory(include_bytes!("reception-3.svg").as_slice());
     pub static ref RECEPTION_GOOD: SvgHandle = SvgHandle::from_memory(include_bytes!("reception-4.svg").as_slice());
+    pub static ref INFO_ICON: SvgHandle = SvgHandle::from_memory(include_bytes!("info.svg").as_slice());
     pub static ref FLAGS: BTreeMap<String, SvgHandle> = FLAGS_SVG_ICONS
         .files()
         .filter_map(|entry| {

@@ -2,20 +2,20 @@ use {
     crate::{
         application::{
             game_mode::{GameMode, GameModeId, GameModes},
-            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, PromisedValue, Server,
+            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, Server,
         },
         icons,
         ui::{
             self,
             buttons::{favorite_button, svg_button},
-            widgets::{self, tooltip},
+            widgets::{self, ping, region, thumbnail, tooltip},
         },
     },
     iced::{
         theme,
         widget::{
-            column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, tooltip::Position, Container,
-            PaneGrid,
+            button, column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, tooltip::Position,
+            Container, PaneGrid,
         },
         Alignment, Color, Element, Length,
         Theme::{self, Dark},
@@ -42,77 +42,18 @@ pub fn view<'l>(
     column![textual_filters, pane_grid,].padding([8, 0]).spacing(4).into()
 }
 
-fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Message> {
-    match &server.country {
-        PromisedValue::Ready(country) => row![
-            text("Region:".to_string()),
-            horizontal_space(Length::Units(4)),
-            widgets::country_icon(country, size, padding)
-        ]
-        .into(),
-        PromisedValue::Loading => text("Region: loading...").into(),
-        PromisedValue::None => text("Region: unknown").into(),
-    }
-}
-
-fn ping<'a>(server: &Server) -> Element<'a, Message> {
-    match &server.ping {
-        PromisedValue::Ready(duration) => row![text("Ping:"), widgets::ping_icon(duration, 20),]
-            .spacing(4)
-            .align_items(Alignment::End)
-            .into(),
-        PromisedValue::Loading => text("Ping: loading...").into(),
-        PromisedValue::None => text("Ping: timeout").into(),
-    }
-}
-
-fn game_mode_view_inner(game_mode: &GameMode) -> Element<Message> {
-    match game_mode.color {
-        Some(_color) => text(&game_mode.title),
-        None => text(&game_mode.title),
-    }
-    .size(16)
-    .into()
-}
-
-struct GameModeStyle {
-    color: Color,
-}
-
-impl GameModeStyle {
-    pub fn new(color: Option<Color>) -> Self {
-        Self {
-            color: color.unwrap_or(Dark.palette().text),
-        }
-    }
-}
-
-impl container::StyleSheet for GameModeStyle {
-    type Style = Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
-        container::Appearance {
-            border_radius: 4.0,
-            border_width: 1.0,
-            border_color: self.color.clone(),
-            ..Default::default()
-        }
-    }
-}
-
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
-    let game_modes = server.game_modes.iter().fold(row![].spacing(4), |row, game_mode_id| {
-        row.push(game_mode_view(game_mode_id, game_modes))
-    });
+    let game_modes = widgets::game_modes(game_modes, &server.game_modes);
 
     container(
         row![
-            thumbnail::thumbnail(server),
+            thumbnail(server, Length::Units(250), Length::Units(125)),
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
+                    svg_button(icons::INFO_ICON.clone(), 20).on_press(Message::ShowServer(server.ip_port.clone())),
                     favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), 20)
                         .on_press(Message::CopyToClipboard(server.ip_port.steam_connection_string())),
@@ -127,11 +68,14 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                         ]
                         .spacing(4),
                         text(&server.map),
-                        text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
+                        text(&format!(
+                            "{} / {}",
+                            server.current_players_count, server.max_players_count
+                        )),
                     ]
                     .spacing(4),
                     horizontal_space(Length::Fill),
-                    column![region(server, 20, 0), ping(server), game_modes]
+                    column![region(server, 20, 0), row![text("Ping:"), ping(&server.ping)], game_modes]
                         .padding(4)
                         .spacing(4)
                         .align_items(Alignment::End)
@@ -240,60 +184,4 @@ fn filter_section_with_switch<'l>(
         .width(Length::Fill)
         .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
         .padding(8)
-}
-
-fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -> Element<'l, Message> {
-    match game_modes.get(&game_mode_id) {
-        None => text(game_mode_id.to_string()).into(),
-        Some(game_mode) => {
-            let inner = container(game_mode_view_inner(game_mode))
-                .style(theme::Container::Custom(Box::new(GameModeStyle::new(game_mode.color))))
-                .padding([2, 4]);
-
-            match game_mode.description.is_empty() {
-                false => tooltip(inner, &game_mode.description, Position::Bottom).into(),
-                true => inner.into(),
-            }
-        }
-    }
-}
-
-mod thumbnail {
-    use {
-        crate::{
-            application::{Message, PromisedValue, Server},
-            icons,
-        },
-        iced::{
-            widget::{container, image, text, Image},
-            Element, Length,
-        },
-    };
-
-    const THUMBNAIL_WIDTH: u16 = 250;
-    const THUMBNAIL_HEIGHT: u16 = 125;
-
-    fn image_thumbnail_viewer<'a>(image: image::Handle) -> Element<'a, Message> {
-        Image::new(image)
-            .width(Length::Units(THUMBNAIL_WIDTH))
-            .height(Length::Units(THUMBNAIL_HEIGHT))
-            .into()
-    }
-
-    fn image_thumbnail_content<'a>(server: &Server) -> Element<'a, Message> {
-        match &server.map_thumbnail {
-            PromisedValue::Ready(image) => image_thumbnail_viewer(image.clone()),
-            PromisedValue::Loading => return text("Loading").into(),
-            PromisedValue::None => image_thumbnail_viewer(icons::NO_IMAGE.clone()),
-        }
-    }
-
-    pub fn thumbnail<'a>(server: &Server) -> Element<'a, Message> {
-        container(image_thumbnail_content(server))
-            .width(Length::Units(THUMBNAIL_WIDTH))
-            .height(Length::Units(THUMBNAIL_HEIGHT))
-            .center_x()
-            .center_y()
-            .into()
-    }
 }

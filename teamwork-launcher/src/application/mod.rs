@@ -77,6 +77,7 @@ pub enum SettingsError {
 
 pub enum Screens {
     Main(MainView),
+    Server(IpPort),
     Settings,
 }
 
@@ -575,6 +576,9 @@ impl iced::Application for TeamworkLauncher {
             Message::CopyToClipboard(text) => {
                 return iced::clipboard::write(text);
             }
+            Message::ShowServer(ip_port) => {
+                self.views.push(Screens::Server(ip_port));
+            }
         }
 
         Command::none()
@@ -587,6 +591,7 @@ impl iced::Application for TeamworkLauncher {
             ui::header::header_view("Teamwork Launcher", current),
             match current {
                 Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes),
+                Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
         ]
