@@ -1,5 +1,6 @@
 [package]
 name = "teamwork-launcher"
+description = "Launcher for Team Fortress 2 that uses Teamwork.tf as data source."
 version = "0.2.0"
 edition = "2021"
 default-run = "teamwork-launcher"
@@ -34,4 +35,9 @@ test-case = "3.0.0"
 [build-dependencies]
 anyhow = "1.0"
 vergen = { version = "7", default-features = false, features = ["build", "rustc", "git"] }
+
+[package.metadata.bundle]
+identifier = "com.io.teamwork-launcher"
+copyright = "Copyright (c) Iohann Rabeson 2023. All rights reserved."
+osx_minimum_system_version = "10.8"
 
