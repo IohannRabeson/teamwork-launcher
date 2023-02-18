@@ -1,44 +1,12 @@
 use {
     crate::application::{
-        country_filter::CountryFilter, game_mode_filter::GameModeFilter, text_filter::TextFilter, Bookmarks, PromisedValue,
-        Server,
+        Bookmarks, country_filter::CountryFilter, game_mode_filter::GameModeFilter, PromisedValue, Server,
+        text_filter::TextFilter,
     },
     serde::{Deserialize, Serialize},
     std::fmt::{Display, Formatter},
 };
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq)]
-pub enum PropertyFilterSwitch {
-    With,
-    Without,
-    Ignore,
-}
-
-impl Display for PropertyFilterSwitch {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            PropertyFilterSwitch::With => {
-                write!(f, "Require")
-            }
-            PropertyFilterSwitch::Without => {
-                write!(f, "Reject")
-            }
-            PropertyFilterSwitch::Ignore => {
-                write!(f, "Ignore")
-            }
-        }
-    }
-}
-
-impl PropertyFilterSwitch {
-    pub fn accept(&self, f: impl Fn(&Server) -> bool, server: &Server) -> bool {
-        match self {
-            PropertyFilterSwitch::With => (f)(server),
-            PropertyFilterSwitch::Without => !(f)(server),
-            PropertyFilterSwitch::Ignore => true,
-        }
-    }
-}
+use crate::application::properties_filter::PropertyFilterSwitch;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -112,3 +80,4 @@ impl Filter {
             && self.password.accept(|s| s.need_password, server)
     }
 }
+
