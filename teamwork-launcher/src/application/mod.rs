@@ -411,6 +411,7 @@ impl TeamworkLauncher {
                     .flatten()
                 {
                     self.bookmarks.add(ip_port, source_key);
+                    self.servers_counts.bookmarks += 1;
                 }
             }
             false => {
@@ -422,6 +423,7 @@ impl TeamworkLauncher {
                     .flatten()
                 {
                     self.bookmarks.remove(&ip_port, source_key);
+                    self.servers_counts.bookmarks -= 1;
                 }
             }
         }
