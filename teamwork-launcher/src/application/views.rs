@@ -26,14 +26,6 @@ impl<V> Views<V> {
         self.views.pop();
     }
 
-    pub fn change(&mut self, new_view: V) {
-        let count = self.views.len();
-
-        if count > 0 {
-            self.views[count - 1] = new_view;
-        }
-    }
-
     pub fn clear(&mut self) {
         while !self.is_empty() {
             self.pop();

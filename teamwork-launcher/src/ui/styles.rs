@@ -1,6 +1,6 @@
 use iced::{
-    widget::{button, container, svg},
-    Background, Color, Theme, Vector,
+    widget::{container, svg},
+    Background, Color, Theme,
 };
 
 #[derive(Default)]
@@ -13,31 +13,6 @@ impl container::StyleSheet for ToolTip {
         container::Appearance {
             background: Some(Background::Color(Color::from_rgb(0.3, 0.3, 0.3))),
             border_radius: 4f32,
-            ..Default::default()
-        }
-    }
-}
-
-pub struct Announce {
-    background: Color,
-    text: Color,
-}
-
-impl Announce {
-    pub fn new(text: Color, background: Color) -> Self {
-        Self { text, background }
-    }
-}
-
-impl button::StyleSheet for Announce {
-    type Style = Theme;
-
-    fn active(&self, _style: &Self::Style) -> button::Appearance {
-        button::Appearance {
-            shadow_offset: Vector::new(0f32, 0f32),
-            background: Some(Background::Color(self.background.clone())),
-            border_radius: 3.0,
-            text_color: self.text.clone(),
             ..Default::default()
         }
     }
