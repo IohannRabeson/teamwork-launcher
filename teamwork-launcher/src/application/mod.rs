@@ -605,6 +605,11 @@ impl iced::Application for TeamworkLauncher {
     type Flags = ApplicationFlags;
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let load_font_command = Command::batch(vec![
+            iced::font::load(include_bytes!("../fonts/tf2build.ttf").as_slice())
+                .map(Message::FontLoaded),
+        ]);
+
         (
             Self {
                 views: Views::new(Screens::Main(MainView::new(flags.user_settings.servers_filter_pane_ratio))),
@@ -624,7 +629,7 @@ impl iced::Application for TeamworkLauncher {
                 system_info: None,
                 theme: Theme::Custom(Box::new(palettes::create_red_palette())),
             },
-            Command::none(),
+            load_font_command,
         )
     }
 
@@ -634,6 +639,7 @@ impl iced::Application for TeamworkLauncher {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
+            Message::FontLoaded(_) => (),
             Message::Servers(FetchServersMessage::FetchServersStart) => {
                 println!("Start");
             }

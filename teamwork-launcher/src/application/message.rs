@@ -106,6 +106,7 @@ pub enum Message {
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
     SystemInfoUpdated(system::Information),
+    FontLoaded(Result<(), iced::font::Error>),
     Back,
 }
 

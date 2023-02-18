@@ -9,22 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 
 [[package]]
-name = "ab_glyph"
-version = "0.2.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe21446ad43aa56417a767f3e2f3d7c4ca522904de1dd640529a76e9c5c3b33c"
-dependencies = [
- "ab_glyph_rasterizer",
- "owned_ttf_parser",
-]
-
-[[package]]
-name = "ab_glyph_rasterizer"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c71b1793ee61086797f5c80b6efa2b8ffa6d5dd703f118545808a7f2e27f7046"
-
-[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -37,6 +21,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
 dependencies = [
  "getrandom",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
+name = "ahash"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f"
+dependencies = [
+ "cfg-if",
  "once_cell",
  "version_check",
 ]
@@ -424,6 +419,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmic-text"
+version = "0.6.0"
+source = "git+https://github.com/hecrj/cosmic-text?rev=dc83efbf00a2efb4118403538e8a47bfd69c3e5e#dc83efbf00a2efb4118403538e8a47bfd69c3e5e"
+dependencies = [
+ "fontdb 0.10.0",
+ "libm",
+ "log",
+ "ouroboros 0.15.6",
+ "rangemap",
+ "rustybuzz 0.6.0",
+ "swash",
+ "sys-locale",
+ "unicode-bidi",
+ "unicode-linebreak",
+ "unicode-script",
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -711,6 +725,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "etagere"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6301151a318f367f392c31395beb1cfba5ccd9abc44d1db0db3a4b27b9601c89"
+dependencies = [
+ "euclid",
+ "svg_fmt",
+]
+
+[[package]]
 name = "euclid"
 version = "0.22.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -813,6 +837,17 @@ dependencies = [
  "log",
  "memmap2 0.3.1",
  "ttf-parser 0.12.3",
+]
+
+[[package]]
+name = "fontdb"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8131752b3f3b876a20f42b3d08233ad177d6e7ec6d18aaa6954489a201071be5"
+dependencies = [
+ "log",
+ "memmap2 0.5.9",
+ "ttf-parser 0.17.1",
 ]
 
 [[package]]
@@ -1070,53 +1105,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "glow_glyph"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f4e62c64947b9a24fe20e2bba9ad819ecb506ef5c8df7ffc4737464c6df9510"
+name = "glyphon"
+version = "0.2.0"
+source = "git+https://github.com/hecrj/glyphon.git?rev=65b481d758f50fd13fc21af2cc5ef62ddee64955#65b481d758f50fd13fc21af2cc5ef62ddee64955"
 dependencies = [
- "bytemuck",
- "glow",
- "glyph_brush",
- "log",
-]
-
-[[package]]
-name = "glyph_brush"
-version = "0.7.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b773a724cb29f6119043a46bd2fc6bfedce59ab9898a3c07df66082acbea0ca"
-dependencies = [
- "glyph_brush_draw_cache",
- "glyph_brush_layout",
- "ordered-float",
- "rustc-hash",
- "twox-hash",
-]
-
-[[package]]
-name = "glyph_brush_draw_cache"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6010675390f6889e09a21e2c8b575b3ee25667ea8237a8d59423f73cb8c28610"
-dependencies = [
- "ab_glyph",
- "crossbeam-channel",
- "crossbeam-deque",
- "linked-hash-map",
- "rayon",
- "rustc-hash",
-]
-
-[[package]]
-name = "glyph_brush_layout"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc32c2334f00ca5ac3695c5009ae35da21da8c62d255b5b96d56e2597a637a38"
-dependencies = [
- "ab_glyph",
- "approx",
- "xi-unicode",
+ "cosmic-text",
+ "etagere",
+ "lru",
+ "wgpu",
 ]
 
 [[package]]
@@ -1146,7 +1142,7 @@ checksum = "0b0c02e1ba0bdb14e965058ca34e09c020f8e507a760df1121728e0aef68d57a"
 dependencies = [
  "bitflags",
  "gpu-descriptor-types",
- "hashbrown",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -1202,7 +1198,16 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 dependencies = [
- "ahash",
+ "ahash 0.7.6",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
+dependencies = [
+ "ahash 0.8.3",
 ]
 
 [[package]]
@@ -1306,11 +1311,10 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "iced_core",
  "iced_futures",
- "iced_glow",
  "iced_graphics",
  "iced_native",
  "iced_wgpu",
@@ -1322,7 +1326,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "bitflags",
  "instant",
@@ -1332,7 +1336,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.5.1"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "futures",
  "log",
@@ -1342,24 +1346,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "iced_glow"
-version = "0.6.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
-dependencies = [
- "bytemuck",
- "euclid",
- "glow",
- "glow_glyph",
- "glyph_brush",
- "iced_graphics",
- "iced_native",
- "log",
-]
-
-[[package]]
 name = "iced_graphics"
 version = "0.6.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -1379,16 +1368,16 @@ dependencies = [
 [[package]]
 name = "iced_lazy"
 version = "0.4.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "iced_native",
- "ouroboros",
+ "ouroboros 0.13.0",
 ]
 
 [[package]]
 name = "iced_native"
 version = "0.8.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1401,7 +1390,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.6.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "iced_core",
  "once_cell",
@@ -1411,27 +1400,30 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.8.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "bitflags",
  "bytemuck",
  "encase",
  "futures",
  "glam",
- "glyph_brush",
+ "glyphon",
  "guillotiere",
  "iced_graphics",
  "iced_native",
  "log",
+ "once_cell",
+ "ouroboros 0.15.6",
  "raw-window-handle 0.5.0",
+ "rustc-hash",
+ "twox-hash",
  "wgpu",
- "wgpu_glyph",
 ]
 
 [[package]]
 name = "iced_winit"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#c6218cbc5532551456c0491eb5aa66dfc5f36879"
+source = "git+https://github.com/iced-rs/iced?branch=text-glyphon#b5815b9918fb8a1d6538d98a0f2d6e80a048368d"
 dependencies = [
  "iced_futures",
  "iced_graphics",
@@ -1506,7 +1498,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1885e79c1fc4b10f0e172c475f458b7f7b93061064d98c3293e98c5ba0c8b399"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -1660,6 +1652,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libm"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
+
+[[package]]
 name = "libz-sys"
 version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1670,12 +1668,6 @@ dependencies = [
  "pkg-config",
  "vcpkg",
 ]
-
-[[package]]
-name = "linked-hash-map"
-version = "0.5.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
 name = "lock_api"
@@ -1694,6 +1686,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "lru"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71e7d46de488603ffdd5f30afbc64fbba2378214a2c3a2fb83abf3d33126df17"
+dependencies = [
+ "hashbrown 0.13.2",
 ]
 
 [[package]]
@@ -2144,23 +2145,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "ordered-float"
-version = "3.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "ouroboros"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f357ef82d1b4db66fbed0b8d542cbd3c22d0bf5b393b3c257b9ba4568e70c9c3"
 dependencies = [
  "aliasable",
- "ouroboros_macro",
+ "ouroboros_macro 0.13.0",
  "stable_deref_trait",
+]
+
+[[package]]
+name = "ouroboros"
+version = "0.15.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1358bd1558bd2a083fed428ffeda486fbfb323e698cdda7794259d592ca72db"
+dependencies = [
+ "aliasable",
+ "ouroboros_macro 0.15.6",
 ]
 
 [[package]]
@@ -2177,12 +2179,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "owned_ttf_parser"
-version = "0.18.1"
+name = "ouroboros_macro"
+version = "0.15.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e25e9fb15717794fae58ab55c26e044103aad13186fbb625893f9a3bbcc24228"
+checksum = "5f7d21ccd03305a674437ee1248f3ab5d4b1db095cf1caf49f1713ddf61956b7"
 dependencies = [
- "ttf-parser 0.18.1",
+ "Inflector",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2513,6 +2519,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8a99fddc9f0ba0a85884b8d14e3592853e787d581ca1816c91349b10e4eeab"
 
 [[package]]
+name = "rangemap"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b9283c6b06096b47afc7109834fdedab891175bb5241ee5d4f7d2546549f263"
+
+[[package]]
 name = "raw-window-handle"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2724,7 +2736,24 @@ dependencies = [
  "ttf-parser 0.12.3",
  "unicode-bidi-mirroring",
  "unicode-ccc",
- "unicode-general-category",
+ "unicode-general-category 0.4.0",
+ "unicode-script",
+]
+
+[[package]]
+name = "rustybuzz"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab9e34ecf6900625412355a61bda0bd68099fe674de707c67e5e4aed2c05e489"
+dependencies = [
+ "bitflags",
+ "bytemuck",
+ "libm",
+ "smallvec",
+ "ttf-parser 0.17.1",
+ "unicode-bidi-mirroring",
+ "unicode-ccc",
+ "unicode-general-category 0.6.0",
  "unicode-script",
 ]
 
@@ -3044,6 +3073,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "swash"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bb18e5888a9b5f0a89ea3ebdf6883dc479347ca9183b6c51a8f9cf2041f23a0"
+dependencies = [
+ "yazi",
+ "zeno",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3052,6 +3091,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sys-locale"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3358acbb4acd4146138b9bda219e904a6bb5aaaa237f8eed06f4d6bc1580ecee"
+dependencies = [
+ "js-sys",
+ "libc",
+ "wasm-bindgen",
+ "web-sys",
+ "winapi",
 ]
 
 [[package]]
@@ -3437,9 +3489,9 @@ checksum = "7ae2f58a822f08abdaf668897e96a5656fe72f5a9ce66422423e8849384872e6"
 
 [[package]]
 name = "ttf-parser"
-version = "0.18.1"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0609f771ad9c6155384897e1df4d948e692667cc0588548b68eb44d052b27633"
+checksum = "375812fa44dab6df41c195cd2f7fecb488f6c09fbaafb62807488cefab642bff"
 
 [[package]]
 name = "twox-hash"
@@ -3477,10 +3529,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07547e3ee45e28326cc23faac56d44f58f16ab23e413db526debce3b0bfd2742"
 
 [[package]]
+name = "unicode-general-category"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2281c8c1d221438e373249e065ca4989c4c36952c211ff21a0ee91c44a3869e7"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84a22b9f218b40614adcb3f4ff08b703773ad44fa9423e4e0d346d5db86e4ebc"
+
+[[package]]
+name = "unicode-linebreak"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5faade31a542b8b35855fff6e8def199853b2da8da256da52f52f1316ee3137"
+dependencies = [
+ "hashbrown 0.12.3",
+ "regex",
+]
 
 [[package]]
 name = "unicode-normalization"
@@ -3548,13 +3616,13 @@ dependencies = [
  "data-url",
  "flate2",
  "float-cmp",
- "fontdb",
+ "fontdb 0.6.2",
  "kurbo",
  "log",
  "pico-args",
  "rctree",
  "roxmltree",
- "rustybuzz",
+ "rustybuzz 0.4.0",
  "simplecss",
  "siphasher",
  "svgtypes",
@@ -3881,18 +3949,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wgpu_glyph"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cafb82773e0f124a33674dab5de4dff73175aeb921949047ab014efb58fb446"
-dependencies = [
- "bytemuck",
- "glyph_brush",
- "log",
- "wgpu",
-]
-
-[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4153,12 +4209,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xi-unicode"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a67300977d3dc3f8034dae89778f502b6ba20b269527b3223ba59c0cf393bb8a"
-
-[[package]]
 name = "xml-rs"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4175,6 +4225,18 @@ name = "xmlwriter"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
+
+[[package]]
+name = "yazi"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c03b3e19c937b5b9bd8e52b1c88f30cce5c0d33d676cf174866175bb794ff658"
+
+[[package]]
+name = "zeno"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c110ba09c9b3a43edd4803d570df0da2414fed6e822e22b976a4e3ef50860701"
 
 [[package]]
 name = "zune-inflate"

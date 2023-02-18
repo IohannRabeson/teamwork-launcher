@@ -11,7 +11,6 @@ use {
 
 mod application;
 mod common_settings;
-mod fonts;
 mod icons;
 mod ui;
 

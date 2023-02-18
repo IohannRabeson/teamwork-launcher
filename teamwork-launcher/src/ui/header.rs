@@ -1,3 +1,4 @@
+use iced::Font;
 use {
     super::{buttons::svg_button, widgets::tooltip},
     crate::{
@@ -40,9 +41,11 @@ pub fn header_view<'a>(title: &str, view: &Screens) -> Element<'a, Message> {
     .into()
 }
 
+const TITLE_FONT: Font = Font::Name("TF2 Build");
+
 fn title_widget<'a>(title: &str) -> Element<'a, Message> {
     row![
-        text(title).font(crate::fonts::TF2_BUILD).size(TITLE_FONT_SIZE),
+        text(title).font(TITLE_FONT).size(TITLE_FONT_SIZE),
         text(format!("{}-{}", APPLICATION_VERSION, GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
     ]
     .into()
