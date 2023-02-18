@@ -24,7 +24,7 @@ impl Display for PropertyFilterSwitch {
                 write!(f, "Reject")
             }
             PropertyFilterSwitch::Ignore => {
-                write!(f, "-")
+                write!(f, "Ignore")
             }
         }
     }
