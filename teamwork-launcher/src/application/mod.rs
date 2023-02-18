@@ -185,17 +185,17 @@ impl TeamworkLauncher {
             }
         }
 
-        for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique().cloned() {
+        for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique() {
             if let Some(country_sender) = &mut self.country_request_sender {
                 country_sender
-                    .send(ip.clone())
+                    .send(*ip)
                     .unwrap_or_else(|e| eprintln!("country sender {}", e))
                     .now_or_never();
             }
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
-                    .send(ip.clone())
+                    .send(*ip)
                     .unwrap_or_else(|e| eprintln!("ping sender {}", e))
                     .now_or_never();
             }
@@ -209,7 +209,7 @@ impl TeamworkLauncher {
         });
         self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
-        self.servers_counts.game_modes = Self::histogram(self.servers.iter().map(|server| server.game_modes.clone()).flatten())
+        self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()))
     }
 
     fn sort_servers(l: &Server, r: &Server) -> Ordering {
@@ -228,7 +228,7 @@ impl TeamworkLauncher {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = PromisedValue::Ready(country.clone());
         }
-        self.servers_counts.add_country(country.clone());
+        self.servers_counts.add_country(country);
     }
 
     fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
@@ -400,6 +400,7 @@ impl TeamworkLauncher {
         urls
     }
 
+    #[allow(clippy::map_flatten)]
     fn bookmark(&mut self, ip_port: IpPort, bookmarked: bool) {
         match bookmarked {
             true => {
@@ -701,7 +702,7 @@ impl iced::Application for TeamworkLauncher {
         use iced::futures::StreamExt;
 
         let urls = self.get_sources_urls();
-        let server_stream = fetch_servers(urls).map(|event| Message::from(event));
+        let server_stream = fetch_servers(urls).map(Message::from);
 
         Subscription::batch([
             subscription::run(self.fetch_servers_subscription_id, server_stream),
@@ -726,19 +727,12 @@ mod window {
                 return None;
             }
 
-            match event {
-                Event::Window(window_event) => {
-                    match window_event {
-                        window::Event::Moved { x, y } => {
-                            return Some(Message::Settings(SettingsMessage::WindowMoved { x, y }))
-                        }
-                        window::Event::Resized {width, height } => {
-                            return Some(Message::Settings(SettingsMessage::WindowResized { width, height }))
-                        }
-                        _ => {}
-                    }
-                }
-                _ => {}
+            if let Event::Window(window::Event::Moved { x, y }) = event {
+                return Some(Message::Settings(SettingsMessage::WindowMoved { x, y }))
+            }
+
+            if let Event::Window(window::Event::Resized {width, height }) = event {
+                return Some(Message::Settings(SettingsMessage::WindowResized { width, height }))
             }
 
             None

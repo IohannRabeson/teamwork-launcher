@@ -78,11 +78,11 @@ impl Default for Filter {
 impl Filter {
     pub fn accept(&self, server: &Server, bookmarks: &Bookmarks) -> bool {
         self.filter_by_bookmark(server, bookmarks)
-            && self.filter_by_text(&server)
-            && self.filter_by_countries(&server)
-            && self.filter_by_ping(&server)
-            && self.filter_by_game_mode(&server)
-            && self.filter_by_properties(&server)
+            && self.filter_by_text(server)
+            && self.filter_by_countries(server)
+            && self.filter_by_ping(server)
+            && self.filter_by_game_mode(server)
+            && self.filter_by_properties(server)
     }
 
     fn filter_by_countries(&self, server: &Server) -> bool {

@@ -21,12 +21,10 @@ impl ProcessDetection {
 
 impl Default for ProcessDetection {
     fn default() -> Self {
-        let this = Self {
+        Self {
             system: RefCell::new(System::new_with_specifics(
                 RefreshKind::new().with_processes(ProcessRefreshKind::new()),
             )),
-        };
-
-        this
+        }
     }
 }

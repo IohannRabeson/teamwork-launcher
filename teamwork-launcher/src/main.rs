@@ -35,11 +35,11 @@ fn load_settings() -> Settings<ApplicationFlags> {
 
     println!("Configuration directory: {}", configuration_directory.display());
 
-    let bookmarks: Bookmarks = read_file(&configuration_directory.join("bookmarks.json")).unwrap_or_default();
-    let mut user_settings: UserSettings = read_file(&configuration_directory.join("settings.json")).unwrap_or_default();
-    let filter: Filter = read_file(&configuration_directory.join("filters.json")).unwrap_or_default();
+    let bookmarks: Bookmarks = read_file(configuration_directory.join("bookmarks.json")).unwrap_or_default();
+    let mut user_settings: UserSettings = read_file(configuration_directory.join("settings.json")).unwrap_or_default();
+    let filter: Filter = read_file(configuration_directory.join("filters.json")).unwrap_or_default();
     let servers_sources: Vec<ServersSource> =
-        read_file(&configuration_directory.join("sources.json")).unwrap_or_else(|error| {
+        read_file(configuration_directory.join("sources.json")).unwrap_or_else(|error| {
             eprintln!("Failed to read sources.json: {}", error);
 
             vec![
