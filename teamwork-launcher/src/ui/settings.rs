@@ -5,7 +5,7 @@ use {
         ui::SettingsMessage,
     },
     iced::{
-        widget::{checkbox, pick_list, column, container, text, text_input},
+        widget::{checkbox, pick_list, column, container, text, text_input, scrollable},
         Element, Length,
     },
 };
@@ -18,7 +18,7 @@ const THEMES: [LauncherTheme; 2] = [
 ];
 
 pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], system_info: Option<&'l system::Information>) -> Element<'l, Message> {
-    column![
+    scrollable(column![
         field(
             Some("Teamwork.tf API key"),
             None,
@@ -79,9 +79,9 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], system
             pick_list(THEMES.as_slice(), Some(settings.theme), |value|Message::Settings(SettingsMessage::ThemeChanged(value))),
         )
     ]
-    .height(Length::Fill)
     .padding(8)
-    .spacing(8)
+    .spacing(8))
+        .height(Length::Fill)
     .into()
 }
 
