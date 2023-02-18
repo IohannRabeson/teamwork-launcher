@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
-#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum PromisedValue<T: Clone + Hash + Debug> {
     Ready(T),
     Loading,

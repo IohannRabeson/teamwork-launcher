@@ -2,8 +2,15 @@ use iced::{system, widget::pane_grid};
 
 use {
     crate::application::{
-        game_mode::GameModeId, geolocation, map::MapName, ping, properties_filter::PropertyFilterSwitch,
-        servers_source::SourceKey, user_settings::LauncherTheme, Country, FetchServersEvent, IpPort, Server,
+        game_mode::GameModeId,
+        geolocation,
+        map::MapName,
+        ping,
+        properties_filter::PropertyFilterSwitch,
+        servers_source::SourceKey,
+        sort_servers::{SortCriterion, SortDirection},
+        user_settings::LauncherTheme,
+        Country, FetchServersEvent, IpPort, Server,
     },
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
@@ -56,6 +63,8 @@ pub enum FilterMessage {
     AllTalkChanged(PropertyFilterSwitch),
     NoRespawnTimeChanged(PropertyFilterSwitch),
     PasswordChanged(PropertyFilterSwitch),
+    SortCriterionChanged(SortCriterion),
+    SortDirectionChanged(SortDirection),
 }
 
 #[derive(Debug, Clone)]

@@ -16,6 +16,7 @@ pub mod promised_value;
 pub mod properties_filter;
 pub mod server;
 pub mod servers_source;
+pub mod sort_servers;
 mod text_filter;
 mod thumbnail;
 pub mod user_settings;
@@ -31,7 +32,6 @@ use {
         Background, Color, Theme,
     },
     std::{
-        cmp::Ordering,
         collections::{
             btree_map::Entry::{Occupied, Vacant},
             BTreeMap,
@@ -59,7 +59,7 @@ use crate::{
         map::MapName,
         message::KeyboardMessage,
         servers_source::{ServersSource, SourceKey},
-        user_settings::LauncherTheme,
+        sort_servers::{sort_servers, SortDirection},
     },
     common_settings::{get_configuration_directory, write_file},
     ApplicationFlags,
@@ -174,10 +174,12 @@ impl TeamworkLauncher {
 
         self.filter.country.extend_available(&countries);
         self.servers.extend(new_servers.into_iter());
-        self.servers.sort_by(Self::sort_servers);
+        self.sort_server();
     }
 
     fn on_finish(&mut self) {
+        self.sort_server();
+
         let mut servers_refs: Vec<&Server> = self.servers.iter().collect();
 
         servers_refs.sort_by(|l, r| {
@@ -219,14 +221,11 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries =
+            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
-        self.servers_counts.timeouts = self.servers.iter().filter(|server|server.ping.is_none()).count();
-    }
-
-    fn sort_servers(l: &Server, r: &Server) -> Ordering {
-        l.ip_port.cmp(&r.ip_port)
+        self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
     }
 
     fn refresh_servers(&mut self) {
@@ -251,8 +250,6 @@ impl TeamworkLauncher {
             }
 
             server.ping = duration.into();
-
-
         }
     }
 
@@ -376,6 +373,25 @@ impl TeamworkLauncher {
             }
             FilterMessage::PasswordChanged(checked) => {
                 self.filter.password = checked;
+            }
+            FilterMessage::SortCriterionChanged(criterion) => {
+                self.filter.sort_criterion = criterion;
+                self.sort_server();
+            }
+            FilterMessage::SortDirectionChanged(direction) => {
+                self.filter.sort_direction = direction;
+                self.sort_server();
+            }
+        }
+    }
+
+    fn sort_server(&mut self) {
+        match self.filter.sort_direction {
+            SortDirection::Ascending => {
+                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, l, r));
+            }
+            SortDirection::Descending => {
+                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, r, l));
             }
         }
     }
