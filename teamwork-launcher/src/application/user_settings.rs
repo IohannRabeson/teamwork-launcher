@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Clone)]
@@ -8,6 +9,21 @@ pub struct WindowSettings {
     pub window_height: u32,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum LauncherTheme {
+    Red,
+    Blue,
+}
+
+impl Display for LauncherTheme {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            LauncherTheme::Red => write!(f, "Red"),
+            LauncherTheme::Blue => write!(f, "Blue"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserSettings {
     pub teamwork_api_key: String,
@@ -15,6 +31,7 @@ pub struct UserSettings {
     pub servers_filter_pane_ratio: f32,
     pub quit_on_launch: bool,
     pub quit_on_copy: bool,
+    pub theme: LauncherTheme,
     #[serde(default)]
     pub window: Option<WindowSettings>,
 }
@@ -28,6 +45,7 @@ impl Default for UserSettings {
             quit_on_launch: false,
             quit_on_copy: false,
             window: None,
+            theme: LauncherTheme::Red,
         }
     }
 }

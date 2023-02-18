@@ -49,6 +49,7 @@ pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l I
         ]
         .align_items(Alignment::Start)
     ]
+    .height(Length::Fill)
     .spacing(4)
     .padding(4)
     .into()

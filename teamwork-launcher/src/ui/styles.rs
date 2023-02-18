@@ -1,6 +1,6 @@
 use iced::{
-    widget::{container, svg},
-    Background, Color, Theme,
+    Background,
+    Color, Theme, widget::{container, svg},
 };
 
 #[derive(Default)]
@@ -47,6 +47,21 @@ impl svg::StyleSheet for ColoredPingIndicatorStyle {
                 ColoredPingIndicatorStyle::Bad => Color::from_rgb8(255, 255, 0),
                 ColoredPingIndicatorStyle::VeryBad => Color::from_rgb8(255, 0, 0),
             }),
+        }
+    }
+}
+
+pub struct BoxContainerStyle;
+
+impl container::StyleSheet for BoxContainerStyle {
+    type Style = Theme;
+
+    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+        let background = style.palette().background;
+
+        container::Appearance {
+            background: background.into(),
+            ..Default::default()
         }
     }
 }

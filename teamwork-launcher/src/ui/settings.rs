@@ -1,14 +1,21 @@
-use iced::system;
+use iced::{system, theme};
 use {
     crate::{
         application::{servers_source::ServersSource, Message, UserSettings},
         ui::SettingsMessage,
     },
     iced::{
-        widget::{checkbox, column, container, text, text_input, vertical_space},
+        widget::{checkbox, pick_list, column, container, text, text_input},
         Element, Length,
     },
 };
+use crate::application::user_settings::LauncherTheme;
+use crate::ui::styles::BoxContainerStyle;
+
+const THEMES: [LauncherTheme; 2] = [
+    LauncherTheme::Blue,
+    LauncherTheme::Red,
+];
 
 pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], system_info: Option<&'l system::Information>) -> Element<'l, Message> {
     column![
@@ -65,25 +72,31 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], system
                     None => String::from("Loading"),
                 }
             ))
+        ),
+        field(
+            Some("Team"),
+            None,
+            pick_list(THEMES.as_slice(), Some(settings.theme), |value|Message::Settings(SettingsMessage::ThemeChanged(value))),
         )
     ]
+    .height(Length::Fill)
     .padding(8)
-    .spacing(4)
+    .spacing(8)
     .into()
 }
 
-fn section_title<'a, Message>(label: &str) -> Element<'a, Message> {
-    text(label).size(25).into()
+fn section_title(label: &str) -> Element<Message> {
+    container(text(label).size(25)).padding(8).into()
 }
 
 /// Compose a field by creating a label and an element.
 fn field<'a>(
-    label: Option<&str>,
-    description: Option<&str>,
+    label: Option<&'a str>,
+    description: Option<&'a str>,
     field: impl Into<Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let mut content = match label {
-        Some(label) => column![section_title(label), vertical_space(Length::Fixed(4.0)),],
+        Some(label) => column![section_title(label)],
         None => column![],
     };
 
@@ -91,5 +104,5 @@ fn field<'a>(
         content = content.push(container(text(description).size(16)).padding(8))
     }
 
-    content.push(container(field).padding(8).width(Length::Fill)).into()
+    container(content.push(container(field).padding(8).width(Length::Fill))).style(theme::Container::Custom(Box::new(BoxContainerStyle{}))).into()
 }
