@@ -75,7 +75,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                     horizontal_space(Length::Fill),
                     column![
                         region(server, BUTTON_SIZE, 0),
-                        row![text("Ping:"), ping(&server.ping)],
+                        row![text("Ping:"), ping(&server.ping)].spacing(4),
                         game_modes
                     ]
                     .padding(4)
