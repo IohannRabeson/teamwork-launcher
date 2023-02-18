@@ -20,6 +20,8 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
+use std::collections::{btree_map, BTreeMap};
+use std::collections::btree_map::Entry::{Occupied, Vacant};
 use {
     iced::widget::{
         column,
@@ -65,6 +67,7 @@ use {
     },
     crate::common_settings::write_file,
 };
+use crate::application::game_mode::GameModeId;
 use crate::ApplicationFlags;
 use crate::common_settings::get_configuration_directory;
 
@@ -98,9 +101,42 @@ impl MainView {
     }
 }
 
+#[derive(Default)]
+pub struct ServersCounts {
+    pub bookmarks: usize,
+    pub countries: BTreeMap<Country, usize>,
+    pub game_modes: BTreeMap<GameModeId, usize>,
+    pub properties: BTreeMap<Property, usize>,
+}
+
+impl ServersCounts {
+    pub fn reset(&mut self) {
+        *self = ServersCounts::default();
+    }
+
+    pub fn add_country(&mut self, country: Country) {
+        match self.countries.entry(country) {
+            Vacant(vacant) => { vacant.insert(1); },
+            Occupied(mut occupied) => { *occupied.get_mut() += 1; },
+        };
+    }
+}
+
+
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Property {
+    Rtd,
+    AllTalk,
+    NoRespawnTime,
+    Password,
+    VacSecured,
+}
+
+
 pub struct TeamworkLauncher {
     views: Views<Screens>,
     servers: Vec<Server>,
+    servers_counts: ServersCounts,
     user_settings: UserSettings,
     filter: Filter,
     servers_sources: Vec<ServersSource>,
@@ -162,6 +198,16 @@ impl TeamworkLauncher {
                     .now_or_never();
             }
         }
+
+        self.servers_counts.bookmarks = self.servers.iter().fold(0usize, |count, server| {
+            match self.bookmarks.is_bookmarked(&server.ip_port) {
+                true => count + 1,
+                false => count,
+            }
+        });
+        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.properties = Self::count_properties(&self.servers);
+        self.servers_counts.game_modes = Self::histogram(self.servers.iter().map(|server| server.game_modes.clone()).flatten())
     }
 
     fn sort_servers(l: &Server, r: &Server) -> Ordering {
@@ -169,6 +215,7 @@ impl TeamworkLauncher {
     }
 
     fn refresh_servers(&mut self) {
+        self.servers_counts.reset();
         self.servers.clear();
         self.filter.country.clear_available();
         self.fetch_servers_subscription_id += 1;
@@ -179,6 +226,7 @@ impl TeamworkLauncher {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = PromisedValue::Ready(country.clone());
         }
+        self.servers_counts.add_country(country.clone());
     }
 
     fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
@@ -400,6 +448,57 @@ impl TeamworkLauncher {
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
         }
     }
+
+    /// Count each element.
+    /// For example with this collection `[3, 3, 3, 2, 2, 1]`
+    /// The result will be: `3 -> 3, 2 -> 2, 1 -> 1`
+    fn histogram<T: Ord>(values: impl Iterator<Item = T>) -> BTreeMap<T, usize> {
+        values.fold(BTreeMap::new(), |mut count, value| {
+            match count.entry(value) {
+                Vacant(vacant) => {
+                    vacant.insert(1usize);
+                }
+                Occupied(mut occupied) => {
+                    *occupied.get_mut() += 1;
+                }
+            }
+
+            count
+        })
+    }
+
+    fn increment_count(count: &mut BTreeMap<Property, usize>, property: Property) {
+        match count.entry(property) {
+            Vacant(vacant) => {
+                vacant.insert(1usize);
+            }
+            Occupied(mut occupied) => {
+                *occupied.get_mut() += 1;
+            }
+        }
+    }
+
+    /// Count how many servers with each properties.
+    /// I can't use `histogram`.
+    fn count_properties(servers: &[Server]) -> BTreeMap<Property, usize> {
+        let mut count = BTreeMap::new();
+
+        for server in servers {
+            if server.need_password {
+                Self::increment_count(&mut count, Property::Password);
+            } else if server.has_no_respawn_time {
+                Self::increment_count(&mut count, Property::NoRespawnTime);
+            } else if server.has_rtd {
+                Self::increment_count(&mut count, Property::Rtd);
+            } else if server.has_all_talk {
+                Self::increment_count(&mut count, Property::AllTalk);
+            } else if server.vac_secured {
+                Self::increment_count(&mut count, Property::VacSecured);
+            }
+        }
+
+        count
+    }
 }
 
 impl Drop for TeamworkLauncher {
@@ -463,6 +562,7 @@ impl iced::Application for TeamworkLauncher {
             Self {
                 views: Views::new(Screens::Main(MainView::new(flags.user_settings.servers_filter_pane_ratio))),
                 servers: Vec::new(),
+                servers_counts: ServersCounts::default(),
                 user_settings: flags.user_settings,
                 filter: flags.filter,
                 servers_sources: flags.servers_sources,
@@ -576,7 +676,7 @@ impl iced::Application for TeamworkLauncher {
         column![
             ui::header::header_view("Teamwork Launcher", current),
             match current {
-                Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes),
+                Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes, &self.servers_counts),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
