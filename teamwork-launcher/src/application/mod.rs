@@ -13,13 +13,13 @@ mod message;
 mod ping;
 mod process_detection;
 pub mod promised_value;
+pub mod properties_filter;
 pub mod server;
 pub mod servers_source;
 mod text_filter;
 mod thumbnail;
 pub mod user_settings;
 mod views;
-pub mod properties_filter;
 
 use {
     iced::{
