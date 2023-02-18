@@ -54,7 +54,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
 
     container(
         row![
-            thumbnail(server, Length::Fixed(250.0), Length::Fixed(125.0)),
+            thumbnail(server, Length::Units(250), Length::Units(125)),
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),

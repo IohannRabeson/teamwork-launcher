@@ -16,7 +16,7 @@ use {
 };
 
 pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'a, Message> {
-    let size = Length::Fixed((size - (padding * 2)) as f32);
+    let size = Length::Units(size - (padding * 2));
 
     match icons::flag(country.code()) {
         Some(icon) => tooltip(
@@ -38,7 +38,7 @@ pub fn ping_icon<'a>(duration: &Duration, size: u16) -> Element<'a, Message> {
     } else {
         svg(icons::RECEPTION_VERY_BAD.clone()).style(theme::Svg::Custom(Box::new(ColoredPingIndicatorStyle::VeryBad)))
     };
-    let size = Length::Fixed(size as f32);
+    let size = Length::Units(size);
 
     tooltip(
         container(icon.width(size).height(size)),
