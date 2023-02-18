@@ -39,7 +39,7 @@ impl CountryFilter {
     }
 
     pub fn available_countries(&self) -> impl Iterator<Item = &Country> {
-        chain!(self.available_countries.iter(), self.countries.keys().into_iter())
+        chain!(self.available_countries.iter(), self.countries.keys())
             .unique()
             .sorted_by(|l, r| l.name().cmp(&r.name()))
     }
@@ -66,7 +66,7 @@ impl CountryFilter {
     }
 
     pub fn is_checked(&self, country: &Country) -> bool {
-        self.countries.get(&country).map(|v| *v).unwrap_or_default()
+        self.countries.get(country).copied().unwrap_or_default()
     }
 
     pub fn check_only(&mut self, country_to_check: &Country) {

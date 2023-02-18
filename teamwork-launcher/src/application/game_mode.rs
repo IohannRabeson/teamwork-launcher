@@ -57,7 +57,7 @@ impl GameModes {
 
     pub fn reset(&mut self, modes: &[teamwork::GameMode]) {
         self.game_modes_info = modes
-            .into_iter()
+            .iter()
             .map(|mode| (GameModeId::new(mode.id.clone()), mode.clone().into()))
             .collect();
     }

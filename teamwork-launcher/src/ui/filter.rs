@@ -91,7 +91,7 @@ pub fn game_modes_filter<'l>(filter: &'l Filter, game_modes: &'l GameModes, coun
     filter
         .game_modes
         .game_modes()
-        .filter_map(|(id, enabled)| game_modes.get(&id).map(|mode| (id, mode, enabled)))
+        .filter_map(|(id, enabled)| game_modes.get(id).map(|mode| (id, mode, enabled)))
         .sorted_by(|(_, l, _), (_, r, _)| l.title.cmp(&r.title))
         .fold(column![].spacing(4), |column, (id, mode, enabled)| {
             let label = format!("{} ({})", mode.title, counts.game_modes.get(id).unwrap_or(&0));

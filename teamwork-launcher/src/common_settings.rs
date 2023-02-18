@@ -16,7 +16,7 @@ pub fn write_file(settings: &impl Serialize, file_path: impl AsRef<Path>) -> Res
     Ok(())
 }
 
-pub fn read_file<'de, S>(file_path: impl AsRef<Path>) -> Result<S, SettingsError>
+pub fn read_file<S>(file_path: impl AsRef<Path>) -> Result<S, SettingsError>
 where
     S: DeserializeOwned + Default,
 {
@@ -24,7 +24,7 @@ where
 
     let file = std::fs::File::open(file_path).map_err(|e| SettingsError::Io(Arc::new(e)))?;
 
-    Ok(serde_json::from_reader(file).map_err(|e| SettingsError::Json(Arc::new(e)))?)
+    serde_json::from_reader(file).map_err(|e| SettingsError::Json(Arc::new(e)))
 }
 
 pub fn get_configuration_directory() -> PathBuf {

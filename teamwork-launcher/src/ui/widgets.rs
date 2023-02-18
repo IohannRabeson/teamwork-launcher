@@ -60,7 +60,7 @@ pub fn tooltip<'a>(
 
 pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
-        PromisedValue::Ready(duration) => ping_icon(duration, 20).into(),
+        PromisedValue::Ready(duration) => ping_icon(duration, 20),
         PromisedValue::Loading => text("Loading...").into(),
         PromisedValue::None => text("Timeout").into(),
     }
@@ -94,7 +94,7 @@ pub fn thumbnail<'a>(server: &Server, width: Length, height: Length) -> Element<
 }
 
 fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -> Element<'l, Message> {
-    match game_modes.get(&game_mode_id) {
+    match game_modes.get(game_mode_id) {
         None => text(game_mode_id.to_string()).into(),
         Some(game_mode) => {
             let inner = container(game_mode_view_inner(game_mode))
@@ -102,7 +102,7 @@ fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -
                 .padding([2, 4]);
 
             match game_mode.description.is_empty() {
-                false => tooltip(inner, &game_mode.description, iced_tooltip::Position::Bottom).into(),
+                false => tooltip(inner, &game_mode.description, iced_tooltip::Position::Bottom),
                 true => inner.into(),
             }
         }
@@ -137,7 +137,7 @@ impl container::StyleSheet for GameModeStyle {
         container::Appearance {
             border_radius: 4.0,
             border_width: 1.0,
-            border_color: self.color.clone(),
+            border_color: self.color,
             ..Default::default()
         }
     }

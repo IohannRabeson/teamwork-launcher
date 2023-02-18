@@ -116,7 +116,7 @@ fn servers_view<'l>(
     filter: &'l Filter,
     game_modes: &'l GameModes,
 ) -> Element<'l, Message> {
-    let servers = servers.iter().filter(|server| filter.accept(*server, bookmarks));
+    let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
     let servers_list = container(scrollable(
         servers.fold(column![], |c, server| {
             c.push(container(
@@ -166,7 +166,7 @@ impl container::StyleSheet for FilterSectionContainer {
 
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
-            text_color: Dark.palette().text.clone().into(),
+            text_color: Dark.palette().text.into(),
             background: Dark.palette().background.into(),
             border_radius: 2.0,
             border_width: 1.0,
