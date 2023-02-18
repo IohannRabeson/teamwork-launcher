@@ -20,8 +20,9 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use std::collections::BTreeMap;
+use iced::{Color, Theme, theme};
 use std::collections::btree_map::Entry::{Occupied, Vacant};
+use std::collections::BTreeMap;
 use iced::system;
 use {
     iced::widget::{
@@ -150,6 +151,7 @@ pub struct TeamworkLauncher {
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
     fetch_servers_subscription_id: u64,
     shift_pressed: bool,
+    theme: Theme,
 }
 
 impl TeamworkLauncher {
@@ -556,6 +558,16 @@ impl PaneView {
     }
 }
 
+fn create_palette() -> theme::Custom {
+    theme::Custom::new(theme::palette::Palette {
+        background: Color::from_rgb8(23, 21, 20),
+        text: Color::WHITE,
+        primary: Color::from_rgb8(57, 92, 120),
+        success: Default::default(),
+        danger: Default::default(),
+    })
+}
+
 impl iced::Application for TeamworkLauncher {
     type Executor = iced::executor::Default;
     type Message = Message;
@@ -580,6 +592,7 @@ impl iced::Application for TeamworkLauncher {
                 fetch_servers_subscription_id: 0,
                 shift_pressed: false,
                 system_info: None,
+                theme: Theme::Custom(Box::new(create_palette())),
             },
             Command::none(),
         )
@@ -695,7 +708,7 @@ impl iced::Application for TeamworkLauncher {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::Dark
+        self.theme.clone()
     }
 
     fn subscription(&self) -> Subscription<Self::Message> {
