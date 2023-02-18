@@ -15,7 +15,7 @@ use {
     iced::{
         theme,
         widget::{
-            button, column, container, horizontal_space, pane_grid, row, scrollable, text, toggler,
+            column, container, horizontal_space, pane_grid, row, scrollable, text, toggler,
             Container, PaneGrid,
         },
         Alignment, Color, Element, Length,
