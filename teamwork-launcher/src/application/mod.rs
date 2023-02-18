@@ -112,6 +112,7 @@ impl MainView {
 #[derive(Default)]
 pub struct ServersCounts {
     pub bookmarks: usize,
+    pub timeouts: usize,
     pub countries: BTreeMap<Country, usize>,
     pub game_modes: BTreeMap<GameModeId, usize>,
     pub properties: BTreeMap<Property, usize>,
@@ -218,10 +219,10 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries =
-            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
-        self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()))
+        self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
+        self.servers_counts.timeouts = self.servers.iter().filter(|server|server.ping.is_none()).count();
     }
 
     fn sort_servers(l: &Server, r: &Server) -> Ordering {
@@ -245,7 +246,13 @@ impl TeamworkLauncher {
 
     fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
+            if duration.is_none() {
+                self.servers_counts.timeouts += 1;
+            }
+
             server.ping = duration.into();
+
+
         }
     }
 

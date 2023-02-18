@@ -67,16 +67,17 @@ pub fn bookmark_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Ele
 const MAX_PING: u32 = 250;
 const MIN_PING: u32 = 5;
 
-pub fn ping_filter(filter: &Filter) -> Element<Message> {
+pub fn ping_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     column![
         row![
+            text("Max:"),
             slider(MIN_PING..=MAX_PING, filter.max_ping, |value| Message::Filter(
                 FilterMessage::MaxPingChanged(value)
             )),
             text(format!("{}ms", filter.max_ping))
         ]
         .spacing(8),
-        checkbox("Timeouts", filter.accept_ping_timeout, |checked| Message::Filter(
+        checkbox(format!("Timeouts ({})", counts.timeouts), filter.accept_ping_timeout, |checked| Message::Filter(
             FilterMessage::AcceptPingTimeoutChanged(checked)
         ))
     ]
