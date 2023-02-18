@@ -9,7 +9,7 @@ use {
     },
     iced::{
         theme,
-        widget::{container, row, svg, text, tooltip::Position, Image}, Color, Element, Length,
+        widget::{container, row, svg, text, tooltip as iced_tooltip, Image}, Color, Element, Length,
         Theme::{self, Dark},
     },
     std::time::Duration,
@@ -22,7 +22,7 @@ pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'
         Some(icon) => tooltip(
             container(svg(icon).width(size).height(size)).padding(padding),
             country,
-            iced::widget::tooltip::Position::Right,
+            iced_tooltip::Position::Bottom,
         ),
         None => text(format!("Region: {} ({})", country, country.code())).into(),
     }
@@ -43,7 +43,7 @@ pub fn ping_icon<'a>(duration: &Duration, size: u16) -> Element<'a, Message> {
     tooltip(
         container(icon.width(size).height(size)),
         format!("{}ms", duration.as_millis()),
-        Position::Bottom,
+        iced_tooltip::Position::Bottom,
     )
 }
 
@@ -102,7 +102,7 @@ fn game_mode_view<'l>(game_mode_id: &'l GameModeId, game_modes: &'l GameModes) -
                 .padding([2, 4]);
 
             match game_mode.description.is_empty() {
-                false => tooltip(inner, &game_mode.description, Position::Bottom).into(),
+                false => tooltip(inner, &game_mode.description, iced_tooltip::Position::Bottom).into(),
                 true => inner.into(),
             }
         }
