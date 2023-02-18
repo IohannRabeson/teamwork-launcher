@@ -43,7 +43,7 @@ pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l I
     column![
         text(&server.name).size(28),
         row![
-            thumbnail(server, Length::Units(500), Length::Units(250)),
+            thumbnail(server, Length::Fixed(500.0), Length::Fixed(250.0)),
             c,
             horizontal_space(Length::Fill),
         ]

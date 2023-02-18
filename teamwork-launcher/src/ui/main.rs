@@ -31,8 +31,8 @@ pub fn view<'l>(
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
     let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
-            PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
-            PaneId::Filters => filter_view(filter, game_modes, counts),
+            PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes).into(),
+            PaneId::Filters => filter_view(filter, game_modes, counts).into(),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -49,7 +49,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
 
     container(
         row![
-            thumbnail(server, Length::Units(250), Length::Units(125)),
+            thumbnail(server, Length::Fixed(250.0), Length::Fixed(125.0)),
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
