@@ -11,6 +11,9 @@ impl<T: Clone + Hash + Debug> PromisedValue<T> {
     pub fn is_ready(&self) -> bool {
         matches!(self, PromisedValue::Ready(_))
     }
+    pub fn is_none(&self) -> bool {
+        matches!(self, PromisedValue::None)
+    }
     pub fn get(&self) -> Option<&T> {
         match self {
             PromisedValue::Ready(value) => Some(value),

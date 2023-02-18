@@ -114,17 +114,17 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter, counts)),
-            filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
+            filter_section(Some("Ping filter"), ui::filter::ping_filter(filter, counts)),
             filter_section(Some("Text filter"), ui::filter::text_filter_options(filter)),
             filter_section(None, ui::filter::server_properties_filter(filter, counts)),
             filter_section_with_switch(
-                Some("Game modes"),
+                Some("Game modes filter"),
                 ui::filter::game_modes_filter(filter, game_modes, counts),
                 filter.game_modes.is_enabled(),
                 |checked| Message::Filter(FilterMessage::GameModeFilterEnabled(checked))
             ),
             filter_section_with_switch(
-                Some("Countries"),
+                Some("Countries filter"),
                 ui::filter::country_filter(filter, counts),
                 filter.country.is_enabled(),
                 |checked| Message::Filter(FilterMessage::CountryFilterEnabled(checked))
