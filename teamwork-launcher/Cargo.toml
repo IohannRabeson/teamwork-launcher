@@ -10,8 +10,8 @@ build = "build.rs"
 
 [dependencies]
 teamwork = { path = "../teamwork" }
-iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "svg", "image", "system"] }
-iced_lazy = { git = "https://github.com/iced-rs/iced" }
+iced = { version = "0.7.0", features = ["tokio", "svg", "image", "system"] }
+iced_lazy = { version = "0.4.0" }
 async-stream = "0.3.3"
 thiserror = "1"
 static_assertions = "1.1.0"

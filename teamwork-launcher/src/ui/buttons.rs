@@ -1,3 +1,4 @@
+use iced::Length;
 use {
     crate::{
         icons::{self, SvgHandle},
@@ -10,6 +11,8 @@ use {
 };
 
 pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
+    let size = Length::Units(size);
+
     button(
         Svg::new(svg)
             .style(theme::Svg::Custom(Box::<SvgButtonIconStyle>::default()))
