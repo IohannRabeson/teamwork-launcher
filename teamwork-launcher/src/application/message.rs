@@ -1,3 +1,4 @@
+use iced::system;
 use iced::widget::pane_grid;
 
 use {
@@ -104,6 +105,7 @@ pub enum Message {
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
+    SystemInfoUpdated(system::Information),
     Back,
 }
 

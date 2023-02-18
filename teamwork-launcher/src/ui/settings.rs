@@ -1,3 +1,4 @@
+use iced::system;
 use {
     crate::{
         application::{servers_source::ServersSource, Message, UserSettings},
@@ -9,7 +10,7 @@ use {
     },
 };
 
-pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Element<'l, Message> {
+pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], system_info: Option<&'l system::Information>) -> Element<'l, Message> {
     column![
         field(
             Some("Teamwork.tf API key"),
@@ -49,6 +50,21 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                 ),
             ]
             .spacing(4)
+        ),
+        field(
+            Some("System information"),
+            None,
+            text(format!("Memory usage: {}",
+                match system_info.map(|info|info.memory_used) {
+                    Some(memory_usage) => {
+                        match memory_usage {
+                            Some(memory_usage) => bytesize::ByteSize(memory_usage).to_string(),
+                            None => String::from("unknown"),
+                        }
+                    },
+                    None => String::from("Loading"),
+                }
+            ))
         )
     ]
     .padding(8)

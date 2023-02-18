@@ -22,6 +22,7 @@ mod views;
 
 use std::collections::{btree_map, BTreeMap};
 use std::collections::btree_map::Entry::{Occupied, Vacant};
+use iced::system;
 use {
     iced::widget::{
         column,
@@ -143,6 +144,7 @@ pub struct TeamworkLauncher {
     launcher: ExecutableLauncher,
     bookmarks: Bookmarks,
     game_modes: GameModes,
+    system_info: Option<system::Information>,
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
@@ -574,6 +576,7 @@ impl iced::Application for TeamworkLauncher {
                 map_thumbnail_request_sender: None,
                 fetch_servers_subscription_id: 0,
                 shift_pressed: false,
+                system_info: None,
             },
             Command::none(),
         )
@@ -643,6 +646,7 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::ShowSettings => {
                 self.views.push(Screens::Settings);
+                return system::fetch_information(Message::SystemInfoUpdated);
             }
             Message::LaunchGame(ip_port) => {
                 return self.launch_game(&ip_port);
@@ -665,6 +669,9 @@ impl iced::Application for TeamworkLauncher {
             Message::ShowServer(ip_port) => {
                 self.views.push(Screens::Server(ip_port));
             }
+            Message::SystemInfoUpdated(information) => {
+                self.system_info = Some(information);
+            }
         }
 
         Command::none()
@@ -678,7 +685,7 @@ impl iced::Application for TeamworkLauncher {
             match current {
                 Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes, &self.servers_counts),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
-                Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
+                Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources, self.system_info.as_ref()),
             }
         ]
         .into()
