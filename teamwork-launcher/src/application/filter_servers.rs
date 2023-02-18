@@ -1,12 +1,10 @@
 use {
     crate::application::{
-        Bookmarks, country_filter::CountryFilter, game_mode_filter::GameModeFilter, PromisedValue, Server,
-        text_filter::TextFilter,
+        country_filter::CountryFilter, game_mode_filter::GameModeFilter, properties_filter::PropertyFilterSwitch,
+        text_filter::TextFilter, Bookmarks, PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
-    std::fmt::{Display, Formatter},
 };
-use crate::application::properties_filter::PropertyFilterSwitch;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -80,4 +78,3 @@ impl Filter {
             && self.password.accept(|s| s.need_password, server)
     }
 }
-

@@ -1,6 +1,8 @@
-use std::fmt::{Display, Formatter};
-use serde::{Deserialize, Serialize};
-use crate::application::Server;
+use {
+    crate::application::Server,
+    serde::{Deserialize, Serialize},
+    std::fmt::{Display, Formatter},
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq)]
 pub enum PropertyFilterSwitch {
