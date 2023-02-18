@@ -20,7 +20,7 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use std::collections::{btree_map, BTreeMap};
+use std::collections::BTreeMap;
 use std::collections::btree_map::Entry::{Occupied, Vacant};
 use iced::system;
 use {

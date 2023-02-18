@@ -37,7 +37,7 @@ pub fn view<'l>(
     let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
-            PaneId::Filters => filter_view(filter, game_modes, servers, counts),
+            PaneId::Filters => filter_view(filter, game_modes, counts),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -130,7 +130,7 @@ fn servers_view<'l>(
     servers_list.into()
 }
 
-fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server], counts: &'l ServersCounts) -> Element<'l, Message> {
+fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l ServersCounts) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
             filter_section(None, ui::filter::bookmark_filter(filter, counts)),
