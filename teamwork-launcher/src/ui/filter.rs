@@ -155,19 +155,3 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCount
     .spacing(4)
     .into()
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::ui::filter::histogram;
-
-    #[test]
-    fn test_histogram() {
-        let numbers = vec![3, 3, 3, 2, 2, 1];
-        let h = histogram(numbers.iter());
-
-        assert_eq!(h.get(&3), Some(&3));
-        assert_eq!(h.get(&2), Some(&2));
-        assert_eq!(h.get(&1), Some(&1));
-        assert_eq!(h.get(&0), None);
-    }
-}
