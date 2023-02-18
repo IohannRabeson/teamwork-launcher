@@ -1,8 +1,10 @@
 use {
     crate::{
         application::{
-            game_mode::GameModes, properties_filter::PropertyFilterSwitch, Filter, FilterMessage, Message, Property,
-            ServersCounts,
+            game_mode::GameModes,
+            properties_filter::PropertyFilterSwitch,
+            sort_servers::{SortCriterion, SortDirection},
+            Filter, FilterMessage, Message, Property, ServersCounts,
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
@@ -77,9 +79,11 @@ pub fn ping_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element
             text(format!("{}ms", filter.max_ping))
         ]
         .spacing(8),
-        checkbox(format!("Timeouts ({})", counts.timeouts), filter.accept_ping_timeout, |checked| Message::Filter(
-            FilterMessage::AcceptPingTimeoutChanged(checked)
-        ))
+        checkbox(
+            format!("Timeouts ({})", counts.timeouts),
+            filter.accept_ping_timeout,
+            |checked| Message::Filter(FilterMessage::AcceptPingTimeoutChanged(checked))
+        )
     ]
     .spacing(4)
     .into()
@@ -111,6 +115,7 @@ const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
     PropertyFilterSwitch::Without,
     PropertyFilterSwitch::Ignore,
 ];
+const PICK_LIST_WIDTH: Length = Length::Fixed(90.0);
 
 fn property_switch<'l>(
     label: String,
@@ -120,7 +125,7 @@ fn property_switch<'l>(
     let selector = pick_list(PROPERTY_FILTER_VALUES.as_slice(), Some(property), f)
         .text_size(16)
         .padding([2, 4])
-        .width(Length::Fixed(80 as f32));
+        .width(PICK_LIST_WIDTH);
 
     row![text(label), horizontal_space(Length::Fill), selector].spacing(8).into()
 }
@@ -158,6 +163,45 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCount
             filter.password,
             |checked| Message::Filter(FilterMessage::PasswordChanged(checked))
         ),
+    ]
+    .spacing(4)
+    .into()
+}
+
+const AVAILABLE_CRITERION: [SortCriterion; 6] = [
+    SortCriterion::Ip,
+    SortCriterion::Name,
+    SortCriterion::Country,
+    SortCriterion::Ping,
+    SortCriterion::Players,
+    SortCriterion::PlayerSlots,
+];
+
+const AVAILABLE_DIRECTIONS: [SortDirection; 2] = [SortDirection::Ascending, SortDirection::Descending];
+
+pub fn server_sort(filter: &Filter) -> Element<Message> {
+    column![
+        row![
+            text("Criterion:"),
+            horizontal_space(Length::Fill),
+            pick_list(&AVAILABLE_CRITERION[..], Some(filter.sort_criterion), |value| {
+                Message::Filter(FilterMessage::SortCriterionChanged(value))
+            })
+            .text_size(16)
+            .padding([2, 4])
+            .width(PICK_LIST_WIDTH),
+        ]
+        .spacing(4),
+        row![
+            text("Direction:"),
+            horizontal_space(Length::Fill),
+            pick_list(&AVAILABLE_DIRECTIONS[..], Some(filter.sort_direction), |value| {
+                Message::Filter(FilterMessage::SortDirectionChanged(value))
+            })
+            .text_size(16)
+            .padding([2, 4])
+            .width(PICK_LIST_WIDTH),
+        ]
     ]
     .spacing(4)
     .into()

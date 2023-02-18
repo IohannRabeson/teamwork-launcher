@@ -113,6 +113,7 @@ fn servers_view<'l>(
 fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l ServersCounts) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
+            filter_section(Some("Sort"), ui::filter::server_sort(filter)),
             filter_section(None, ui::filter::bookmark_filter(filter, counts)),
             filter_section(Some("Ping filter"), ui::filter::ping_filter(filter, counts)),
             filter_section(Some("Text filter"), ui::filter::text_filter_options(filter)),

@@ -1,7 +1,11 @@
 use {
     crate::application::{
-        country_filter::CountryFilter, game_mode_filter::GameModeFilter, properties_filter::PropertyFilterSwitch,
-        text_filter::TextFilter, Bookmarks, PromisedValue, Server,
+        country_filter::CountryFilter,
+        game_mode_filter::GameModeFilter,
+        properties_filter::PropertyFilterSwitch,
+        sort_servers::{SortCriterion, SortDirection},
+        text_filter::TextFilter,
+        Bookmarks, PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
 };
@@ -20,6 +24,8 @@ pub struct Filter {
     pub no_respawn_time: PropertyFilterSwitch,
     pub random_crits: PropertyFilterSwitch,
     pub password: PropertyFilterSwitch,
+    pub sort_criterion: SortCriterion,
+    pub sort_direction: SortDirection,
 }
 
 impl Default for Filter {
@@ -37,6 +43,8 @@ impl Default for Filter {
             no_respawn_time: PropertyFilterSwitch::Ignore,
             random_crits: PropertyFilterSwitch::Ignore,
             password: PropertyFilterSwitch::Ignore,
+            sort_criterion: SortCriterion::Ip,
+            sort_direction: SortDirection::Ascending,
         }
     }
 }

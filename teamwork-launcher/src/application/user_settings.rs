@@ -1,9 +1,9 @@
-use iced::Theme;
 use {
+    crate::application::palettes,
+    iced::Theme,
     serde::{Deserialize, Serialize},
     std::fmt::{Display, Formatter},
 };
-use crate::application::palettes;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct WindowSettings {
