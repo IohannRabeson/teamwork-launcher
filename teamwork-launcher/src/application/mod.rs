@@ -20,10 +20,11 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use iced::{Color, Theme, theme};
+use iced::{Background, Color, Theme, theme};
 use std::collections::btree_map::Entry::{Occupied, Vacant};
 use std::collections::BTreeMap;
 use iced::system;
+use iced::widget::container;
 use {
     iced::widget::{
         column,
@@ -70,6 +71,7 @@ use {
     crate::common_settings::write_file,
 };
 use crate::application::game_mode::GameModeId;
+use crate::application::user_settings::LauncherTheme;
 use crate::ApplicationFlags;
 use crate::common_settings::get_configuration_directory;
 
@@ -287,6 +289,13 @@ impl TeamworkLauncher {
                 if let Some(settings) = &mut self.user_settings.window {
                     settings.window_width = width;
                     settings.window_height = height;
+                }
+            }
+            SettingsMessage::ThemeChanged(theme) => {
+                self.user_settings.theme = theme;
+                self.theme = match theme {
+                    LauncherTheme::Red => Theme::Custom(Box::new(palettes::create_red_palette())),
+                    LauncherTheme::Blue => Theme::Custom(Box::new(palettes::create_blue_palette())),
                 }
             }
         }
@@ -558,14 +567,29 @@ impl PaneView {
     }
 }
 
-fn create_palette() -> theme::Custom {
-    theme::Custom::new(theme::palette::Palette {
-        background: Color::from_rgb8(23, 21, 20),
-        text: Color::WHITE,
-        primary: Color::from_rgb8(57, 92, 120),
-        success: Default::default(),
-        danger: Default::default(),
-    })
+mod palettes
+{
+    use iced::{Color, theme};
+
+    pub fn create_blue_palette() -> theme::Custom {
+        theme::Custom::new(theme::palette::Palette {
+            background: Color::from_rgb8(38, 35, 33),
+            text: Color::WHITE,
+            primary: Color::from_rgb8(57, 92, 120),
+            success: Default::default(),
+            danger: Default::default(),
+        })
+    }
+
+    pub fn create_red_palette() -> theme::Custom {
+        theme::Custom::new(theme::palette::Palette {
+            background: Color::from_rgb8(38, 35, 33),
+            text: Color::WHITE,
+            primary: Color::from_rgb8(159, 49, 47),
+            success: Default::default(),
+            danger: Default::default(),
+        })
+    }
 }
 
 impl iced::Application for TeamworkLauncher {
@@ -592,7 +616,7 @@ impl iced::Application for TeamworkLauncher {
                 fetch_servers_subscription_id: 0,
                 shift_pressed: false,
                 system_info: None,
-                theme: Theme::Custom(Box::new(create_palette())),
+                theme: Theme::Custom(Box::new(palettes::create_red_palette())),
             },
             Command::none(),
         )
@@ -696,14 +720,15 @@ impl iced::Application for TeamworkLauncher {
     fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
         let current = self.views.current().expect("valid view");
 
-        column![
+        container(column![
             ui::header::header_view("Teamwork Launcher", current),
             match current {
                 Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes, &self.servers_counts),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources, self.system_info.as_ref()),
             }
-        ]
+        ])
+        .style(theme::Container::Custom(Box::new(MainBackground{})))
         .into()
     }
 
@@ -727,6 +752,19 @@ impl iced::Application for TeamworkLauncher {
             keyboard::subscription().map(Message::from),
             window::subscription(),
         ])
+    }
+}
+
+struct MainBackground;
+
+impl container::StyleSheet for MainBackground {
+    type Style = Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(Background::Color(Color::from_rgb8(23, 21, 20))),
+            ..Default::default()
+        }
     }
 }
 

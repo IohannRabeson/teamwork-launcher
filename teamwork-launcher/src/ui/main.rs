@@ -1,9 +1,9 @@
-use iced::Background;
+
 use {
     crate::{
         application::{
-            game_mode::GameModes,
-            Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, Server,
+            Bookmarks,
+            Filter, FilterMessage, game_mode::GameModes, MainView, Message, PaneId, PaneMessage, Server,
         },
         icons,
         ui::{
@@ -13,17 +13,17 @@ use {
         },
     },
     iced::{
-        theme,
+        Alignment,
+        Element, Length, theme,
         widget::{
-            column, container, horizontal_space, pane_grid, row, scrollable, text, toggler,
-            Container, PaneGrid,
+            column, container, Container, horizontal_space, pane_grid, PaneGrid, row, scrollable,
+            text, toggler,
         },
-        Alignment, Color, Element, Length,
-        Theme::{self, Dark},
     },
     iced_lazy::responsive,
 };
 use crate::application::ServersCounts;
+use crate::ui::styles::BoxContainerStyle;
 
 pub fn view<'l>(
     view: &'l MainView,
@@ -90,24 +90,8 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
         .spacing(4),
     )
     .padding(8)
-    .style(theme::Container::Custom(Box::new(ServerViewStyle{})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
     .into()
-}
-
-struct ServerViewStyle;
-
-impl container::StyleSheet for ServerViewStyle {
-    type Style = Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
-        container::Appearance {
-            text_color: None,
-            background: Some(Background::Color(Color::from([0.15, 0.15, 0.15]))),
-            border_radius: 2.0,
-            border_width: 1.0,
-            border_color: Color::from([0.30, 0.30, 0.30]),
-        }
-    }
 }
 
 fn servers_view<'l>(
@@ -121,7 +105,7 @@ fn servers_view<'l>(
         servers.fold(column![], |c, server| {
             c.push(container(
                 server_view(server, bookmarks, game_modes))
-                .padding([4, 24 /* THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]))
+                .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]))
         }),
     ))
     .height(Length::Fill)
@@ -158,23 +142,6 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
     filter_panel.into()
 }
 
-#[derive(Default)]
-struct FilterSectionContainer;
-
-impl container::StyleSheet for FilterSectionContainer {
-    type Style = Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
-        container::Appearance {
-            text_color: Dark.palette().text.into(),
-            background: Dark.palette().background.into(),
-            border_radius: 2.0,
-            border_width: 1.0,
-            border_color: Color::from([0.5, 0.5, 0.5]),
-        }
-    }
-}
-
 fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Message>>) -> Container<'l, Message> {
     container(
         match title {
@@ -188,7 +155,7 @@ fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Messag
         .spacing(8),
     )
     .width(Length::Fill)
-    .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
     .padding(8)
 }
 
@@ -207,6 +174,6 @@ fn filter_section_with_switch<'l>(
 
     container(main_column.spacing(8))
         .width(Length::Fill)
-        .style(theme::Container::Custom(Box::<FilterSectionContainer>::default()))
+        .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
         .padding(8)
 }

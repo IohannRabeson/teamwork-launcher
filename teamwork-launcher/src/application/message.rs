@@ -9,6 +9,7 @@ use {
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
+use crate::application::user_settings::LauncherTheme;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -67,7 +68,8 @@ pub enum SettingsMessage {
     QuitWhenLaunchChecked(bool),
     QuitWhenCopyChecked(bool),
     WindowMoved{ x: i32, y: i32 },
-    WindowResized{ width: u32, height: u32 }
+    WindowResized{ width: u32, height: u32 },
+    ThemeChanged(LauncherTheme),
 }
 
 #[derive(Debug, Clone)]
