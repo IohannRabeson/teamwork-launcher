@@ -1,15 +1,13 @@
-use iced::system;
-use iced::widget::pane_grid;
+use iced::{system, widget::pane_grid};
 
 use {
     crate::application::{
         filter_servers::PropertyFilterSwitch, game_mode::GameModeId, geolocation, map::MapName, ping,
-        servers_source::SourceKey, Country, FetchServersEvent, IpPort, Server,
+        servers_source::SourceKey, user_settings::LauncherTheme, Country, FetchServersEvent, IpPort, Server,
     },
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
-use crate::application::user_settings::LauncherTheme;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -67,8 +65,8 @@ pub enum SettingsMessage {
     SourceEnabled(SourceKey, bool),
     QuitWhenLaunchChecked(bool),
     QuitWhenCopyChecked(bool),
-    WindowMoved{ x: i32, y: i32 },
-    WindowResized{ width: u32, height: u32 },
+    WindowMoved { x: i32, y: i32 },
+    WindowResized { width: u32, height: u32 },
     ThemeChanged(LauncherTheme),
 }
 

@@ -1,23 +1,18 @@
 use {
-    iced::{
-        widget::{pick_list, slider, tooltip::Position},
-        Length,
-    },
-    itertools::Itertools,
-};
-use crate::application::Property;
-use {
     crate::{
-        application::{filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message},
+        application::{
+            filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message, Property,
+            ServersCounts,
+        },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{checkbox, column, horizontal_space, row, text, text_input},
-        Element,
+        widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
+        Element, Length,
     },
+    itertools::Itertools,
 };
-use crate::application::ServersCounts;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -61,9 +56,11 @@ pub fn country_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Elem
 }
 
 pub fn bookmark_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
-    checkbox(format!("Bookmarks ({})", counts.bookmarks), filter.bookmarked_only, |checked| {
-        Message::Filter(FilterMessage::BookmarkedOnlyChecked(checked))
-    })
+    checkbox(
+        format!("Bookmarks ({})", counts.bookmarks),
+        filter.bookmarked_only,
+        |checked| Message::Filter(FilterMessage::BookmarkedOnlyChecked(checked)),
+    )
     .into()
 }
 
@@ -87,7 +84,11 @@ pub fn ping_filter(filter: &Filter) -> Element<Message> {
     .into()
 }
 
-pub fn game_modes_filter<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l ServersCounts) -> Element<'l, Message> {
+pub fn game_modes_filter<'l>(
+    filter: &'l Filter,
+    game_modes: &'l GameModes,
+    counts: &'l ServersCounts,
+) -> Element<'l, Message> {
     filter
         .game_modes
         .game_modes()
@@ -126,7 +127,10 @@ fn property_switch<'l>(
 pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     column![
         property_switch(
-            format!("Valve secured ({})", counts.properties.get(&Property::VacSecured).unwrap_or(&0)),
+            format!(
+                "Valve secured ({})",
+                counts.properties.get(&Property::VacSecured).unwrap_or(&0)
+            ),
             filter.vac_secured,
             |checked| Message::Filter(FilterMessage::VacSecuredChanged(checked))
         ),
@@ -141,7 +145,10 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCount
             |checked| Message::Filter(FilterMessage::AllTalkChanged(checked))
         ),
         property_switch(
-            format!("No respawn time ({})", counts.properties.get(&Property::NoRespawnTime).unwrap_or(&0)),
+            format!(
+                "No respawn time ({})",
+                counts.properties.get(&Property::NoRespawnTime).unwrap_or(&0)
+            ),
             filter.no_respawn_time,
             |checked| Message::Filter(FilterMessage::NoRespawnTimeChanged(checked))
         ),

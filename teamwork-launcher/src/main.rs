@@ -1,18 +1,19 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
-use iced::{Application, Settings};
-use iced::window::Position;
-use crate::application::{Bookmarks, Filter, UserSettings};
-use crate::application::servers_source::ServersSource;
-use crate::application::user_settings::WindowSettings;
-use crate::common_settings::{get_configuration_directory, read_file};
+use {
+    crate::{
+        application::{servers_source::ServersSource, user_settings::WindowSettings, Bookmarks, Filter, UserSettings},
+        common_settings::{get_configuration_directory, read_file},
+    },
+    iced::{window::Position, Application, Settings},
+};
 
 mod application;
+mod common_settings;
 mod fonts;
 mod icons;
 mod ui;
-mod common_settings;
 
 const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
 const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -55,7 +56,10 @@ fn load_settings() -> Settings<ApplicationFlags> {
 
     if let Some(window_settings) = user_settings.window.clone() {
         let mut settings = Settings::with_flags(ApplicationFlags {
-            bookmarks, user_settings, filter, servers_sources,
+            bookmarks,
+            user_settings,
+            filter,
+            servers_sources,
         });
 
         settings.window.position = Position::Specific(window_settings.window_x, window_settings.window_y);
@@ -67,7 +71,10 @@ fn load_settings() -> Settings<ApplicationFlags> {
         user_settings.window = Some(WindowSettings::default());
 
         Settings::with_flags(ApplicationFlags {
-            bookmarks, user_settings, filter, servers_sources,
+            bookmarks,
+            user_settings,
+            filter,
+            servers_sources,
         })
     }
 }
