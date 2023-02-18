@@ -35,6 +35,13 @@ pub fn view<'l>(
                 })
             ),
             field(
+                Some("Team"),
+                None,
+                pick_list(THEMES.as_slice(), Some(settings.theme), |value| Message::Settings(
+                    SettingsMessage::ThemeChanged(value)
+                )),
+            ),
+            field(
                 Some("Sources"),
                 None,
                 sources.iter().fold(column![].spacing(4), |column, source| {
@@ -73,13 +80,6 @@ pub fn view<'l>(
                         None => String::from("Loading"),
                     }
                 ))
-            ),
-            field(
-                Some("Team"),
-                None,
-                pick_list(THEMES.as_slice(), Some(settings.theme), |value| Message::Settings(
-                    SettingsMessage::ThemeChanged(value)
-                )),
             )
         ]
         .padding(8)
