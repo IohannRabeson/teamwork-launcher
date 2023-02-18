@@ -11,7 +11,7 @@ use {
 };
 
 pub fn svg_button<'a, M: Clone + 'a>(svg: SvgHandle, size: u16) -> Button<'a, M> {
-    let size = Length::Units(size);
+    let size = Length::Fixed(size as f32);
 
     button(
         Svg::new(svg)
