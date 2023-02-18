@@ -55,36 +55,3 @@ pub fn fetch_servers(urls: Vec<(SourceKey, UrlWithKey)>) -> impl Stream<Item = F
         yield FetchServersEvent::Finish;
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use {
-        super::FetchServersEvent,
-        crate::application::servers_source::SourceKey,
-        iced::futures::{pin_mut, StreamExt},
-        teamwork::UrlWithKey,
-    };
-
-    #[tokio::test]
-    async fn smoke_test_fetch_servers() {
-        let api_key = std::env::var("TEST_TEAMWORK_API_KEY").unwrap();
-        let stream = super::fetch_servers(vec![(
-            SourceKey::new("test"),
-            UrlWithKey::new("https://teamwork.tf/api/v1/quickplay/payload/servers", &api_key),
-        )]);
-
-        pin_mut!(stream);
-
-        let mut results = Vec::new();
-
-        while let Some(event) = stream.next().await {
-            if let FetchServersEvent::Servers(servers) = event {
-                results.extend(servers.into_iter());
-            }
-        }
-
-        assert!(results.len() > 0);
-
-        assert_eq!(Some(SourceKey::new("test")), results[0].source_key);
-    }
-}
