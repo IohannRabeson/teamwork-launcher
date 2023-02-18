@@ -22,7 +22,7 @@ pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'
         Some(icon) => tooltip(
             container(svg(icon).width(size).height(size)).padding(padding),
             country,
-            iced_tooltip::Position::Bottom,
+            iced_tooltip::Position::Left,
         ),
         None => text(format!("Region: {} ({})", country, country.code())).into(),
     }

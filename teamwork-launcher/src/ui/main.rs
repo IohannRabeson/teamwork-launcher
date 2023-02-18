@@ -103,7 +103,7 @@ impl container::StyleSheet for ServerViewStyle {
         container::Appearance {
             text_color: None,
             background: Some(Background::Color(Color::from([0.15, 0.15, 0.15]))),
-            border_radius: 6.0,
+            border_radius: 2.0,
             border_width: 1.0,
             border_color: Color::from([0.30, 0.30, 0.30]),
         }
