@@ -1,6 +1,6 @@
 use iced::{
-    Background,
-    Color, Theme, widget::{container, svg},
+    widget::{container, svg},
+    Background, Color, Theme,
 };
 
 #[derive(Default)]

@@ -1,10 +1,8 @@
-use std::path::PathBuf;
 use {
-    crate::application::SettingsError,
+    crate::{application::SettingsError, APPLICATION_NAME},
     serde::{de::DeserializeOwned, Serialize},
-    std::path::Path,
+    std::path::{Path, PathBuf},
 };
-use crate::APPLICATION_NAME;
 
 pub fn write_file(settings: &impl Serialize, file_path: impl AsRef<Path>) -> Result<(), SettingsError> {
     use std::{io::Write, sync::Arc};

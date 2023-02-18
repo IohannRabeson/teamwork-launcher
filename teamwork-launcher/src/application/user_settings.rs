@@ -1,5 +1,7 @@
-use std::fmt::{Display, Formatter};
-use serde::{Deserialize, Serialize};
+use {
+    serde::{Deserialize, Serialize},
+    std::fmt::{Display, Formatter},
+};
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct WindowSettings {

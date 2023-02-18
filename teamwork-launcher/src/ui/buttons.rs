@@ -1,4 +1,3 @@
-use iced::Length;
 use {
     crate::{
         icons::{self, SvgHandle},
@@ -7,6 +6,7 @@ use {
     iced::{
         theme,
         widget::{button, Button, Svg},
+        Length,
     },
 };
 

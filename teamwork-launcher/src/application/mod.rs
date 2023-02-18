@@ -20,17 +20,22 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use iced::{Background, Color, Theme, theme};
-use std::collections::btree_map::Entry::{Occupied, Vacant};
-use std::collections::BTreeMap;
-use iced::system;
-use iced::widget::container;
 use {
-    iced::widget::{
-        column,
-        pane_grid::{self, Axis},
+    iced::{
+        system, theme,
+        widget::{
+            column, container,
+            pane_grid::{self, Axis},
+        },
+        Background, Color, Theme,
     },
-    std::cmp::Ordering,
+    std::{
+        cmp::Ordering,
+        collections::{
+            btree_map::Entry::{Occupied, Vacant},
+            BTreeMap,
+        },
+    },
 };
 
 use {
@@ -46,6 +51,18 @@ use {
     teamwork::UrlWithKey,
 };
 
+use crate::{
+    application::{
+        game_mode::{GameModeId, GameModes},
+        launcher::ExecutableLauncher,
+        map::MapName,
+        message::KeyboardMessage,
+        servers_source::{ServersSource, SourceKey},
+        user_settings::LauncherTheme,
+    },
+    common_settings::{get_configuration_directory, write_file},
+    ApplicationFlags,
+};
 pub use {
     crate::application::user_settings::UserSettings,
     bookmarks::Bookmarks,
@@ -60,20 +77,6 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
-use {
-    crate::application::{
-        game_mode::GameModes,
-        launcher::ExecutableLauncher,
-        map::MapName,
-        message::KeyboardMessage,
-        servers_source::{ServersSource, SourceKey},
-    },
-    crate::common_settings::write_file,
-};
-use crate::application::game_mode::GameModeId;
-use crate::application::user_settings::LauncherTheme;
-use crate::ApplicationFlags;
-use crate::common_settings::get_configuration_directory;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -120,12 +123,15 @@ impl ServersCounts {
 
     pub fn add_country(&mut self, country: Country) {
         match self.countries.entry(country) {
-            Vacant(vacant) => { vacant.insert(1); },
-            Occupied(mut occupied) => { *occupied.get_mut() += 1; },
+            Vacant(vacant) => {
+                vacant.insert(1);
+            }
+            Occupied(mut occupied) => {
+                *occupied.get_mut() += 1;
+            }
         };
     }
 }
-
 
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Property {
@@ -135,7 +141,6 @@ pub enum Property {
     Password,
     VacSecured,
 }
-
 
 pub struct TeamworkLauncher {
     views: Views<Screens>,
@@ -205,13 +210,15 @@ impl TeamworkLauncher {
             }
         }
 
-        self.servers_counts.bookmarks = self.servers.iter().fold(0usize, |count, server| {
-            match self.bookmarks.is_bookmarked(&server.ip_port) {
-                true => count + 1,
-                false => count,
-            }
-        });
-        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.bookmarks =
+            self.servers
+                .iter()
+                .fold(0usize, |count, server| match self.bookmarks.is_bookmarked(&server.ip_port) {
+                    true => count + 1,
+                    false => count,
+                });
+        self.servers_counts.countries =
+            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()))
     }
@@ -567,9 +574,8 @@ impl PaneView {
     }
 }
 
-mod palettes
-{
-    use iced::{Color, theme};
+mod palettes {
+    use iced::{theme, Color};
 
     pub fn create_blue_palette() -> theme::Custom {
         theme::Custom::new(theme::palette::Palette {
@@ -723,12 +729,20 @@ impl iced::Application for TeamworkLauncher {
         container(column![
             ui::header::header_view("Teamwork Launcher", current),
             match current {
-                Screens::Main(view) => ui::main::view(view, &self.servers, &self.bookmarks, &self.filter, &self.game_modes, &self.servers_counts),
+                Screens::Main(view) => ui::main::view(
+                    view,
+                    &self.servers,
+                    &self.bookmarks,
+                    &self.filter,
+                    &self.game_modes,
+                    &self.servers_counts
+                ),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
-                Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources, self.system_info.as_ref()),
+                Screens::Settings =>
+                    ui::settings::view(&self.user_settings, &self.servers_sources, self.system_info.as_ref()),
             }
         ])
-        .style(theme::Container::Custom(Box::new(MainBackground{})))
+        .style(theme::Container::Custom(Box::new(MainBackground {})))
         .into()
     }
 
@@ -769,8 +783,10 @@ impl container::StyleSheet for MainBackground {
 }
 
 mod window {
-    use iced::{Event, event, Subscription, subscription, window};
-    use crate::application::{Message, SettingsMessage};
+    use {
+        crate::application::{Message, SettingsMessage},
+        iced::{event, subscription, window, Event, Subscription},
+    };
 
     pub fn subscription() -> Subscription<Message> {
         subscription::events_with(|event, status| {
@@ -779,11 +795,11 @@ mod window {
             }
 
             if let Event::Window(window::Event::Moved { x, y }) = event {
-                return Some(Message::Settings(SettingsMessage::WindowMoved { x, y }))
+                return Some(Message::Settings(SettingsMessage::WindowMoved { x, y }));
             }
 
-            if let Event::Window(window::Event::Resized {width, height }) = event {
-                return Some(Message::Settings(SettingsMessage::WindowResized { width, height }))
+            if let Event::Window(window::Event::Resized { width, height }) = event {
+                return Some(Message::Settings(SettingsMessage::WindowResized { width, height }));
             }
 
             None
@@ -825,7 +841,6 @@ mod keyboard {
         })
     }
 }
-
 
 #[cfg(test)]
 mod tests {

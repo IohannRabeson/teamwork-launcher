@@ -1,29 +1,24 @@
-
 use {
     crate::{
         application::{
-            Bookmarks,
-            Filter, FilterMessage, game_mode::GameModes, MainView, Message, PaneId, PaneMessage, Server,
+            game_mode::GameModes, Bookmarks, Filter, FilterMessage, MainView, Message, PaneId, PaneMessage, Server,
+            ServersCounts,
         },
         icons,
         ui::{
             self,
             buttons::{favorite_button, svg_button},
+            styles::BoxContainerStyle,
             widgets::{self, ping, region, thumbnail},
         },
     },
     iced::{
-        Alignment,
-        Element, Length, theme,
-        widget::{
-            column, container, Container, horizontal_space, pane_grid, PaneGrid, row, scrollable,
-            text, toggler,
-        },
+        theme,
+        widget::{column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, Container, PaneGrid},
+        Alignment, Element, Length,
     },
     iced_lazy::responsive,
 };
-use crate::application::ServersCounts;
-use crate::ui::styles::BoxContainerStyle;
 
 pub fn view<'l>(
     view: &'l MainView,
@@ -59,7 +54,8 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                 row![
                     text(&server.name).size(28).width(Length::Fill),
                     svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE).on_press(Message::ShowServer(server.ip_port.clone())),
-                    favorite_button(is_bookmarked, BUTTON_SIZE).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                    favorite_button(is_bookmarked, BUTTON_SIZE)
+                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
                         .on_press(Message::CopyConnectionString(server.ip_port.clone())),
                     svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
@@ -73,24 +69,25 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                         ]
                         .spacing(4),
                         text(&server.map),
-                        text(&format!(
-                            "{} / {}",
-                            server.current_players_count, server.max_players_count
-                        )),
+                        text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
                     ]
                     .spacing(4),
                     horizontal_space(Length::Fill),
-                    column![region(server, BUTTON_SIZE, 0), row![text("Ping:"), ping(&server.ping)], game_modes]
-                        .padding(4)
-                        .spacing(4)
-                        .align_items(Alignment::End)
+                    column![
+                        region(server, BUTTON_SIZE, 0),
+                        row![text("Ping:"), ping(&server.ping)],
+                        game_modes
+                    ]
+                    .padding(4)
+                    .spacing(4)
+                    .align_items(Alignment::End)
                 ]
             ],
         ]
         .spacing(4),
     )
     .padding(8)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
     .into()
 }
 
@@ -101,13 +98,12 @@ fn servers_view<'l>(
     game_modes: &'l GameModes,
 ) -> Element<'l, Message> {
     let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
-    let servers_list = container(scrollable(
-        servers.fold(column![], |c, server| {
-            c.push(container(
-                server_view(server, bookmarks, game_modes))
-                .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]))
-        }),
-    ))
+    let servers_list = container(scrollable(servers.fold(column![], |c, server| {
+        c.push(
+            container(server_view(server, bookmarks, game_modes))
+                .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]),
+        )
+    })))
     .height(Length::Fill)
     .width(Length::Fill);
 
@@ -155,7 +151,7 @@ fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Messag
         .spacing(8),
     )
     .width(Length::Fill)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
     .padding(8)
 }
 
@@ -174,6 +170,6 @@ fn filter_section_with_switch<'l>(
 
     container(main_column.spacing(8))
         .width(Length::Fill)
-        .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+        .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
         .padding(8)
 }
