@@ -23,6 +23,7 @@ use {
     },
     iced_lazy::responsive,
 };
+use crate::application::ServersCounts;
 
 pub fn view<'l>(
     view: &'l MainView,
@@ -30,12 +31,13 @@ pub fn view<'l>(
     bookmarks: &'l Bookmarks,
     filter: &'l Filter,
     game_modes: &'l GameModes,
+    counts: &'l ServersCounts,
 ) -> Element<'l, Message> {
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
     let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes),
-            PaneId::Filters => filter_view(filter, game_modes, servers),
+            PaneId::Filters => filter_view(filter, game_modes, servers, counts),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
@@ -48,17 +50,19 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
     let game_modes = widgets::game_modes(game_modes, &server.game_modes);
 
+    const BUTTON_SIZE: u16 = 20;
+
     container(
         row![
             thumbnail(server, Length::Fixed(250.0), Length::Fixed(125.0)),
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
-                    svg_button(icons::INFO_ICON.clone(), 20).on_press(Message::ShowServer(server.ip_port.clone())),
-                    favorite_button(is_bookmarked, 20).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
-                    svg_button(icons::COPY_ICON.clone(), 20)
+                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE).on_press(Message::ShowServer(server.ip_port.clone())),
+                    favorite_button(is_bookmarked, BUTTON_SIZE).on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
                         .on_press(Message::CopyConnectionString(server.ip_port.clone())),
-                    svg_button(icons::PLAY_ICON.clone(), 20).on_press(Message::LaunchGame(server.ip_port.clone())),
+                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
                 ]
                 .spacing(4),
                 row![
@@ -76,7 +80,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                     ]
                     .spacing(4),
                     horizontal_space(Length::Fill),
-                    column![region(server, 20, 0), row![text("Ping:"), ping(&server.ping)], game_modes]
+                    column![region(server, BUTTON_SIZE, 0), row![text("Ping:"), ping(&server.ping)], game_modes]
                         .padding(4)
                         .spacing(4)
                         .align_items(Alignment::End)
@@ -126,22 +130,22 @@ fn servers_view<'l>(
     servers_list.into()
 }
 
-fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server]) -> Element<'l, Message> {
+fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, servers: &'l [Server], counts: &'l ServersCounts) -> Element<'l, Message> {
     let filter_panel = container(scrollable(
         column![
-            filter_section(None, ui::filter::bookmark_filter(filter)),
+            filter_section(None, ui::filter::bookmark_filter(filter, counts)),
             filter_section(Some("Max ping"), ui::filter::ping_filter(filter)),
-            filter_section(Some("Text filter"), ui::filter::advanced_text_filter(filter)),
-            filter_section(None, ui::filter::server_properties_filter(filter, servers)),
+            filter_section(Some("Text filter"), ui::filter::text_filter_options(filter)),
+            filter_section(None, ui::filter::server_properties_filter(filter, counts)),
             filter_section_with_switch(
                 Some("Game modes"),
-                ui::filter::game_modes_filter(filter, game_modes, servers),
+                ui::filter::game_modes_filter(filter, game_modes, counts),
                 filter.game_modes.is_enabled(),
                 |checked| Message::Filter(FilterMessage::GameModeFilterEnabled(checked))
             ),
             filter_section_with_switch(
                 Some("Countries"),
-                ui::filter::country_filter(filter, servers),
+                ui::filter::country_filter(filter, counts),
                 filter.country.is_enabled(),
                 |checked| Message::Filter(FilterMessage::CountryFilterEnabled(checked))
             ),
