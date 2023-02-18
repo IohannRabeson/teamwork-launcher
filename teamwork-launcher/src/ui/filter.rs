@@ -4,12 +4,11 @@ use {
         Length,
     },
     itertools::Itertools,
-    std::collections::{btree_map, btree_map::Entry, BTreeMap},
 };
 use crate::application::Property;
 use {
     crate::{
-        application::{filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message, Server},
+        application::{filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message},
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
