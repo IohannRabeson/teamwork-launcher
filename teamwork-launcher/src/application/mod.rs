@@ -308,10 +308,7 @@ impl TeamworkLauncher {
             }
             SettingsMessage::ThemeChanged(theme) => {
                 self.user_settings.theme = theme;
-                self.theme = match theme {
-                    LauncherTheme::Red => Theme::Custom(Box::new(palettes::create_red_palette())),
-                    LauncherTheme::Blue => Theme::Custom(Box::new(palettes::create_blue_palette())),
-                }
+                self.theme = theme.into();
             }
         }
     }
@@ -613,6 +610,8 @@ impl iced::Application for TeamworkLauncher {
     type Flags = ApplicationFlags;
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let theme: Theme = flags.user_settings.theme.into();
+
         (
             Self {
                 views: Views::new(Screens::Main(MainView::new(flags.user_settings.servers_filter_pane_ratio))),
@@ -630,7 +629,7 @@ impl iced::Application for TeamworkLauncher {
                 fetch_servers_subscription_id: 0,
                 shift_pressed: false,
                 system_info: None,
-                theme: Theme::Custom(Box::new(palettes::create_red_palette())),
+                theme,
             },
             Command::none(),
         )

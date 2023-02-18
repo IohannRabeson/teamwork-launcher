@@ -1,7 +1,9 @@
+use iced::Theme;
 use {
     serde::{Deserialize, Serialize},
     std::fmt::{Display, Formatter},
 };
+use crate::application::palettes;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct WindowSettings {
@@ -15,6 +17,15 @@ pub struct WindowSettings {
 pub enum LauncherTheme {
     Red,
     Blue,
+}
+
+impl Into<Theme> for LauncherTheme {
+    fn into(self) -> Theme {
+        match self {
+            LauncherTheme::Red => Theme::Custom(Box::new(palettes::create_red_palette())),
+            LauncherTheme::Blue => Theme::Custom(Box::new(palettes::create_blue_palette())),
+        }
+    }
 }
 
 impl Display for LauncherTheme {
