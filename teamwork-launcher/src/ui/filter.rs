@@ -1,18 +1,19 @@
 use {
     crate::{
         application::{
-            filter_servers::PropertyFilterSwitch, game_mode::GameModes, Filter, FilterMessage, Message, Property,
+            Filter, FilterMessage, game_mode::GameModes, Message, Property,
             ServersCounts,
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
-        Element, Length,
+        Element,
+        Length, widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
     },
     itertools::Itertools,
 };
+use crate::application::properties_filter::PropertyFilterSwitch;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![

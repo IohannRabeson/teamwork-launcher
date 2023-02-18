@@ -2,12 +2,13 @@ use iced::{system, widget::pane_grid};
 
 use {
     crate::application::{
-        filter_servers::PropertyFilterSwitch, game_mode::GameModeId, geolocation, map::MapName, ping,
-        servers_source::SourceKey, user_settings::LauncherTheme, Country, FetchServersEvent, IpPort, Server,
+        Country, FetchServersEvent, game_mode::GameModeId, geolocation,
+        IpPort, map::MapName, ping, Server, servers_source::SourceKey, user_settings::LauncherTheme,
     },
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
+use crate::application::properties_filter::PropertyFilterSwitch;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {

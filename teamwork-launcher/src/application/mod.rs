@@ -19,6 +19,7 @@ mod text_filter;
 mod thumbnail;
 pub mod user_settings;
 mod views;
+pub mod properties_filter;
 
 use {
     iced::{
