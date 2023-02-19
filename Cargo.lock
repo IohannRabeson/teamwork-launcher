@@ -1306,7 +1306,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.8.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1322,7 +1322,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.8.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "bitflags",
  "instant",
@@ -1332,7 +1332,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.6.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "futures",
  "log",
@@ -1344,7 +1344,7 @@ dependencies = [
 [[package]]
 name = "iced_glow"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "bytemuck",
  "euclid",
@@ -1359,7 +1359,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -1379,7 +1379,7 @@ dependencies = [
 [[package]]
 name = "iced_lazy"
 version = "0.5.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "iced_native",
  "ouroboros",
@@ -1387,8 +1387,8 @@ dependencies = [
 
 [[package]]
 name = "iced_native"
-version = "0.9.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+version = "0.9.1"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1401,7 +1401,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.7.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "iced_core",
  "once_cell",
@@ -1411,7 +1411,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.9.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -1431,7 +1431,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.8.0"
-source = "git+https://github.com/iced-rs/iced#0d1656937b459237670cdc0b1f45e09d78c47494"
+source = "git+https://github.com/iced-rs/iced#2b8742937fb41fbe2ce60a494bfce2fd8b6ab916"
 dependencies = [
  "iced_futures",
  "iced_graphics",
@@ -2898,9 +2898,9 @@ checksum = "7bd3e3206899af3f8b12af284fafc038cc1dc2b41d1b89dd17297221c5d225de"
 
 [[package]]
 name = "slab"
-version = "0.4.7"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4614a76b2a8be0058caa9dbbaf66d988527d86d003c11a94fbd335d7661edcef"
+checksum = "6528351c9bc8ab22353f9d776db39a20288e8d6c37ef8cfe3317cf875eecfc2d"
 dependencies = [
  "autocfg",
 ]
@@ -3071,9 +3071,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.27.7"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "975fe381e0ecba475d4acff52466906d95b153a40324956552e027b2a9eaa89e"
+checksum = "727220a596b4ca0af040a07091e49f5c105ec8f2592674339a5bf35be592f76e"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
@@ -3118,7 +3118,7 @@ dependencies = [
  "serde_json",
  "static_assertions",
  "surge-ping",
- "sysinfo 0.27.7",
+ "sysinfo 0.28.0",
  "teamwork",
  "test-case",
  "thiserror",
