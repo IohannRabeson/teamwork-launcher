@@ -45,8 +45,10 @@ pub fn country_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Elem
     filter
         .country
         .available_countries()
-        .fold(column![].spacing(4), |column, country| {
-            let label = format!("{} ({})", country.name(), counts.countries.get(country).unwrap_or(&0));
+        .map(|country|(country, *counts.countries.get(country).unwrap_or(&0)))
+        .filter(|(country, count)|count > &0)
+        .fold(column![].spacing(4), |column, (country, count)| {
+            let label = format!("{} ({})", country.name(), count);
 
             column.push(checkbox(label, filter.country.is_checked(country), |checked| {
                 Message::Filter(FilterMessage::CountryChecked(country.clone(), checked))
@@ -100,8 +102,17 @@ pub fn game_modes_filter<'l>(
         .game_modes()
         .filter_map(|(id, enabled)| game_modes.get(id).map(|mode| (id, mode, enabled)))
         .sorted_by(|(_, l, _), (_, r, _)| l.title.cmp(&r.title))
-        .fold(column![].spacing(4), |column, (id, mode, enabled)| {
-            let label = format!("{} ({})", mode.title, counts.game_modes.get(id).unwrap_or(&0));
+        .filter_map(|(id, mode, enabled)| {
+            let count = *counts.game_modes.get(id).unwrap_or(&0);
+
+            if count == 0 {
+                return None
+            }
+
+            Some((id, mode, enabled, count))
+        })
+        .fold(column![].spacing(4), |column, (id, mode, enabled, count)| {
+            let label = format!("{} ({})", mode.title, count);
             let check_box = checkbox(&label, *enabled, |checked| {
                 Message::Filter(FilterMessage::GameModeChecked(id.clone(), checked))
             });
