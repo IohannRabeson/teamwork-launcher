@@ -1,7 +1,6 @@
 use std::collections::btree_map::Entry::Vacant;
 use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
-use crate::application::map::MapName;
 
 #[derive(Serialize, Deserialize)]
 pub struct FilterDictionary<K>

@@ -103,7 +103,6 @@ impl Filter {
 
 mod map_filter {
     use {
-        crate::application::Server,
         serde::{Deserialize, Serialize},
     };
     use crate::application::filter_dictionary::FilterDictionary;

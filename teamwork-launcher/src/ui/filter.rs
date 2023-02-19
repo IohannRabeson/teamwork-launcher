@@ -99,7 +99,7 @@ pub fn game_modes_filter<'l>(
 ) -> Element<'l, Message> {
     filter
         .game_modes
-        .game_modes()
+        .dictionary.iter()
         .filter_map(|(id, enabled)| game_modes.get(id).map(|mode| (id, mode, enabled)))
         .sorted_by(|(_, l, _), (_, r, _)| l.title.cmp(&r.title))
         .filter_map(|(id, mode, enabled)| {
@@ -113,7 +113,7 @@ pub fn game_modes_filter<'l>(
         })
         .fold(column![].spacing(4), |column, (id, mode, enabled, count)| {
             let label = format!("{} ({})", mode.title, count);
-            let check_box = checkbox(&label, *enabled, |checked| {
+            let check_box = checkbox(&label, enabled, |checked| {
                 Message::Filter(FilterMessage::GameModeChecked(id.clone(), checked))
             });
 
