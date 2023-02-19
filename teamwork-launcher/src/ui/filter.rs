@@ -231,3 +231,10 @@ pub fn server_sort(filter: &Filter) -> Element<Message> {
     .spacing(4)
     .into()
 }
+
+pub fn maps_filter(filter: &Filter) -> Element<Message> {
+    filter.maps.dictionary.iter()
+        .fold(column![].spacing(4), |column, (name, enabled)|{
+            column.push(checkbox(name.as_str(), enabled, move |checked|Message::Filter(FilterMessage::MapChecked(name.clone(), checked))))
+        }).into()
+}

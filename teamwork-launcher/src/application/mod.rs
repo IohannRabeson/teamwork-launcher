@@ -21,6 +21,7 @@ mod text_filter;
 mod thumbnail;
 pub mod user_settings;
 mod views;
+mod filter_dictionary;
 
 use {
     iced::{
@@ -194,6 +195,7 @@ impl TeamworkLauncher {
                     .unwrap_or_else(|e| eprintln!("thumbnail sender {}", e))
                     .now_or_never();
             }
+            self.filter.maps.dictionary.add(map_name);
         }
 
         for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique() {
@@ -403,6 +405,19 @@ impl TeamworkLauncher {
             }
             FilterMessage::MinimumFreeSlotsChanged(value) => {
                 self.filter.players.minimum_free_slots = value;
+            }
+            FilterMessage::MapChecked(map, enabled) => {
+                if self.shift_pressed {
+                    match self.filter.maps.dictionary.is_checked(&map) {
+                        false => self.filter.maps.dictionary.uncheck_only(&map),
+                        true => self.filter.maps.dictionary.check_only(&map),
+                    }
+                } else {
+                    self.filter.maps.dictionary.set_checked(&map, enabled);
+                }
+            }
+            FilterMessage::MapFilterEnabled(enabled) => {
+                self.filter.maps.enabled = enabled;
             }
         }
     }

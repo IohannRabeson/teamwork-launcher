@@ -67,6 +67,8 @@ pub enum FilterMessage {
     SortDirectionChanged(SortDirection),
     MinimumPlayersChanged(u8),
     MinimumFreeSlotsChanged(u8),
+    MapChecked(MapName, bool),
+    MapFilterEnabled(bool),
 }
 
 #[derive(Debug, Clone)]
