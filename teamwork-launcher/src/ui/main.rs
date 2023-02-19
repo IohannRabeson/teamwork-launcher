@@ -138,6 +138,12 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
                 filter.country.enabled,
                 |checked| Message::Filter(FilterMessage::CountryFilterEnabled(checked))
             ),
+            filter_section_with_switch(
+                Some("Providers filter"),
+                ui::filter::providers_filter(filter, counts),
+                filter.providers.enabled,
+                |checked| Message::Filter(FilterMessage::ProviderFilterEnabled(checked))
+            ),
         ]
         .padding([0, 14, 0, 0])
         .spacing(4),

@@ -41,6 +41,7 @@ mod tests {
         crate::application::{game_mode::GameModeId, game_mode_filter::GameModeFilter, IpPort, Server},
         std::net::Ipv4Addr,
     };
+    use crate::application::filter::game_mode_filter::GameModeFilter;
 
     #[test]
     fn test_accept() {

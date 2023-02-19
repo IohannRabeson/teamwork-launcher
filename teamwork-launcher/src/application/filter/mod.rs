@@ -5,3 +5,4 @@ pub mod properties_filter;
 pub mod sort_servers;
 pub mod text_filter;
 pub mod filter_dictionary;
+pub mod provider_filter;

@@ -21,6 +21,7 @@ pub struct Server {
     pub ping: PromisedValue<Duration>,
     pub source_key: Option<SourceKey>,
     pub game_modes: Vec<GameModeId>,
+    pub provider: String,
     pub vac_secured: bool,
     pub has_rtd: bool,
     pub has_no_respawn_time: bool,
@@ -37,6 +38,7 @@ impl Server {
         self.max_players_count - self.current_players_count
     }
 }
+
 impl Default for Server {
     fn default() -> Self {
         Self {
@@ -50,6 +52,7 @@ impl Default for Server {
             country: PromisedValue::None,
             ping: PromisedValue::None,
             source_key: None,
+            provider: String::new(),
             game_modes: Vec::new(),
             vac_secured: false,
             has_rtd: false,
@@ -79,6 +82,7 @@ impl From<teamwork::Server> for Server {
             country: PromisedValue::Loading,
             ping: PromisedValue::Loading,
             source_key: None,
+            provider: server.provider.unwrap_or_else(||String::from("Unspecified")),
             game_modes: server.game_modes.iter().map(GameModeId::new).collect(),
             vac_secured: server.valve_secure,
             has_all_talk: server.has_alltalk.unwrap_or_default(),
