@@ -6,15 +6,15 @@ use {
         geolocation,
         map::MapName,
         ping,
-        properties_filter::PropertyFilterSwitch,
         servers_source::SourceKey,
-        sort_servers::{SortCriterion, SortDirection},
         user_settings::LauncherTheme,
         Country, FetchServersEvent, IpPort, Server,
     },
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
+use crate::application::filter::properties_filter::PropertyFilterSwitch;
+use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {

@@ -1,10 +1,7 @@
 mod bookmarks;
 pub mod country;
-mod country_filter;
 pub mod fetch_servers;
-pub mod filter_servers;
 pub mod game_mode;
-mod game_mode_filter;
 mod geolocation;
 pub mod ip_port;
 mod launcher;
@@ -13,16 +10,13 @@ mod message;
 mod ping;
 mod process_detection;
 pub mod promised_value;
-pub mod properties_filter;
 pub mod server;
 pub mod servers_source;
-pub mod sort_servers;
-mod text_filter;
 mod thumbnail;
 pub mod user_settings;
 mod views;
-mod filter_dictionary;
 pub mod servers_counts;
+pub mod filter;
 
 use {
     iced::{
@@ -59,7 +53,6 @@ use crate::{
         map::MapName,
         message::KeyboardMessage,
         servers_source::{ServersSource, SourceKey},
-        sort_servers::{sort_servers, SortDirection},
     },
     ApplicationFlags,
     common_settings::{get_configuration_directory, write_file},
@@ -69,7 +62,6 @@ pub use {
     country::Country,
     crate::application::user_settings::UserSettings,
     fetch_servers::{fetch_servers, FetchServersEvent},
-    filter_servers::Filter,
     ip_port::IpPort,
     message::{
         CountryServiceMessage, FetchServersMessage, FilterMessage, GameModesMessage, Message, PaneMessage,
@@ -79,6 +71,8 @@ pub use {
     server::Server,
 };
 use servers_counts::ServersCounts;
+use crate::application::filter::filter_servers::Filter;
+use crate::application::filter::sort_servers::{sort_servers, SortDirection};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {

@@ -2,6 +2,8 @@ use std::collections::btree_map::Entry::Vacant;
 use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
+/// Core implementation of filters for multiple
+/// values (such as Country or Game Mode).
 #[derive(Serialize, Deserialize)]
 pub struct FilterDictionary<K>
 where K: Ord

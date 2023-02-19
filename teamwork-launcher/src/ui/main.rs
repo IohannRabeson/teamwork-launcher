@@ -1,7 +1,7 @@
 use {
     crate::{
         application::{
-            Bookmarks, Filter, FilterMessage, game_mode::GameModes, MainView, Message, PaneId, PaneMessage, Server,
+            Bookmarks, FilterMessage, game_mode::GameModes, MainView, Message, PaneId, PaneMessage, Server,
         },
         icons,
         ui::{
@@ -18,6 +18,7 @@ use {
     },
     iced_lazy::responsive,
 };
+use crate::application::filter::filter_servers::Filter;
 use crate::application::servers_counts::ServersCounts;
 
 pub fn view<'l>(

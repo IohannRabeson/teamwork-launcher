@@ -3,11 +3,12 @@
 
 use {
     crate::{
-        application::{servers_source::ServersSource, user_settings::WindowSettings, Bookmarks, Filter, UserSettings},
+        application::{servers_source::ServersSource, user_settings::WindowSettings, Bookmarks, UserSettings},
         common_settings::{get_configuration_directory, read_file},
     },
     iced::{window::Position, Application, Settings},
 };
+use crate::application::filter::filter_servers::Filter;
 
 mod application;
 mod common_settings;

@@ -2,7 +2,7 @@ use {
     crate::application::{game_mode::GameModeId, Server},
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter_dictionary::FilterDictionary;
+use crate::application::filter::filter_dictionary::FilterDictionary;
 
 #[derive(Serialize, Deserialize)]
 pub struct GameModeFilter {
