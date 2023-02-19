@@ -9,12 +9,14 @@ use {
     },
     serde::{Deserialize, Serialize},
 };
+use crate::application::filter_servers::player_filter::PlayerFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
     pub text: TextFilter,
     pub country: CountryFilter,
     pub game_modes: GameModeFilter,
+    pub players: PlayerFilter,
     pub bookmarked_only: bool,
     pub max_ping: u32,
     pub accept_ping_timeout: bool,
@@ -34,6 +36,7 @@ impl Default for Filter {
             text: TextFilter::default(),
             country: CountryFilter::default(),
             game_modes: GameModeFilter::default(),
+            players: PlayerFilter::default(),
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
@@ -53,6 +56,7 @@ impl Filter {
     pub fn accept(&self, server: &Server, bookmarks: &Bookmarks) -> bool {
         self.filter_by_bookmark(server, bookmarks)
             && self.filter_by_text(server)
+            && self.filter_by_player(server)
             && self.filter_by_countries(server)
             && self.filter_by_ping(server)
             && self.filter_by_game_mode(server)
@@ -84,5 +88,30 @@ impl Filter {
             && self.rtd.accept(|s| s.has_rtd, server)
             && self.no_respawn_time.accept(|s| s.has_no_respawn_time, server)
             && self.password.accept(|s| s.need_password, server)
+    }
+    fn filter_by_player(&self, server: &Server) -> bool {
+        self.players.accept(server)
+    }
+}
+
+mod player_filter {
+    use crate::application::Server;
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Serialize, Deserialize, Default)]
+    pub struct PlayerFilter {
+        pub minimum_players: u8,
+        #[serde(skip)]
+        pub maximum_players: u8,
+        pub minimum_free_slots: u8,
+        #[serde(skip)]
+        pub maximum_free_slots: u8,
+    }
+
+    impl PlayerFilter {
+        pub fn accept(&self, server: &Server) -> bool {
+            server.current_players_count >= self.minimum_players
+            && server.free_slots() >= self.minimum_free_slots
+        }
     }
 }

@@ -226,12 +226,30 @@ impl TeamworkLauncher {
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
+
+        self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server|{
+            if max < server.current_players_count {
+                max = server.current_players_count;
+            }
+            max
+        });
+
+        self.filter.players.maximum_free_slots = self.servers.iter().fold(0u8, |mut max, server|{
+            if max < server.max_players_count {
+                max = server.max_players_count;
+            }
+            max
+        });
     }
 
     fn refresh_servers(&mut self) {
         self.servers_counts.reset();
         self.servers.clear();
+
         self.filter.country.clear_available();
+        self.filter.players.maximum_free_slots = 0;
+        self.filter.players.maximum_players = 0;
+
         self.fetch_servers_subscription_id += 1;
     }
 
@@ -381,6 +399,12 @@ impl TeamworkLauncher {
             FilterMessage::SortDirectionChanged(direction) => {
                 self.filter.sort_direction = direction;
                 self.sort_server();
+            }
+            FilterMessage::MinimumPlayersChanged(value) => {
+                self.filter.players.minimum_players = value;
+            }
+            FilterMessage::MinimumFreeSlotsChanged(value) => {
+                self.filter.players.minimum_free_slots = value;
             }
         }
     }

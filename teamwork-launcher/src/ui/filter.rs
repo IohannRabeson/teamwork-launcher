@@ -168,6 +168,21 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCount
     .into()
 }
 
+pub fn players_filter(filter: &Filter) -> Element<Message> {
+    column![
+        row![
+            text("Minimum players:"),
+            slider(0..=filter.players.maximum_players, filter.players.minimum_players, |value|Message::Filter(FilterMessage::MinimumPlayersChanged(value))),
+            text(filter.players.minimum_players.to_string())
+        ].spacing(8),
+        row![text("Minimum free slots:"),
+            slider(0..=filter.players.maximum_free_slots, filter.players.minimum_free_slots, |value|Message::Filter(FilterMessage::MinimumFreeSlotsChanged(value))),
+            text(filter.players.minimum_free_slots.to_string())
+        ].spacing(8)
+    ].spacing(4)
+        .into()
+}
+
 const AVAILABLE_CRITERION: [SortCriterion; 6] = [
     SortCriterion::Ip,
     SortCriterion::Name,
@@ -206,3 +221,4 @@ pub fn server_sort(filter: &Filter) -> Element<Message> {
     .spacing(4)
     .into()
 }
+
