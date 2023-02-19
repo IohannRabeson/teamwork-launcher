@@ -38,7 +38,7 @@ impl GameModeFilter {
 #[cfg(test)]
 mod tests {
     use {
-        crate::application::{game_mode::GameModeId, game_mode_filter::GameModeFilter, IpPort, Server},
+        crate::application::{game_mode::GameModeId, IpPort, Server},
         std::net::Ipv4Addr,
     };
     use crate::application::filter::game_mode_filter::GameModeFilter;
