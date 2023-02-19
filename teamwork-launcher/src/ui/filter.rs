@@ -1,20 +1,21 @@
 use {
     crate::{
         application::{
+            Filter,
+            FilterMessage,
             game_mode::GameModes,
-            properties_filter::PropertyFilterSwitch,
-            sort_servers::{SortCriterion, SortDirection},
-            Filter, FilterMessage, Message, Property, ServersCounts,
+            Message, properties_filter::PropertyFilterSwitch, Property, sort_servers::{SortCriterion, SortDirection},
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
-        Element, Length,
+        Element,
+        Length, widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
     },
     itertools::Itertools,
 };
+use crate::application::servers_counts::ServersCounts;
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -232,9 +233,20 @@ pub fn server_sort(filter: &Filter) -> Element<Message> {
     .into()
 }
 
-pub fn maps_filter(filter: &Filter) -> Element<Message> {
+pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     filter.maps.dictionary.iter()
-        .fold(column![].spacing(4), |column, (name, enabled)|{
-            column.push(checkbox(name.as_str(), enabled, move |checked|Message::Filter(FilterMessage::MapChecked(name.clone(), checked))))
+        .filter_map(|(name, enabled)|{
+            let count = *counts.maps.get(name).unwrap_or(&0);
+
+            if count == 0 {
+                return None
+            }
+
+            Some((name, enabled, count))
+        })
+        .fold(column![].spacing(4), |column, (name, enabled, count)|{
+            let label = format!("{} ({})", name.as_str(), count);
+
+            column.push(checkbox(label, enabled, move |checked|Message::Filter(FilterMessage::MapChecked(name.clone(), checked))))
         }).into()
 }
