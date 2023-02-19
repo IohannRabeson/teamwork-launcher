@@ -263,3 +263,21 @@ pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element
             column.push(checkbox(label, enabled, move |checked|Message::Filter(FilterMessage::MapChecked(name.clone(), checked))))
         }).into()
 }
+
+pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
+    filter.providers.dictionary.iter()
+        .filter_map(|(provider, enabled)|{
+            let count = *counts.providers.get(provider).unwrap_or(&0);
+
+            if count == 0 {
+                return None
+            }
+
+            Some((provider, enabled, count))
+        })
+        .fold(column![].spacing(4), |column, (provider, enabled, count)|{
+        let label = format!("{} ({})", provider, count);
+
+        column.push(checkbox(label, enabled, move |checked|Message::Filter(FilterMessage::ProviderChecked(provider.clone(), checked))))
+    }).into()
+}

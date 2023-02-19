@@ -11,6 +11,7 @@ use crate::application::filter::filter_servers::map_filter::MapFilter;
 use crate::application::filter::filter_servers::player_filter::PlayerFilter;
 use crate::application::filter::game_mode_filter::GameModeFilter;
 use crate::application::filter::properties_filter::PropertyFilterSwitch;
+use crate::application::filter::provider_filter::ProviderFilter;
 use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
 use crate::application::filter::text_filter::TextFilter;
 
@@ -21,6 +22,7 @@ pub struct Filter {
     pub game_modes: GameModeFilter,
     pub players: PlayerFilter,
     pub maps: MapFilter,
+    pub providers: ProviderFilter,
     pub bookmarked_only: bool,
     pub max_ping: u32,
     pub accept_ping_timeout: bool,
@@ -42,6 +44,7 @@ impl Default for Filter {
             game_modes: GameModeFilter::default(),
             players: PlayerFilter::default(),
             maps: MapFilter::default(),
+            providers: ProviderFilter::default(),
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
@@ -67,6 +70,7 @@ impl Filter {
             && self.filter_by_game_mode(server)
             && self.filter_by_properties(server)
             && self.filter_by_maps(server)
+            && self.filter_by_providers(server)
     }
 
     fn filter_by_countries(&self, server: &Server) -> bool {
@@ -100,6 +104,9 @@ impl Filter {
     }
     fn filter_by_maps(&self, server: &Server) -> bool {
         self.maps.dictionary.is_checked(&server.map)
+    }
+    fn filter_by_providers(&self, server: &Server) -> bool {
+        self.providers.accept(server)
     }
 }
 

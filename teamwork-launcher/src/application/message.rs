@@ -69,6 +69,8 @@ pub enum FilterMessage {
     MinimumFreeSlotsChanged(u8),
     MapChecked(MapName, bool),
     MapFilterEnabled(bool),
+    ProviderChecked(String, bool),
+    ProviderFilterEnabled(bool),
 }
 
 #[derive(Debug, Clone)]

@@ -142,6 +142,7 @@ impl TeamworkLauncher {
             .collect();
 
         self.filter.country.dictionary.extend(countries.into_iter());
+
         self.servers.extend(new_servers.into_iter());
         self.sort_server();
     }
@@ -168,6 +169,7 @@ impl TeamworkLauncher {
             self.filter.maps.dictionary.add(map_name);
         }
 
+        // Request country for each server
         for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique() {
             if let Some(country_sender) = &mut self.country_request_sender {
                 country_sender
@@ -184,6 +186,7 @@ impl TeamworkLauncher {
             }
         }
 
+        // Update counts
         self.servers_counts.bookmarks =
             self.servers
                 .iter()
@@ -191,12 +194,15 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries =
-            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
         self.servers_counts.maps = Self::histogram(self.servers.iter().map(|server| server.map.clone()));
+        self.servers_counts.providers = Self::histogram(self.servers.iter().map(|server| server.provider.clone()));
+
+        // Update filters
+        self.filter.providers.dictionary.extend(self.servers.iter().map(|server|server.provider.clone()));
 
         self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server| {
             if max < server.current_players_count {
@@ -388,6 +394,12 @@ impl TeamworkLauncher {
             }
             FilterMessage::MapFilterEnabled(enabled) => {
                 self.filter.maps.enabled = enabled;
+            }
+            FilterMessage::ProviderChecked(provider, checked) => {
+                self.filter.providers.dictionary.set_checked(&provider, checked);
+            }
+            FilterMessage::ProviderFilterEnabled(enabled) => {
+                self.filter.providers.enabled = enabled;
             }
         }
     }

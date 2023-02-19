@@ -12,6 +12,7 @@ pub struct ServersCounts {
     pub game_modes: BTreeMap<GameModeId, usize>,
     pub properties: BTreeMap<Property, usize>,
     pub maps: BTreeMap<MapName, usize>,
+    pub providers: BTreeMap<String, usize>,
 }
 
 impl ServersCounts {
