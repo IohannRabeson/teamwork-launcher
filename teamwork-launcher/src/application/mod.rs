@@ -31,11 +31,9 @@ use {
         },
         Background, Color, Theme,
     },
-    std::{
-        collections::{
-            btree_map::Entry::{Occupied, Vacant},
-            BTreeMap,
-        },
+    std::collections::{
+        btree_map::Entry::{Occupied, Vacant},
+        BTreeMap,
     },
 };
 
@@ -227,14 +225,14 @@ impl TeamworkLauncher {
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
 
-        self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server|{
+        self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server| {
             if max < server.current_players_count {
                 max = server.current_players_count;
             }
             max
         });
 
-        self.filter.players.maximum_free_slots = self.servers.iter().fold(0u8, |mut max, server|{
+        self.filter.players.maximum_free_slots = self.servers.iter().fold(0u8, |mut max, server| {
             if max < server.max_players_count {
                 max = server.max_players_count;
             }

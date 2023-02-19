@@ -1,6 +1,7 @@
 use {
     crate::application::{
         country_filter::CountryFilter,
+        filter_servers::player_filter::PlayerFilter,
         game_mode_filter::GameModeFilter,
         properties_filter::PropertyFilterSwitch,
         sort_servers::{SortCriterion, SortDirection},
@@ -9,7 +10,6 @@ use {
     },
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter_servers::player_filter::PlayerFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -95,8 +95,10 @@ impl Filter {
 }
 
 mod player_filter {
-    use crate::application::Server;
-    use serde::{Serialize, Deserialize};
+    use {
+        crate::application::Server,
+        serde::{Deserialize, Serialize},
+    };
 
     #[derive(Serialize, Deserialize, Default)]
     pub struct PlayerFilter {
@@ -110,8 +112,7 @@ mod player_filter {
 
     impl PlayerFilter {
         pub fn accept(&self, server: &Server) -> bool {
-            server.current_players_count >= self.minimum_players
-            && server.free_slots() >= self.minimum_free_slots
+            server.current_players_count >= self.minimum_players && server.free_slots() >= self.minimum_free_slots
         }
     }
 }
