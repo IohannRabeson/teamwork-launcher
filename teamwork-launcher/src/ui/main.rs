@@ -120,6 +120,11 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
             filter_section(Some("Players filter"), ui::filter::players_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::text_filter_options(filter)),
             filter_section(None, ui::filter::server_properties_filter(filter, counts)),
+            filter_section_with_switch(Some("Maps filter"),
+                ui::filter::maps_filter(filter),
+                filter.maps.enabled,
+                |checked| Message::Filter(FilterMessage::MapFilterEnabled(checked))
+            ),
             filter_section_with_switch(
                 Some("Game modes filter"),
                 ui::filter::game_modes_filter(filter, game_modes, counts),

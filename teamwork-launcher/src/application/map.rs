@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
+use serde::{Serialize, Deserialize};
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Debug, Default, Serialize, Deserialize)]
 pub struct MapName(String);
 
 impl MapName {

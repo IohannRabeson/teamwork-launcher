@@ -1,15 +1,16 @@
 use {
     crate::application::{
+        Bookmarks,
         country_filter::CountryFilter,
         filter_servers::player_filter::PlayerFilter,
         game_mode_filter::GameModeFilter,
+        PromisedValue,
         properties_filter::PropertyFilterSwitch,
-        sort_servers::{SortCriterion, SortDirection},
-        text_filter::TextFilter,
-        Bookmarks, PromisedValue, Server,
+        Server, sort_servers::{SortCriterion, SortDirection}, text_filter::TextFilter,
     },
     serde::{Deserialize, Serialize},
 };
+use crate::application::filter_servers::map_filter::MapFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -17,6 +18,7 @@ pub struct Filter {
     pub country: CountryFilter,
     pub game_modes: GameModeFilter,
     pub players: PlayerFilter,
+    pub maps: MapFilter,
     pub bookmarked_only: bool,
     pub max_ping: u32,
     pub accept_ping_timeout: bool,
@@ -37,6 +39,7 @@ impl Default for Filter {
             country: CountryFilter::default(),
             game_modes: GameModeFilter::default(),
             players: PlayerFilter::default(),
+            maps: MapFilter::default(),
             bookmarked_only: false,
             max_ping: 50,
             accept_ping_timeout: true,
@@ -61,6 +64,7 @@ impl Filter {
             && self.filter_by_ping(server)
             && self.filter_by_game_mode(server)
             && self.filter_by_properties(server)
+            && self.filter_by_maps(server)
     }
 
     fn filter_by_countries(&self, server: &Server) -> bool {
@@ -91,6 +95,26 @@ impl Filter {
     }
     fn filter_by_player(&self, server: &Server) -> bool {
         self.players.accept(server)
+    }
+    fn filter_by_maps(&self, server: &Server) -> bool {
+        self.maps.dictionary.is_checked(&server.map)
+    }
+}
+
+mod map_filter {
+    use std::collections::btree_map::Entry::Vacant;
+    use std::collections::BTreeMap;
+    use {
+        crate::application::Server,
+        serde::{Deserialize, Serialize},
+    };
+    use crate::application::filter_dictionary::FilterDictionary;
+    use crate::application::map::MapName;
+
+    #[derive(Serialize, Deserialize, Default)]
+    pub struct MapFilter {
+        pub dictionary: FilterDictionary<MapName>,
+        pub enabled: bool,
     }
 }
 
