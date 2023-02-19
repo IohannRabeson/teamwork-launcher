@@ -29,6 +29,14 @@ pub struct Server {
     pub need_password: bool,
 }
 
+impl Server {
+    pub fn free_slots(&self) -> u8 {
+        if self.max_players_count < self.current_players_count {
+            return 0;
+        }
+        self.max_players_count - self.current_players_count
+    }
+}
 impl Default for Server {
     fn default() -> Self {
         Self {

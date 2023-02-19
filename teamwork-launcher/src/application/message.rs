@@ -65,6 +65,8 @@ pub enum FilterMessage {
     PasswordChanged(PropertyFilterSwitch),
     SortCriterionChanged(SortCriterion),
     SortDirectionChanged(SortDirection),
+    MinimumPlayersChanged(u8),
+    MinimumFreeSlotsChanged(u8),
 }
 
 #[derive(Debug, Clone)]
