@@ -1,10 +1,9 @@
 use {
     crate::{
         application::{
-            Filter,
             FilterMessage,
             game_mode::GameModes,
-            Message, properties_filter::PropertyFilterSwitch, Property, sort_servers::{SortCriterion, SortDirection},
+            Message, Property,
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
@@ -15,7 +14,10 @@ use {
     },
     itertools::Itertools,
 };
+use crate::application::filter::filter_servers::Filter;
 use crate::application::servers_counts::ServersCounts;
+use crate::application::filter::properties_filter::PropertyFilterSwitch;
+use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
