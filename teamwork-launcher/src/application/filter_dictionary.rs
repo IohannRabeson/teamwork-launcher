@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use crate::application::map::MapName;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct FilterDictionary<K>
 where K: Ord
 {
@@ -11,9 +11,19 @@ where K: Ord
 }
 
 impl<K: Ord> FilterDictionary<K> {
+    pub fn new() -> Self {
+        Self { entries: BTreeMap::new() }
+    }
+
     pub fn add(&mut self, key: K) {
         if let Vacant(entry) = self.entries.entry(key) {
             entry.insert(true);
+        }
+    }
+
+    pub fn extend(&mut self, keys: impl Iterator<Item = K>) {
+        for key in keys {
+            self.add(key)
         }
     }
 

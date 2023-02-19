@@ -134,7 +134,7 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
             filter_section_with_switch(
                 Some("Countries filter"),
                 ui::filter::country_filter(filter, counts),
-                filter.country.is_enabled(),
+                filter.country.enabled,
                 |checked| Message::Filter(FilterMessage::CountryFilterEnabled(checked))
             ),
         ]
