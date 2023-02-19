@@ -339,19 +339,19 @@ impl TeamworkLauncher {
             }
             FilterMessage::GameModeChecked(id, checked) => {
                 if self.shift_pressed {
-                    match self.filter.game_modes.is_mode_enabled(&id) {
-                        false => self.filter.game_modes.enable_all_excepted(&id),
-                        true => self.filter.game_modes.enable_only(&id),
+                    match self.filter.game_modes.dictionary.is_checked(&id) {
+                        false => self.filter.game_modes.dictionary.uncheck_only(&id),
+                        true => self.filter.game_modes.dictionary.check_only(&id),
                     }
                 } else {
-                    self.filter.game_modes.set_mode_enabled(&id, checked);
+                    self.filter.game_modes.dictionary.set_checked(&id, checked);
                 }
             }
             FilterMessage::CountryFilterEnabled(checked) => {
                 self.filter.country.enabled = checked;
             }
             FilterMessage::GameModeFilterEnabled(checked) => {
-                self.filter.game_modes.set_enabled(checked);
+                self.filter.game_modes.enabled = checked;
             }
             FilterMessage::VacSecuredChanged(checked) => {
                 self.filter.vac_secured = checked;
@@ -413,7 +413,7 @@ impl TeamworkLauncher {
         match message {
             GameModesMessage::GameModes(game_modes) => {
                 self.game_modes.reset(&game_modes);
-                self.filter.game_modes.reset(&game_modes);
+                self.filter.game_modes.dictionary.extend(game_modes.into_iter().map(|mode|GameModeId::new(mode.id)));
             }
             GameModesMessage::Error(error) => {
                 eprintln!("Failed to fetch game modes: {}", error)

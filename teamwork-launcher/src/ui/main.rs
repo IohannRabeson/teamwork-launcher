@@ -128,7 +128,7 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
             filter_section_with_switch(
                 Some("Game modes filter"),
                 ui::filter::game_modes_filter(filter, game_modes, counts),
-                filter.game_modes.is_enabled(),
+                filter.game_modes.enabled,
                 |checked| Message::Filter(FilterMessage::GameModeFilterEnabled(checked))
             ),
             filter_section_with_switch(
