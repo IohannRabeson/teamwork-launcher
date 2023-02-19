@@ -11,7 +11,7 @@ use {
     },
     iced::{
         Element,
-        Length, widget::{checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
+        Length, widget::{vertical_space, checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
     },
     itertools::Itertools,
 };
@@ -44,17 +44,17 @@ pub fn text_filter_options(filter: &Filter) -> Element<Message> {
 pub fn country_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     filter
         .country
-        .available_countries()
-        .map(|country|(country, *counts.countries.get(country).unwrap_or(&0)))
-        .filter(|(country, count)|count > &0)
-        .fold(column![].spacing(4), |column, (country, count)| {
+        .dictionary.iter()
+        .map(|(country, checked)|(country, checked, *counts.countries.get(country).unwrap_or(&0)))
+        .fold(column![].spacing(4), |column, (country, checked, count)| {
             let label = format!("{} ({})", country.name(), count);
 
-            column.push(checkbox(label, filter.country.is_checked(country), |checked| {
+            column.push(checkbox(label, checked, |checked| {
                 Message::Filter(FilterMessage::CountryChecked(country.clone(), checked))
             }))
         })
-        .push(checkbox("No country", filter.country.accept_no_country(), |checked| {
+        .push(vertical_space(Length::Fixed(8.0)))
+        .push(checkbox("No country", filter.country.no_countries, |checked| {
             Message::Filter(FilterMessage::NoCountryChecked(checked))
         }))
         .into()

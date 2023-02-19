@@ -102,8 +102,6 @@ impl Filter {
 }
 
 mod map_filter {
-    use std::collections::btree_map::Entry::Vacant;
-    use std::collections::BTreeMap;
     use {
         crate::application::Server,
         serde::{Deserialize, Serialize},
@@ -111,10 +109,19 @@ mod map_filter {
     use crate::application::filter_dictionary::FilterDictionary;
     use crate::application::map::MapName;
 
-    #[derive(Serialize, Deserialize, Default)]
+    #[derive(Serialize, Deserialize)]
     pub struct MapFilter {
         pub dictionary: FilterDictionary<MapName>,
         pub enabled: bool,
+    }
+
+    impl Default for MapFilter {
+        fn default() -> Self {
+            Self {
+                dictionary: FilterDictionary::new(),
+                enabled: false,
+            }
+        }
     }
 }
 

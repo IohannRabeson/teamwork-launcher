@@ -147,7 +147,7 @@ impl TeamworkLauncher {
             .cloned()
             .collect();
 
-        self.filter.country.extend_available(&countries);
+        self.filter.country.dictionary.extend(countries.into_iter());
         self.servers.extend(new_servers.into_iter());
         self.sort_server();
     }
@@ -223,7 +223,6 @@ impl TeamworkLauncher {
         self.servers_counts.reset();
         self.servers.clear();
 
-        self.filter.country.clear_available();
         self.filter.players.maximum_free_slots = 0;
         self.filter.players.maximum_players = 0;
 
@@ -231,7 +230,7 @@ impl TeamworkLauncher {
     }
 
     fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
-        self.filter.country.add_available(country.clone());
+        self.filter.country.dictionary.add(country.clone());
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = PromisedValue::Ready(country.clone());
         }
@@ -309,16 +308,16 @@ impl TeamworkLauncher {
         match message {
             FilterMessage::CountryChecked(country, checked) => {
                 if self.shift_pressed {
-                    match self.filter.country.is_checked(&country) {
-                        false => self.filter.country.check_all_excepted(&country),
-                        true => self.filter.country.check_only(&country),
+                    match self.filter.country.dictionary.is_checked(&country) {
+                        false => self.filter.country.dictionary.uncheck_only(&country),
+                        true => self.filter.country.dictionary.check_only(&country),
                     }
                 } else {
-                    self.filter.country.set_checked(&country, checked);
+                    self.filter.country.dictionary.set_checked(&country, checked);
                 }
             }
             FilterMessage::NoCountryChecked(checked) => {
-                self.filter.country.set_accept_no_country(checked);
+                self.filter.country.no_countries = checked;
             }
             FilterMessage::TextChanged(text) => {
                 self.filter.text.set_text(&text);
@@ -349,7 +348,7 @@ impl TeamworkLauncher {
                 }
             }
             FilterMessage::CountryFilterEnabled(checked) => {
-                self.filter.country.set_enabled(checked);
+                self.filter.country.enabled = checked;
             }
             FilterMessage::GameModeFilterEnabled(checked) => {
                 self.filter.game_modes.set_enabled(checked);
