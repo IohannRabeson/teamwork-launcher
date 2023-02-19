@@ -22,15 +22,16 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 mod filter_dictionary;
+pub mod servers_counts;
 
 use {
     iced::{
-        system, theme,
-        widget::{
+        Background, Color,
+        system,
+        theme, Theme, widget::{
             column, container,
             pane_grid::{self, Axis},
         },
-        Background, Color, Theme,
     },
     std::collections::{
         btree_map::Entry::{Occupied, Vacant},
@@ -41,10 +42,10 @@ use {
 use {
     crate::{application::views::Views, ui},
     iced::{
+        Command,
+        Element,
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
-        subscription,
-        widget::image,
-        Command, Element, Renderer, Subscription,
+        Renderer, subscription, Subscription, widget::image,
     },
     itertools::Itertools,
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
@@ -60,13 +61,13 @@ use crate::{
         servers_source::{ServersSource, SourceKey},
         sort_servers::{sort_servers, SortDirection},
     },
-    common_settings::{get_configuration_directory, write_file},
     ApplicationFlags,
+    common_settings::{get_configuration_directory, write_file},
 };
 pub use {
-    crate::application::user_settings::UserSettings,
     bookmarks::Bookmarks,
     country::Country,
+    crate::application::user_settings::UserSettings,
     fetch_servers::{fetch_servers, FetchServersEvent},
     filter_servers::Filter,
     ip_port::IpPort,
@@ -77,6 +78,7 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
+use servers_counts::ServersCounts;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -105,32 +107,6 @@ impl MainView {
         }
 
         Self { panes }
-    }
-}
-
-#[derive(Default)]
-pub struct ServersCounts {
-    pub bookmarks: usize,
-    pub timeouts: usize,
-    pub countries: BTreeMap<Country, usize>,
-    pub game_modes: BTreeMap<GameModeId, usize>,
-    pub properties: BTreeMap<Property, usize>,
-}
-
-impl ServersCounts {
-    pub fn reset(&mut self) {
-        *self = ServersCounts::default();
-    }
-
-    pub fn add_country(&mut self, country: Country) {
-        match self.countries.entry(country) {
-            Vacant(vacant) => {
-                vacant.insert(1);
-            }
-            Occupied(mut occupied) => {
-                *occupied.get_mut() += 1;
-            }
-        };
     }
 }
 
@@ -226,6 +202,7 @@ impl TeamworkLauncher {
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
+        self.servers_counts.maps = Self::histogram(self.servers.iter().map(|server| server.map.clone()));
 
         self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server| {
             if max < server.current_players_count {
@@ -633,7 +610,7 @@ impl PaneView {
 }
 
 mod palettes {
-    use iced::{theme, Color};
+    use iced::{Color, theme};
 
     pub fn create_blue_palette() -> theme::Custom {
         theme::Custom::new(theme::palette::Palette {
@@ -845,7 +822,7 @@ impl container::StyleSheet for MainBackground {
 mod window {
     use {
         crate::application::{Message, SettingsMessage},
-        iced::{event, subscription, window, Event, Subscription},
+        iced::{event, Event, subscription, Subscription, window},
     };
 
     pub fn subscription() -> Subscription<Message> {
@@ -872,8 +849,8 @@ mod keyboard {
         crate::application::message::KeyboardMessage,
         iced::{
             event,
-            keyboard::{self, KeyCode},
-            subscription, Event, Subscription,
+            Event,
+            keyboard::{self, KeyCode}, subscription, Subscription,
         },
     };
 
