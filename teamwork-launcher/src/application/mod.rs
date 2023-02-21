@@ -241,7 +241,10 @@ impl TeamworkLauncher {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = PromisedValue::Ready(country.clone());
         }
+
         self.servers_counts.add_country(country);
+
+        self.sort_server();
     }
 
     fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
@@ -252,6 +255,8 @@ impl TeamworkLauncher {
 
             server.ping = duration.into();
         }
+
+        self.sort_server();
     }
 
     fn thumbnail_ready(&mut self, map_name: MapName, thumbnail: Option<image::Handle>) {
