@@ -1,8 +1,10 @@
-use std::collections::BTreeMap;
-use std::collections::btree_map::Entry::{Occupied, Vacant};
-use crate::application::{Country, Property};
-use crate::application::game_mode::GameModeId;
-use crate::application::map::MapName;
+use {
+    crate::application::{game_mode::GameModeId, map::MapName, Country, Property},
+    std::collections::{
+        btree_map::Entry::{Occupied, Vacant},
+        BTreeMap,
+    },
+};
 
 #[derive(Default)]
 pub struct ServersCounts {

@@ -2,6 +2,10 @@ use iced::{system, widget::pane_grid};
 
 use {
     crate::application::{
+        filter::{
+            properties_filter::PropertyFilterSwitch,
+            sort_servers::{SortCriterion, SortDirection},
+        },
         game_mode::GameModeId,
         geolocation,
         map::MapName,
@@ -13,8 +17,6 @@ use {
     iced::{futures::channel::mpsc::UnboundedSender, widget::image},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
-use crate::application::filter::properties_filter::PropertyFilterSwitch;
-use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {

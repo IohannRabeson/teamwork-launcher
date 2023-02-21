@@ -1,19 +1,18 @@
 use {
     crate::application::{
-        Bookmarks,
-        PromisedValue,
-        Server,
+        filter::{
+            country_filter::CountryFilter,
+            filter_servers::{map_filter::MapFilter, player_filter::PlayerFilter},
+            game_mode_filter::GameModeFilter,
+            properties_filter::PropertyFilterSwitch,
+            provider_filter::ProviderFilter,
+            sort_servers::{SortCriterion, SortDirection},
+            text_filter::TextFilter,
+        },
+        Bookmarks, PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter::country_filter::CountryFilter;
-use crate::application::filter::filter_servers::map_filter::MapFilter;
-use crate::application::filter::filter_servers::player_filter::PlayerFilter;
-use crate::application::filter::game_mode_filter::GameModeFilter;
-use crate::application::filter::properties_filter::PropertyFilterSwitch;
-use crate::application::filter::provider_filter::ProviderFilter;
-use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
-use crate::application::filter::text_filter::TextFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -112,10 +111,9 @@ impl Filter {
 
 mod map_filter {
     use {
+        crate::application::{filter::filter_dictionary::FilterDictionary, map::MapName},
         serde::{Deserialize, Serialize},
     };
-    use crate::application::filter::filter_dictionary::FilterDictionary;
-    use crate::application::map::MapName;
 
     #[derive(Serialize, Deserialize)]
     pub struct MapFilter {

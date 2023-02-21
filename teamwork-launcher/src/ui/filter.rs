@@ -1,23 +1,26 @@
 use {
     crate::{
         application::{
-            FilterMessage,
+            filter::{
+                filter_servers::Filter,
+                properties_filter::PropertyFilterSwitch,
+                sort_servers::{SortCriterion, SortDirection},
+            },
             game_mode::GameModes,
-            Message, Property,
+            servers_counts::ServersCounts,
+            FilterMessage, Message, Property,
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        Element,
-        Length, widget::{vertical_space, checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position},
+        widget::{
+            checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position, vertical_space,
+        },
+        Element, Length,
     },
     itertools::Itertools,
 };
-use crate::application::filter::filter_servers::Filter;
-use crate::application::servers_counts::ServersCounts;
-use crate::application::filter::properties_filter::PropertyFilterSwitch;
-use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -46,8 +49,9 @@ pub fn text_filter_options(filter: &Filter) -> Element<Message> {
 pub fn country_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     filter
         .country
-        .dictionary.iter()
-        .map(|(country, checked)|(country, checked, *counts.countries.get(country).unwrap_or(&0)))
+        .dictionary
+        .iter()
+        .map(|(country, checked)| (country, checked, *counts.countries.get(country).unwrap_or(&0)))
         .fold(column![].spacing(4), |column, (country, checked, count)| {
             let label = format!("{} ({})", country.name(), count);
 
@@ -101,14 +105,15 @@ pub fn game_modes_filter<'l>(
 ) -> Element<'l, Message> {
     filter
         .game_modes
-        .dictionary.iter()
+        .dictionary
+        .iter()
         .filter_map(|(id, enabled)| game_modes.get(id).map(|mode| (id, mode, enabled)))
         .sorted_by(|(_, l, _), (_, r, _)| l.title.cmp(&r.title))
         .filter_map(|(id, mode, enabled)| {
             let count = *counts.game_modes.get(id).unwrap_or(&0);
 
             if count == 0 {
-                return None
+                return None;
             }
 
             Some((id, mode, enabled, count))
@@ -207,6 +212,54 @@ pub fn players_filter(filter: &Filter) -> Element<Message> {
     .into()
 }
 
+pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
+    filter
+        .maps
+        .dictionary
+        .iter()
+        .filter_map(|(name, enabled)| {
+            let count = *counts.maps.get(name).unwrap_or(&0);
+
+            if count == 0 {
+                return None;
+            }
+
+            Some((name, enabled, count))
+        })
+        .fold(column![].spacing(4), |column, (name, enabled, count)| {
+            let label = format!("{} ({})", name.as_str(), count);
+
+            column.push(checkbox(label, enabled, move |checked| {
+                Message::Filter(FilterMessage::MapChecked(name.clone(), checked))
+            }))
+        })
+        .into()
+}
+
+pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
+    filter
+        .providers
+        .dictionary
+        .iter()
+        .filter_map(|(provider, enabled)| {
+            let count = *counts.providers.get(provider).unwrap_or(&0);
+
+            if count == 0 {
+                return None;
+            }
+
+            Some((provider, enabled, count))
+        })
+        .fold(column![].spacing(4), |column, (provider, enabled, count)| {
+            let label = format!("{} ({})", provider, count);
+
+            column.push(checkbox(label, enabled, move |checked| {
+                Message::Filter(FilterMessage::ProviderChecked(provider.clone(), checked))
+            }))
+        })
+        .into()
+}
+
 const AVAILABLE_CRITERION: [SortCriterion; 6] = [
     SortCriterion::Ip,
     SortCriterion::Name,
@@ -244,40 +297,4 @@ pub fn server_sort(filter: &Filter) -> Element<Message> {
     ]
     .spacing(4)
     .into()
-}
-
-pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
-    filter.maps.dictionary.iter()
-        .filter_map(|(name, enabled)|{
-            let count = *counts.maps.get(name).unwrap_or(&0);
-
-            if count == 0 {
-                return None
-            }
-
-            Some((name, enabled, count))
-        })
-        .fold(column![].spacing(4), |column, (name, enabled, count)|{
-            let label = format!("{} ({})", name.as_str(), count);
-
-            column.push(checkbox(label, enabled, move |checked|Message::Filter(FilterMessage::MapChecked(name.clone(), checked))))
-        }).into()
-}
-
-pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
-    filter.providers.dictionary.iter()
-        .filter_map(|(provider, enabled)|{
-            let count = *counts.providers.get(provider).unwrap_or(&0);
-
-            if count == 0 {
-                return None
-            }
-
-            Some((provider, enabled, count))
-        })
-        .fold(column![].spacing(4), |column, (provider, enabled, count)|{
-        let label = format!("{} ({})", provider, count);
-
-        column.push(checkbox(label, enabled, move |checked|Message::Filter(FilterMessage::ProviderChecked(provider.clone(), checked))))
-    }).into()
 }

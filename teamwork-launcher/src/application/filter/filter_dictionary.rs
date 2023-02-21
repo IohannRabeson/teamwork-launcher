@@ -1,19 +1,23 @@
-use std::collections::btree_map::Entry::Vacant;
-use std::collections::BTreeMap;
-use serde::{Deserialize, Serialize};
+use {
+    serde::{Deserialize, Serialize},
+    std::collections::{btree_map::Entry::Vacant, BTreeMap},
+};
 
 /// Core implementation of filters for multiple
 /// values (such as Country or Game Mode).
 #[derive(Serialize, Deserialize)]
 pub struct FilterDictionary<K>
-where K: Ord
+where
+    K: Ord,
 {
     entries: BTreeMap<K, bool>,
 }
 
 impl<K: Ord> FilterDictionary<K> {
     pub fn new() -> Self {
-        Self { entries: BTreeMap::new() }
+        Self {
+            entries: BTreeMap::new(),
+        }
     }
 
     pub fn add(&mut self, key: K) {
@@ -51,6 +55,6 @@ impl<K: Ord> FilterDictionary<K> {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&K, bool)> {
-        self.entries.iter().map(|(key, enabled)|(key, *enabled))
+        self.entries.iter().map(|(key, enabled)| (key, *enabled))
     }
 }

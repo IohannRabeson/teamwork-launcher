@@ -72,7 +72,12 @@ pub fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Messa
         PromisedValue::Ready(country) => row![text("Region:".to_string()), country_icon(country, size, padding)]
             .spacing(4)
             .into(),
-        PromisedValue::Loading => row![text("Region:"), spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0))].spacing(4).into(),
+        PromisedValue::Loading => row![
+            text("Region:"),
+            spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0))
+        ]
+        .spacing(4)
+        .into(),
         PromisedValue::None => text("Region: unknown").into(),
     }
 }

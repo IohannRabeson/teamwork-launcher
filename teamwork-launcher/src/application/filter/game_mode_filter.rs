@@ -1,8 +1,7 @@
 use {
-    crate::application::{game_mode::GameModeId, Server},
+    crate::application::{filter::filter_dictionary::FilterDictionary, game_mode::GameModeId, Server},
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter::filter_dictionary::FilterDictionary;
 
 #[derive(Serialize, Deserialize)]
 pub struct GameModeFilter {
@@ -38,10 +37,9 @@ impl GameModeFilter {
 #[cfg(test)]
 mod tests {
     use {
-        crate::application::{game_mode::GameModeId, IpPort, Server},
+        crate::application::{filter::game_mode_filter::GameModeFilter, game_mode::GameModeId, IpPort, Server},
         std::net::Ipv4Addr,
     };
-    use crate::application::filter::game_mode_filter::GameModeFilter;
 
     #[test]
     fn test_accept() {

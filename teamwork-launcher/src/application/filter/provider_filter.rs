@@ -1,6 +1,7 @@
-use crate::application::filter::filter_dictionary::FilterDictionary;
-use serde::{Serialize, Deserialize};
-use crate::application::Server;
+use {
+    crate::application::{filter::filter_dictionary::FilterDictionary, Server},
+    serde::{Deserialize, Serialize},
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct ProviderFilter {
@@ -20,7 +21,7 @@ impl Default for ProviderFilter {
 impl ProviderFilter {
     pub fn accept(&self, server: &Server) -> bool {
         if !self.enabled {
-            return true
+            return true;
         }
 
         self.dictionary.is_checked(&server.provider)

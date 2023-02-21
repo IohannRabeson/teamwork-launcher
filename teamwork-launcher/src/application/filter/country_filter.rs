@@ -1,8 +1,7 @@
 use {
-    crate::application::{Country, PromisedValue},
+    crate::application::{filter::filter_dictionary::FilterDictionary, Country, PromisedValue},
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter::filter_dictionary::FilterDictionary;
 
 #[derive(Serialize, Deserialize)]
 pub struct CountryFilter {

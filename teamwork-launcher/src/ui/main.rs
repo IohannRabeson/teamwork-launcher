@@ -1,7 +1,8 @@
 use {
     crate::{
         application::{
-            Bookmarks, FilterMessage, game_mode::GameModes, MainView, Message, PaneId, PaneMessage, Server,
+            filter::filter_servers::Filter, game_mode::GameModes, servers_counts::ServersCounts, Bookmarks, FilterMessage,
+            MainView, Message, PaneId, PaneMessage, Server,
         },
         icons,
         ui::{
@@ -12,14 +13,12 @@ use {
         },
     },
     iced::{
-        Alignment,
-        Element,
-        Length, theme, widget::{column, container, Container, horizontal_space, pane_grid, PaneGrid, row, scrollable, text, toggler},
+        theme,
+        widget::{column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, Container, PaneGrid},
+        Alignment, Element, Length,
     },
     iced_lazy::responsive,
 };
-use crate::application::filter::filter_servers::Filter;
-use crate::application::servers_counts::ServersCounts;
 
 pub fn view<'l>(
     view: &'l MainView,
@@ -121,7 +120,8 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
             filter_section(Some("Players filter"), ui::filter::players_filter(filter)),
             filter_section(Some("Text filter"), ui::filter::text_filter_options(filter)),
             filter_section(None, ui::filter::server_properties_filter(filter, counts)),
-            filter_section_with_switch(Some("Maps filter"),
+            filter_section_with_switch(
+                Some("Maps filter"),
                 ui::filter::maps_filter(filter, counts),
                 filter.maps.enabled,
                 |checked| Message::Filter(FilterMessage::MapFilterEnabled(checked))

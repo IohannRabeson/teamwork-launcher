@@ -82,7 +82,7 @@ impl From<teamwork::Server> for Server {
             country: PromisedValue::Loading,
             ping: PromisedValue::Loading,
             source_key: None,
-            provider: server.provider.unwrap_or_else(||String::from("Unspecified")),
+            provider: server.provider.unwrap_or_else(|| String::from("Unspecified")),
             game_modes: server.game_modes.iter().map(GameModeId::new).collect(),
             vac_secured: server.valve_secure,
             has_all_talk: server.has_alltalk.unwrap_or_default(),

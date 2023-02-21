@@ -1,6 +1,7 @@
 mod bookmarks;
 pub mod country;
 pub mod fetch_servers;
+pub mod filter;
 pub mod game_mode;
 mod geolocation;
 pub mod ip_port;
@@ -11,21 +12,20 @@ mod ping;
 mod process_detection;
 pub mod promised_value;
 pub mod server;
+pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 mod views;
-pub mod servers_counts;
-pub mod filter;
 
 use {
     iced::{
-        Background, Color,
-        system,
-        theme, Theme, widget::{
+        system, theme,
+        widget::{
             column, container,
             pane_grid::{self, Axis},
         },
+        Background, Color, Theme,
     },
     std::collections::{
         btree_map::Entry::{Occupied, Vacant},
@@ -36,31 +36,20 @@ use {
 use {
     crate::{application::views::Views, ui},
     iced::{
-        Command,
-        Element,
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
-        Renderer, subscription, Subscription, widget::image,
+        subscription,
+        widget::image,
+        Command, Element, Renderer, Subscription,
     },
     itertools::Itertools,
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
     teamwork::UrlWithKey,
 };
 
-use crate::{
-    application::{
-        game_mode::{GameModeId, GameModes},
-        launcher::ExecutableLauncher,
-        map::MapName,
-        message::KeyboardMessage,
-        servers_source::{ServersSource, SourceKey},
-    },
-    ApplicationFlags,
-    common_settings::{get_configuration_directory, write_file},
-};
 pub use {
+    crate::application::user_settings::UserSettings,
     bookmarks::Bookmarks,
     country::Country,
-    crate::application::user_settings::UserSettings,
     fetch_servers::{fetch_servers, FetchServersEvent},
     ip_port::IpPort,
     message::{
@@ -70,9 +59,24 @@ pub use {
     promised_value::PromisedValue,
     server::Server,
 };
-use servers_counts::ServersCounts;
-use crate::application::filter::filter_servers::Filter;
-use crate::application::filter::sort_servers::{sort_servers, SortDirection};
+use {
+    crate::{
+        application::{
+            filter::{
+                filter_servers::Filter,
+                sort_servers::{sort_servers, SortDirection},
+            },
+            game_mode::{GameModeId, GameModes},
+            launcher::ExecutableLauncher,
+            map::MapName,
+            message::KeyboardMessage,
+            servers_source::{ServersSource, SourceKey},
+        },
+        common_settings::{get_configuration_directory, write_file},
+        ApplicationFlags,
+    },
+    servers_counts::ServersCounts,
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -194,7 +198,8 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries =
+            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
@@ -202,7 +207,10 @@ impl TeamworkLauncher {
         self.servers_counts.providers = Self::histogram(self.servers.iter().map(|server| server.provider.clone()));
 
         // Update filters
-        self.filter.providers.dictionary.extend(self.servers.iter().map(|server|server.provider.clone()));
+        self.filter
+            .providers
+            .dictionary
+            .extend(self.servers.iter().map(|server| server.provider.clone()));
 
         self.filter.players.maximum_players = self.servers.iter().fold(0u8, |mut max, server| {
             if max < server.current_players_count {
@@ -419,7 +427,10 @@ impl TeamworkLauncher {
         match message {
             GameModesMessage::GameModes(game_modes) => {
                 self.game_modes.reset(&game_modes);
-                self.filter.game_modes.dictionary.extend(game_modes.into_iter().map(|mode|GameModeId::new(mode.id)));
+                self.filter
+                    .game_modes
+                    .dictionary
+                    .extend(game_modes.into_iter().map(|mode| GameModeId::new(mode.id)));
             }
             GameModesMessage::Error(error) => {
                 eprintln!("Failed to fetch game modes: {}", error)
@@ -615,7 +626,7 @@ impl PaneView {
 }
 
 mod palettes {
-    use iced::{Color, theme};
+    use iced::{theme, Color};
 
     pub fn create_blue_palette() -> theme::Custom {
         theme::Custom::new(theme::palette::Palette {
@@ -827,7 +838,7 @@ impl container::StyleSheet for MainBackground {
 mod window {
     use {
         crate::application::{Message, SettingsMessage},
-        iced::{event, Event, subscription, Subscription, window},
+        iced::{event, subscription, window, Event, Subscription},
     };
 
     pub fn subscription() -> Subscription<Message> {
@@ -854,8 +865,8 @@ mod keyboard {
         crate::application::message::KeyboardMessage,
         iced::{
             event,
-            Event,
-            keyboard::{self, KeyCode}, subscription, Subscription,
+            keyboard::{self, KeyCode},
+            subscription, Event, Subscription,
         },
     };
 
