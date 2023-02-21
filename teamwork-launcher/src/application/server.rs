@@ -64,11 +64,6 @@ impl Default for Server {
     }
 }
 
-/// The rational is I do not want the entire application depends on the Teamwork.tf API.
-/// So even if it's a bit tedious, I prefer to have a struct Server dedicated to the application
-/// to avoid using teamwork::Server.
-/// Also that opens the system to extension by adding more source of data.
-///
 impl From<teamwork::Server> for Server {
     fn from(server: teamwork::Server) -> Self {
         Server {
