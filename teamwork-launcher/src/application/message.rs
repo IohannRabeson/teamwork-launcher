@@ -73,6 +73,7 @@ pub enum FilterMessage {
     MapFilterEnabled(bool),
     ProviderChecked(String, bool),
     ProviderFilterEnabled(bool),
+    MapNameFilterChanged(String),
 }
 
 #[derive(Debug, Clone)]
