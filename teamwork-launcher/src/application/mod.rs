@@ -134,6 +134,7 @@ pub struct TeamworkLauncher {
     fetch_servers_subscription_id: u64,
     shift_pressed: bool,
     theme: Theme,
+    is_loading: bool,
 }
 
 impl TeamworkLauncher {
@@ -152,6 +153,7 @@ impl TeamworkLauncher {
     }
 
     fn on_finish(&mut self) {
+        self.is_loading = false;
         self.sort_server();
 
         let mut servers_refs: Vec<&Server> = self.servers.iter().collect();
@@ -228,6 +230,7 @@ impl TeamworkLauncher {
     }
 
     fn refresh_servers(&mut self) {
+        self.is_loading = true;
         self.servers_counts.reset();
         self.servers.clear();
 
@@ -679,6 +682,7 @@ impl iced::Application for TeamworkLauncher {
                 shift_pressed: false,
                 system_info: None,
                 theme,
+                is_loading: false,
             },
             Command::none(),
         )
@@ -791,7 +795,8 @@ impl iced::Application for TeamworkLauncher {
                     &self.bookmarks,
                     &self.filter,
                     &self.game_modes,
-                    &self.servers_counts
+                    &self.servers_counts,
+                    self.is_loading,
                 ),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
                 Screens::Settings =>
