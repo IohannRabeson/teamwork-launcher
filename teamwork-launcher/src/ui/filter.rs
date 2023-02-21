@@ -4,23 +4,26 @@ use {
             filter::{
                 filter_servers::Filter,
                 properties_filter::PropertyFilterSwitch,
-                sort_servers::{SortCriterion, SortDirection},
             },
+            FilterMessage,
             game_mode::GameModes,
-            servers_counts::ServersCounts,
-            FilterMessage, Message, Property,
+            Message, Property, servers_counts::ServersCounts,
         },
         icons,
         ui::{buttons::svg_button, widgets::tooltip},
     },
     iced::{
-        widget::{
+        Element,
+        Length, widget::{
             checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position, vertical_space,
         },
-        Element, Length,
     },
     itertools::Itertools,
 };
+use crate::ui::AVAILABLE_CRITERION;
+use crate::ui::AVAILABLE_DIRECTIONS;
+use crate::ui;
+use crate::ui::{PICK_LIST_WIDTH, PROPERTY_FILTER_VALUES};
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
@@ -129,13 +132,6 @@ pub fn game_modes_filter<'l>(
         .into()
 }
 
-const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
-    PropertyFilterSwitch::With,
-    PropertyFilterSwitch::Without,
-    PropertyFilterSwitch::Ignore,
-];
-const PICK_LIST_WIDTH: Length = Length::Fixed(90.0);
-
 fn property_switch<'l>(
     label: String,
     property: PropertyFilterSwitch,
@@ -144,7 +140,7 @@ fn property_switch<'l>(
     let selector = pick_list(PROPERTY_FILTER_VALUES.as_slice(), Some(property), f)
         .text_size(16)
         .padding([2, 4])
-        .width(PICK_LIST_WIDTH);
+        .width(ui::PICK_LIST_WIDTH);
 
     row![text(label), horizontal_space(Length::Fill), selector].spacing(8).into()
 }
@@ -266,17 +262,6 @@ pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> El
         })
         .into()
 }
-
-const AVAILABLE_CRITERION: [SortCriterion; 6] = [
-    SortCriterion::Ip,
-    SortCriterion::Name,
-    SortCriterion::Country,
-    SortCriterion::Ping,
-    SortCriterion::Players,
-    SortCriterion::PlayerSlots,
-];
-
-const AVAILABLE_DIRECTIONS: [SortDirection; 2] = [SortDirection::Ascending, SortDirection::Descending];
 
 pub fn server_sort(filter: &Filter) -> Element<Message> {
     column![

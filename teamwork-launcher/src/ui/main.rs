@@ -1,3 +1,4 @@
+use iced_spinner::spinner;
 use {
     crate::{
         application::{
@@ -27,11 +28,26 @@ pub fn view<'l>(
     filter: &'l Filter,
     game_modes: &'l GameModes,
     counts: &'l ServersCounts,
+    is_loading: bool,
 ) -> Element<'l, Message> {
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
     let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
-            PaneId::Servers => servers_view(servers, bookmarks, filter, game_modes).into(),
+            PaneId::Servers => {
+                match is_loading {
+                    false => servers_view(servers, bookmarks, filter, game_modes),
+                    true => {
+                        container(spinner()
+                                            .width(Length::Fixed(20.0))
+                                            .height(Length::Fixed(20.0)))
+                            .width(Length::Fill)
+                            .height(Length::Fill)
+                            .center_x()
+                            .center_y()
+                            .into()
+                    }
+                }
+            }.into(),
             PaneId::Filters => filter_view(filter, game_modes, counts).into(),
         }))
     })
