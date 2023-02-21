@@ -221,7 +221,7 @@ pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element
             .maps
             .dictionary
             .iter()
-            .filter(|(name, enabled)| { name.as_str().contains(&filter.maps.text) })
+            .filter(|(name, _enabled)| { name.as_str().contains(&filter.maps.text) })
             .filter_map(|(name, enabled)| {
                 let count = *counts.maps.get(name).unwrap_or(&0);
 

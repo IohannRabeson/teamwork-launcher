@@ -1,5 +1,3 @@
-use iced::{system, widget::pane_grid};
-
 use {
     crate::application::{
         filter::{
@@ -14,7 +12,7 @@ use {
         user_settings::LauncherTheme,
         Country, FetchServersEvent, IpPort, Server,
     },
-    iced::{futures::channel::mpsc::UnboundedSender, widget::image},
+    iced::{futures::channel::mpsc::UnboundedSender, widget::{image, pane_grid}},
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
 
@@ -123,7 +121,6 @@ pub enum Message {
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
-    SystemInfoUpdated(system::Information),
     Back,
 }
 

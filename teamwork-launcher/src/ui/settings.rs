@@ -4,7 +4,7 @@ use {
         ui::{styles::BoxContainerStyle, SettingsMessage},
     },
     iced::{
-        system, theme,
+        theme,
         widget::{checkbox, column, container, pick_list, scrollable, text, text_input},
         Element, Length,
     },
@@ -15,7 +15,6 @@ const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 pub fn view<'l>(
     settings: &'l UserSettings,
     sources: &'l [ServersSource],
-    system_info: Option<&'l system::Information>,
 ) -> Element<'l, Message> {
     scrollable(
         column![
@@ -65,22 +64,6 @@ pub fn view<'l>(
                 ]
                 .spacing(4)
             ),
-            field(
-                Some("System information"),
-                None,
-                text(format!(
-                    "Memory usage: {}",
-                    match system_info.map(|info| info.memory_used) {
-                        Some(memory_usage) => {
-                            match memory_usage {
-                                Some(memory_usage) => bytesize::ByteSize(memory_usage).to_string(),
-                                None => String::from("unknown"),
-                            }
-                        }
-                        None => String::from("Loading"),
-                    }
-                ))
-            )
         ]
         .padding(8)
         .spacing(8),
