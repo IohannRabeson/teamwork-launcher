@@ -409,6 +409,9 @@ impl TeamworkLauncher {
             FilterMessage::ProviderFilterEnabled(enabled) => {
                 self.filter.providers.enabled = enabled;
             }
+            FilterMessage::MapNameFilterChanged(text) => {
+                self.filter.maps.text = text;
+            }
         }
     }
 

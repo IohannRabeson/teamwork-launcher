@@ -213,27 +213,34 @@ pub fn players_filter(filter: &Filter) -> Element<Message> {
 }
 
 pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
-    filter
-        .maps
-        .dictionary
-        .iter()
-        .filter_map(|(name, enabled)| {
-            let count = *counts.maps.get(name).unwrap_or(&0);
+    column![
+        text_input("Filter", &filter.maps.text, |text| Message::Filter(
+            FilterMessage::MapNameFilterChanged(text)
+        )),
+        filter
+            .maps
+            .dictionary
+            .iter()
+            .filter(|(name, enabled)| { name.as_str().contains(&filter.maps.text) })
+            .filter_map(|(name, enabled)| {
+                let count = *counts.maps.get(name).unwrap_or(&0);
 
-            if count == 0 {
-                return None;
-            }
+                if count == 0 {
+                    return None;
+                }
 
-            Some((name, enabled, count))
-        })
-        .fold(column![].spacing(4), |column, (name, enabled, count)| {
-            let label = format!("{} ({})", name.as_str(), count);
+                Some((name, enabled, count))
+            })
+            .fold(column![].spacing(4), |column, (name, enabled, count)| {
+                let label = format!("{} ({})", name.as_str(), count);
 
-            column.push(checkbox(label, enabled, move |checked| {
-                Message::Filter(FilterMessage::MapChecked(name.clone(), checked))
-            }))
-        })
-        .into()
+                column.push(checkbox(label, enabled, move |checked| {
+                    Message::Filter(FilterMessage::MapChecked(name.clone(), checked))
+                }))
+            })
+    ]
+    .spacing(4)
+    .into()
 }
 
 pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {

@@ -119,6 +119,7 @@ mod map_filter {
     pub struct MapFilter {
         pub dictionary: FilterDictionary<MapName>,
         pub enabled: bool,
+        pub text: String,
     }
 
     impl Default for MapFilter {
@@ -126,6 +127,7 @@ mod map_filter {
             Self {
                 dictionary: FilterDictionary::new(),
                 enabled: false,
+                text: String::new(),
             }
         }
     }

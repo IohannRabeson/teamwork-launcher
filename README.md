@@ -4,5 +4,6 @@ Launcher for Team Fortress 2 that uses Teamwork.tf as data source.
 
 ![Main view screenshot](/screenshots/main_view.png?raw=true)
 
-## How to run tests
-You must define an environment variable TEST_TEAMWORK_API_KEY containing you API key.  
+# How to use it
+You must have a [Teamwork](https://teamwork.tf) API key.  
+To get one, connect to [teamwork.tf](https://teamwork.tf), go to https://teamwork.tf/settings and click "Show optional settings".
