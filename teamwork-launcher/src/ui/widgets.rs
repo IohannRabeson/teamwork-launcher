@@ -62,7 +62,7 @@ pub fn tooltip<'a>(
 pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
         PromisedValue::Ready(duration) => ping_icon(duration, 20),
-        PromisedValue::Loading => text("Loading...").into(),
+        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => text("Timeout").into(),
     }
 }
@@ -72,15 +72,17 @@ pub fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Messa
         PromisedValue::Ready(country) => row![text("Region:".to_string()), country_icon(country, size, padding)]
             .spacing(4)
             .into(),
-        PromisedValue::Loading => text("Region: loading...").into(),
+        PromisedValue::Loading => row![text("Region:"), spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0))].spacing(4).into(),
         PromisedValue::None => text("Region: unknown").into(),
     }
 }
 
+use iced_spinner::spinner;
+
 fn image_thumbnail_content<'a>(server: &Server) -> Element<'a, Message> {
     match &server.map_thumbnail {
         PromisedValue::Ready(image) => Image::new(image.clone()).into(),
-        PromisedValue::Loading => return text("Loading").into(),
+        PromisedValue::Loading => return spinner().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
     }
 }

@@ -12,6 +12,7 @@ build = "build.rs"
 teamwork = { path = "../teamwork" }
 iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "svg", "image", "system"] }
 iced_lazy = { git = "https://github.com/iced-rs/iced" }
+iced_spinner = { git = "https://github.com/IohannRabeson/iced_spinner" }
 async-stream = "0.3.3"
 thiserror = "1"
 static_assertions = "1.1.0"
