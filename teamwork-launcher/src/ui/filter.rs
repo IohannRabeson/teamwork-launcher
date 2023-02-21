@@ -260,13 +260,14 @@ pub fn providers_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> El
         .into()
 }
 
-const AVAILABLE_CRITERION: [SortCriterion; 6] = [
+const AVAILABLE_CRITERION: [SortCriterion; 7] = [
     SortCriterion::Ip,
     SortCriterion::Name,
     SortCriterion::Country,
     SortCriterion::Ping,
     SortCriterion::Players,
     SortCriterion::PlayerSlots,
+    SortCriterion::FreePlayerSlots,
 ];
 
 const AVAILABLE_DIRECTIONS: [SortDirection; 2] = [SortDirection::Ascending, SortDirection::Descending];
