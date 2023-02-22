@@ -10,8 +10,9 @@ build = "build.rs"
 
 [dependencies]
 teamwork = { path = "../teamwork" }
-iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "svg", "image", "system"] }
-iced_lazy = { git = "https://github.com/iced-rs/iced" }
+iced = { version = "0.8.0", features = ["tokio", "svg", "image", "system"] }
+iced_lazy = "0.5.0"
+iced_native = "0.9.1"
 iced_spinner = { git = "https://github.com/IohannRabeson/iced_spinner" }
 async-stream = "0.3.3"
 thiserror = "1"
@@ -29,9 +30,9 @@ unidecode = "0.3.0"
 sysinfo = "0.28.0"
 platform-dirs = "0.3.0"
 bytesize = "1.1.0"
+tokio = { version = "1.25.0", features = ["macros", "time"] }
 
 [dev-dependencies]
-tokio = { version = "1.25.0", features = ["macros"] }
 test-case = "3.0.0"
 
 [build-dependencies]
