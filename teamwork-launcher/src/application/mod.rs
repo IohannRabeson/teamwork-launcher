@@ -541,7 +541,7 @@ impl TeamworkLauncher {
     fn copy_connection_string(&mut self, ip_port: IpPort) -> Command<Message> {
         let connection_string = ip_port.steam_connection_string();
 
-        self.push_notification("Copied to clipboard", NotificationKind::Info);
+        self.push_notification("Copied to clipboard", NotificationKind::Feedback);
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
@@ -596,7 +596,7 @@ impl TeamworkLauncher {
         let text = Self::remove_api_key(&self.user_settings, text);
         let duration = match kind {
             NotificationKind::Error => None,
-            NotificationKind::Info => Some(Duration::from_secs(5)),
+            NotificationKind::Feedback => Some(Duration::from_secs(5)),
         };
         self.notifications.push(Notification::new(text, duration, kind));
     }

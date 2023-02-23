@@ -6,23 +6,23 @@ use {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum NotificationKind {
-    Info,
+    Feedback,
     Error,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Notification {
     pub text: String,
-    pub duration: Option<Duration>,
+    pub expiry: Option<Duration>,
     pub kind: NotificationKind,
     pub multiplier: usize,
 }
 
 impl Notification {
-    pub fn new(text: impl ToString, duration: Option<Duration>, kind: NotificationKind) -> Self {
+    pub fn new(text: impl ToString, expiry: Option<Duration>, kind: NotificationKind) -> Self {
         Self {
             text: text.to_string(),
-            duration,
+            expiry,
             kind,
             multiplier: 1,
         }
@@ -35,12 +35,16 @@ impl Notification {
 
 pub struct Notifications {
     current: Option<(Notification, Instant)>,
+    /// Queue of pending notifications.
+    /// The new element are push to the back, and the front elements are consumed.
+    pending: Vec<Notification>,
 }
 
 impl Notifications {
     pub fn new() -> Self {
         Self {
             current: None,
+            pending: Vec::new(),
         }
     }
 
@@ -48,6 +52,7 @@ impl Notifications {
         self.current.as_ref().map(|(notification, _)| notification)
     }
 
+    /// Push a new notification
     pub fn push(&mut self, notification: Notification) {
         let now = Instant::now();
 
@@ -59,6 +64,8 @@ impl Notifications {
                 if current.can_combine(&notification) {
                     *started = now;
                     current.multiplier += 1;
+                } else if current.expiry.is_none() {
+                    self.pending.push(notification);
                 } else {
                     self.current = Some((notification, now));
                 }
@@ -72,15 +79,25 @@ impl Notifications {
 
     pub fn update(&mut self) {
         if let Some((notification, instant)) = &self.current {
-            if let Some(duration) = notification.duration {
+            if let Some(duration) = notification.expiry {
                 if Instant::now() - *instant >= duration {
-                    self.current = None;
+                    self.current = self.take_next_pending();
                 }
             }
         }
     }
 
     pub fn subscription(&self) -> Subscription<NotificationMessage> {
-        iced::time::every(std::time::Duration::from_millis(20)).map(|_| NotificationMessage::Update)
+        const REFRESH_RATE: Duration = Duration::from_millis(20);
+
+        iced::time::every(REFRESH_RATE).map(|_| NotificationMessage::Update)
+    }
+
+    fn take_next_pending(&mut self) -> Option<(Notification, Instant)> {
+        if self.pending.is_empty() {
+            None
+        } else {
+            Some((self.pending.remove(0), Instant::now()))
+        }
     }
 }

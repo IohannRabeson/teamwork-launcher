@@ -24,9 +24,9 @@ const BIG_BUTTON_SIZE: u16 = 26;
 const VERSION_FONT_SIZE: u16 = 16;
 const VISUAL_SPACING_SMALL: u16 = 4;
 
-struct InfoNotificationStyle;
+struct FeedbackNotificationStyle;
 
-impl button::StyleSheet for InfoNotificationStyle {
+impl button::StyleSheet for FeedbackNotificationStyle {
     type Style = Theme;
 
     fn active(&self, style: &Self::Style) -> button::Appearance {
@@ -38,12 +38,32 @@ impl button::StyleSheet for InfoNotificationStyle {
     }
 }
 
+struct ErrorNotificationStyle;
+
+impl button::StyleSheet for ErrorNotificationStyle {
+    type Style = Theme;
+
+    fn active(&self, style: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            background: Some(Background::Color(style.palette().danger)),
+            text_color: style.palette().text,
+            ..Default::default()
+        }
+    }
+}
+
 fn create_notification(notification: &Notification) -> Element<Message> {
-    button(row![text(&notification.text), text(format!("x{}", notification.multiplier))].spacing(4))
+    let button_content = if notification.multiplier > 1 {
+        row![text(&notification.text), text(format!("x{}", notification.multiplier))]
+    } else {
+        row![text(&notification.text)]
+    };
+
+    button(button_content.align_items(Alignment::Center).spacing(4))
         .on_press(Message::Notification(NotificationMessage::Clear))
         .style(match notification.kind {
-            NotificationKind::Info => theme::Button::Custom(Box::new(InfoNotificationStyle {})),
-            NotificationKind::Error => theme::Button::Destructive,
+            NotificationKind::Feedback => theme::Button::Custom(Box::new(FeedbackNotificationStyle {})),
+            NotificationKind::Error => theme::Button::Custom(Box::new(ErrorNotificationStyle {})),
         })
         .into()
 }

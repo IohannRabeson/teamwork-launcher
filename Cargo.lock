@@ -1323,7 +1323,7 @@ dependencies = [
 [[package]]
 name = "iced_aw"
 version = "0.4.0"
-source = "git+https://github.com/IohannRabeson/iced_aw?branch=anchors#d8a019bd737e271d0b57bc50c8921ea49471edd0"
+source = "git+https://github.com/iced-rs/iced_aw#f2b1bbb743303ccac304e8c4e5f93336a7619628"
 dependencies = [
  "iced_graphics",
  "iced_native",
