@@ -664,7 +664,7 @@ mod palettes {
             background: Color::from_rgb8(38, 35, 33),
             text: Color::from([0.9, 0.9, 0.9]),
             primary: Color::from_rgb8(57, 92, 120),
-            success: Color::from_rgb8(114, 192, 131),
+            success: Color::from_rgb8(75, 116, 28),
             danger: Color::from_rgb8(189, 59, 59),
         })
     }
@@ -674,7 +674,7 @@ mod palettes {
             background: Color::from_rgb8(38, 35, 33),
             text: Color::from([0.9, 0.9, 0.9]),
             primary: Color::from_rgb8(159, 49, 47),
-            success: Color::from_rgb8(114, 192, 131),
+            success: Color::from_rgb8(75, 116, 28),
             danger: Color::from_rgb8(189, 59, 59),
         })
     }
