@@ -1321,6 +1321,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced_aw"
+version = "0.4.0"
+source = "git+https://github.com/IohannRabeson/iced_aw?branch=anchors#b7650c0fc62a6d0020bca37dd42b6b1badc2ab68"
+dependencies = [
+ "iced_graphics",
+ "iced_native",
+ "iced_style",
+]
+
+[[package]]
 name = "iced_core"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3124,6 +3134,7 @@ dependencies = [
  "async-stream",
  "bytesize",
  "iced",
+ "iced_aw",
  "iced_lazy",
  "iced_native",
  "iced_spinner",

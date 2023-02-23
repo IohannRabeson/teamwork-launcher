@@ -12,7 +12,10 @@ use {
         user_settings::LauncherTheme,
         Country, FetchServersEvent, IpPort, Server,
     },
-    iced::{futures::channel::mpsc::UnboundedSender, widget::{image, pane_grid}},
+    iced::{
+        futures::channel::mpsc::UnboundedSender,
+        widget::{image, pane_grid},
+    },
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
 
@@ -36,6 +39,12 @@ pub enum PingServiceMessage {
     Started(UnboundedSender<Ipv4Addr>),
     Answer(Ipv4Addr, Duration),
     Error(Ipv4Addr, ping::Error),
+}
+
+#[derive(Debug, Clone)]
+pub enum NotificationMessage {
+    Update,
+    Clear,
 }
 
 #[derive(Debug, Clone)]
@@ -114,6 +123,7 @@ pub enum Message {
     Pane(PaneMessage),
     GameModes(GameModesMessage),
     Keyboard(KeyboardMessage),
+    Notification(NotificationMessage),
     RefreshServers,
     ShowSettings,
     ShowServer(IpPort),
@@ -168,5 +178,11 @@ impl From<GameModesMessage> for Message {
 impl From<KeyboardMessage> for Message {
     fn from(value: KeyboardMessage) -> Self {
         Message::Keyboard(value)
+    }
+}
+
+impl From<NotificationMessage> for Message {
+    fn from(message: NotificationMessage) -> Self {
+        Message::Notification(message)
     }
 }

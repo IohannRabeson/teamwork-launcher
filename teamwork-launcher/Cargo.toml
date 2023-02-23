@@ -13,6 +13,8 @@ teamwork = { path = "../teamwork" }
 iced = { version = "0.8.0", features = ["tokio", "svg", "image", "system"] }
 iced_lazy = "0.5.0"
 iced_native = "0.9.1"
+# If https://github.com/iced-rs/iced_aw/pull/92 is merged, switch back to the original repository
+iced_aw = { git = "https://github.com/IohannRabeson/iced_aw", branch = "anchors", default-features = false, features = ["floating_element"] }
 iced_spinner = { git = "https://github.com/IohannRabeson/iced_spinner" }
 async-stream = "0.3.3"
 thiserror = "1"

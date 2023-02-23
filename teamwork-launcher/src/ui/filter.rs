@@ -1,29 +1,25 @@
 use {
     crate::{
         application::{
-            filter::{
-                filter_servers::Filter,
-                properties_filter::PropertyFilterSwitch,
-            },
-            FilterMessage,
+            filter::{filter_servers::Filter, properties_filter::PropertyFilterSwitch},
             game_mode::GameModes,
-            Message, Property, servers_counts::ServersCounts,
+            servers_counts::ServersCounts,
+            FilterMessage, Message, Property,
         },
         icons,
-        ui::{buttons::svg_button, widgets::tooltip},
+        ui::{
+            self, buttons::svg_button, widgets::tooltip, AVAILABLE_CRITERION, AVAILABLE_DIRECTIONS, PICK_LIST_WIDTH,
+            PROPERTY_FILTER_VALUES,
+        },
     },
     iced::{
-        Element,
-        Length, widget::{
+        widget::{
             checkbox, column, horizontal_space, pick_list, row, slider, text, text_input, tooltip::Position, vertical_space,
         },
+        Element, Length,
     },
     itertools::Itertools,
 };
-use crate::ui::AVAILABLE_CRITERION;
-use crate::ui::AVAILABLE_DIRECTIONS;
-use crate::ui;
-use crate::ui::{PICK_LIST_WIDTH, PROPERTY_FILTER_VALUES};
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![

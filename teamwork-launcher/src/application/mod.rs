@@ -7,7 +7,8 @@ mod geolocation;
 pub mod ip_port;
 mod launcher;
 mod map;
-mod message;
+pub mod message;
+pub mod notifications;
 mod ping;
 mod process_detection;
 pub mod promised_value;
@@ -69,7 +70,8 @@ use {
             game_mode::{GameModeId, GameModes},
             launcher::ExecutableLauncher,
             map::MapName,
-            message::KeyboardMessage,
+            message::{KeyboardMessage, NotificationMessage},
+            notifications::{Notification, NotificationKind, Notifications},
             servers_source::{ServersSource, SourceKey},
         },
         common_settings::{get_configuration_directory, write_file},
@@ -134,6 +136,7 @@ pub struct TeamworkLauncher {
     shift_pressed: bool,
     theme: Theme,
     is_loading: bool,
+    notifications: Notifications,
 }
 
 impl TeamworkLauncher {
@@ -443,7 +446,7 @@ impl TeamworkLauncher {
                     .extend(game_modes.into_iter().map(|mode| GameModeId::new(mode.id)));
             }
             GameModesMessage::Error(error) => {
-                eprintln!("Failed to fetch game modes: {}", error)
+                self.push_notification(format!("Failed to fetch game modes: {}", error), NotificationKind::Error);
             }
         }
     }
@@ -455,6 +458,17 @@ impl TeamworkLauncher {
             }
             KeyboardMessage::ShiftReleased => {
                 self.shift_pressed = false;
+            }
+        }
+    }
+
+    fn process_notification_message(&mut self, message: NotificationMessage) {
+        match message {
+            NotificationMessage::Update => {
+                self.notifications.update();
+            }
+            NotificationMessage::Clear => {
+                self.notifications.clear_current();
             }
         }
     }
@@ -509,10 +523,10 @@ impl TeamworkLauncher {
         }
     }
 
-    fn launch_game(&self, ip_port: &IpPort) -> Command<Message> {
+    fn launch_game(&mut self, ip_port: &IpPort) -> Command<Message> {
         match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
             Err(error) => {
-                eprintln!("Error: {}", error);
+                self.push_notification(error, NotificationKind::Error);
             }
             Ok(()) => {
                 if self.user_settings.quit_on_launch {
@@ -524,9 +538,10 @@ impl TeamworkLauncher {
         Command::none()
     }
 
-    fn copy_connection_string(&self, ip_port: IpPort) -> Command<Message> {
+    fn copy_connection_string(&mut self, ip_port: IpPort) -> Command<Message> {
         let connection_string = ip_port.steam_connection_string();
 
+        self.push_notification("Copied to clipboard", NotificationKind::Info);
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
@@ -538,21 +553,14 @@ impl TeamworkLauncher {
     /// The result will be: `3 -> 3, 2 -> 2, 1 -> 1`
     fn histogram<T: Ord>(values: impl Iterator<Item = T>) -> BTreeMap<T, usize> {
         values.fold(BTreeMap::new(), |mut count, value| {
-            match count.entry(value) {
-                Vacant(vacant) => {
-                    vacant.insert(1usize);
-                }
-                Occupied(mut occupied) => {
-                    *occupied.get_mut() += 1;
-                }
-            }
+            Self::increment_count(&mut count, value);
 
             count
         })
     }
 
-    fn increment_count(count: &mut BTreeMap<Property, usize>, property: Property) {
-        match count.entry(property) {
+    fn increment_count<K: Ord>(count: &mut BTreeMap<K, usize>, key: K) {
+        match count.entry(key) {
             Vacant(vacant) => {
                 vacant.insert(1usize);
             }
@@ -582,6 +590,19 @@ impl TeamworkLauncher {
         }
 
         count
+    }
+
+    fn push_notification(&mut self, text: impl ToString, kind: NotificationKind) {
+        let text = Self::remove_api_key(&self.user_settings, text);
+        let duration = match kind {
+            NotificationKind::Error => None,
+            NotificationKind::Info => Some(Duration::from_secs(5)),
+        };
+        self.notifications.push(Notification::new(text, duration, kind));
+    }
+
+    fn remove_api_key(settings: &UserSettings, text: impl ToString) -> String {
+        text.to_string().replace(&settings.teamwork_api_key, "****")
     }
 }
 
@@ -641,20 +662,20 @@ mod palettes {
     pub fn create_blue_palette() -> theme::Custom {
         theme::Custom::new(theme::palette::Palette {
             background: Color::from_rgb8(38, 35, 33),
-            text: Color::WHITE,
+            text: Color::from([0.9, 0.9, 0.9]),
             primary: Color::from_rgb8(57, 92, 120),
-            success: Default::default(),
-            danger: Default::default(),
+            success: Color::from_rgb8(114, 192, 131),
+            danger: Color::from_rgb8(189, 59, 59),
         })
     }
 
     pub fn create_red_palette() -> theme::Custom {
         theme::Custom::new(theme::palette::Palette {
             background: Color::from_rgb8(38, 35, 33),
-            text: Color::WHITE,
+            text: Color::from([0.9, 0.9, 0.9]),
             primary: Color::from_rgb8(159, 49, 47),
-            success: Default::default(),
-            danger: Default::default(),
+            success: Color::from_rgb8(114, 192, 131),
+            danger: Color::from_rgb8(189, 59, 59),
         })
     }
 }
@@ -686,6 +707,7 @@ impl iced::Application for TeamworkLauncher {
                 shift_pressed: false,
                 theme,
                 is_loading: false,
+                notifications: Notifications::new(),
             },
             Command::none(),
         )
@@ -717,7 +739,7 @@ impl iced::Application for TeamworkLauncher {
                 self.country_found(ip, country);
             }
             Message::Country(CountryServiceMessage::Error(error)) => {
-                eprintln!("Error: {}", error);
+                eprintln!("Country service error: {}", error);
             }
             Message::Ping(PingServiceMessage::Started(sender)) => {
                 self.ping_request_sender = Some(sender);
@@ -727,7 +749,7 @@ impl iced::Application for TeamworkLauncher {
                 self.ping_found(ip, Some(duration));
             }
             Message::Ping(PingServiceMessage::Error(ip, error)) => {
-                eprintln!("Error: {}", error);
+                eprintln!("Ping service error: {}", error);
                 self.ping_found(ip, None);
             }
             Message::Thumbnail(ThumbnailMessage::Started(sender)) => {
@@ -739,7 +761,7 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::Thumbnail(ThumbnailMessage::Error(map_name, error)) => {
                 self.thumbnail_ready(map_name, None);
-                eprintln!("Error: {}", error);
+                eprintln!("Thumbnail service error: {}", error);
             }
             Message::Filter(message) => {
                 self.process_filter_message(message);
@@ -749,6 +771,9 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::Keyboard(message) => {
                 self.process_keyboard_message(message);
+            }
+            Message::Notification(message) => {
+                self.process_notification_message(message);
             }
             Message::Back => {
                 self.views.pop();
@@ -786,7 +811,7 @@ impl iced::Application for TeamworkLauncher {
         let current = self.views.current().expect("valid view");
 
         container(column![
-            ui::header::header_view("Teamwork Launcher", current),
+            ui::header::header_view("Teamwork Launcher", current, &self.notifications),
             match current {
                 Screens::Main(view) => ui::main::view(
                     view,
@@ -798,8 +823,7 @@ impl iced::Application for TeamworkLauncher {
                     self.is_loading,
                 ),
                 Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
-                Screens::Settings =>
-                    ui::settings::view(&self.user_settings, &self.servers_sources),
+                Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
         ])
         .style(theme::Container::Custom(Box::new(MainBackground {})))
@@ -825,6 +849,7 @@ impl iced::Application for TeamworkLauncher {
                 .map(Message::from),
             keyboard::subscription().map(Message::from),
             window::subscription(),
+            self.notifications.subscription().map(Message::from),
         ])
     }
 }

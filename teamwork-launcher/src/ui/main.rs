@@ -1,5 +1,3 @@
-use iced::Length;
-use iced_spinner::spinner;
 use {
     crate::{
         application::{
@@ -17,9 +15,10 @@ use {
     iced::{
         theme,
         widget::{column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, Container, PaneGrid},
-        Alignment, Element,
+        Alignment, Element, Length,
     },
     iced_lazy::responsive,
+    iced_spinner::spinner,
 };
 
 pub fn view<'l>(
@@ -37,18 +36,15 @@ pub fn view<'l>(
             PaneId::Servers => {
                 match is_loading {
                     false => servers_view(servers, bookmarks, filter, game_modes),
-                    true => {
-                        container(spinner()
-                                            .width(Length::Fixed(20.0))
-                                            .height(Length::Fixed(20.0)))
-                            .width(Length::Fill)
-                            .height(Length::Fill)
-                            .center_x()
-                            .center_y()
-                            .into()
-                    }
+                    true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .center_x()
+                        .center_y()
+                        .into(),
                 }
-            }.into(),
+            }
+            .into(),
             PaneId::Filters => filter_view(filter, game_modes, counts).into(),
         }))
     })
