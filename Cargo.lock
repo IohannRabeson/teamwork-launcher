@@ -1323,7 +1323,7 @@ dependencies = [
 [[package]]
 name = "iced_aw"
 version = "0.4.0"
-source = "git+https://github.com/IohannRabeson/iced_aw?branch=anchors#b7650c0fc62a6d0020bca37dd42b6b1badc2ab68"
+source = "git+https://github.com/IohannRabeson/iced_aw?branch=anchors#d8a019bd737e271d0b57bc50c8921ea49471edd0"
 dependencies = [
  "iced_graphics",
  "iced_native",
@@ -3073,9 +3073,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "d56e159d99e6c2b93995d171050271edb50ecc5288fbc7cc17de8fdce4e58c14"
 dependencies = [
  "proc-macro2",
  "quote",
