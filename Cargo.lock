@@ -3136,7 +3136,6 @@ dependencies = [
  "iced",
  "iced_aw",
  "iced_lazy",
- "iced_native",
  "iced_spinner",
  "include_dir",
  "iso_country",

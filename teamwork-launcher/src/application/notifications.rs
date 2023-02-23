@@ -1,6 +1,6 @@
 use {
     crate::application::message::NotificationMessage,
-    iced_native::Subscription,
+    iced::Subscription,
     std::time::{Duration, Instant},
 };
 
