@@ -82,5 +82,5 @@ pub fn subscription(id: u64, teamwork_api_key: &str) -> Subscription<GameModesMe
         }
     };
 
-    subscription::run_with_id(id, s)
+    subscription::run(id, s)
 }
