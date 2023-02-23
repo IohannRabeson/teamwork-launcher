@@ -74,6 +74,7 @@ pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notificat
         None => content.into(),
         Some(notification) => FloatingElement::new(content, || create_notification(notification))
             .anchor(Anchor::North)
+            .offset([0.0, 8.0])
             .into(),
     }
 }

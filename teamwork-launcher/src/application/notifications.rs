@@ -49,23 +49,24 @@ impl Notifications {
     }
 
     pub fn push(&mut self, notification: Notification) {
+        let now = Instant::now();
+
         match self.current.as_mut() {
             None => {
-                self.current = Some((notification, Instant::now()));
+                self.current = Some((notification, now));
             }
             Some((current, started)) => {
                 if current.can_combine(&notification) {
-                    *started = Instant::now();
+                    *started = now;
                     current.multiplier += 1;
                 } else {
-                    self.current = Some((notification, Instant::now()));
+                    self.current = Some((notification, now));
                 }
             }
         }
     }
 
     pub fn clear_current(&mut self) {
-        println!("clear current");
         self.current = None;
     }
 
