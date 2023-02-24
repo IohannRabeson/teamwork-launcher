@@ -122,6 +122,7 @@ pub enum Property {
     NoRespawnTime,
     Password,
     VacSecured,
+    RandomCrits,
 }
 
 pub struct TeamworkLauncher {
@@ -415,6 +416,9 @@ impl TeamworkLauncher {
             FilterMessage::PasswordChanged(checked) => {
                 self.filter.password = checked;
             }
+            FilterMessage::RandomCritsChanged(checked) => {
+                self.filter.random_crits = checked;
+            }
             FilterMessage::SortCriterionChanged(criterion) => {
                 self.filter.sort_criterion = criterion;
                 self.sort_server();
@@ -686,6 +690,8 @@ impl TeamworkLauncher {
                 Self::increment_count(&mut count, Property::AllTalk);
             } else if server.vac_secured {
                 Self::increment_count(&mut count, Property::VacSecured);
+            } else if server.has_random_crits {
+                Self::increment_count(&mut count, Property::RandomCrits);
             }
         }
 
