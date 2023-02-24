@@ -1,10 +1,10 @@
-use std::time::Duration;
-use iced::futures::channel::mpsc::UnboundedSender;
-use iced::futures::SinkExt;
 use {
     crate::application::{map::MapName, message::ThumbnailMessage},
     iced::{
-        futures::channel::mpsc::{unbounded, UnboundedReceiver},
+        futures::{
+            channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+            SinkExt,
+        },
         subscription,
         widget::image,
         Subscription,
@@ -12,6 +12,7 @@ use {
     std::{
         collections::{btree_map::Entry, BTreeMap},
         sync::Arc,
+        time::Duration,
     },
 };
 
@@ -41,10 +42,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
             match state {
                 State::Wait(duration, context) => {
                     tokio::time::sleep(duration).await;
-                    (
-                        None,
-                        State::Ready(context),
-                    )
+                    (None, State::Ready(context))
                 }
                 State::Starting { api_key } => {
                     let (sender, receiver) = unbounded();
