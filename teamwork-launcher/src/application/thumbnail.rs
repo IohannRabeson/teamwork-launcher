@@ -1,3 +1,6 @@
+use std::time::Duration;
+use iced::futures::channel::mpsc::UnboundedSender;
+use iced::futures::SinkExt;
 use {
     crate::application::{map::MapName, message::ThumbnailMessage},
     iced::{
@@ -15,9 +18,11 @@ use {
 enum State {
     Starting { api_key: String },
     Ready(Context),
+    Wait(Duration, Context),
 }
 
 struct Context {
+    requests_sender: UnboundedSender<MapName>,
     requests_receiver: UnboundedReceiver<MapName>,
     client: teamwork::Client,
     teamwork_api_key: String,
@@ -25,6 +30,8 @@ struct Context {
 }
 
 pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
+    const SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS: u64 = 60;
+
     subscription::unfold(
         id,
         State::Starting {
@@ -32,9 +39,17 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
         },
         |state| async move {
             match state {
+                State::Wait(duration, context) => {
+                    tokio::time::sleep(duration).await;
+                    (
+                        None,
+                        State::Ready(context),
+                    )
+                }
                 State::Starting { api_key } => {
                     let (sender, receiver) = unbounded();
                     let context = Context {
+                        requests_sender: sender.clone(),
                         requests_receiver: receiver,
                         teamwork_api_key: api_key,
                         client: teamwork::Client::default(),
@@ -58,6 +73,14 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                                 Ok(thumbnail) => {
                                     vacant.insert(thumbnail.clone());
                                     (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context))
+                                }
+                                Err(teamwork::Error::TooManyAttempts) => {
+                                    context.requests_sender.send(map_name.clone()).await.unwrap();
+
+                                    (
+                                        Some(ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts))),
+                                        State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
+                                    )
                                 }
                                 Err(error) => (
                                     Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
