@@ -19,6 +19,7 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
+use std::time::Instant;
 use {
     iced::{
         theme,
@@ -167,14 +168,16 @@ impl TeamworkLauncher {
             right.cmp(&left)
         });
 
-        for map_name in servers_refs.iter().map(|server| server.map.clone()).unique() {
+        let unique_maps: Vec<&MapName> = servers_refs.iter().map(|server| &server.map).unique().collect();
+
+        // For each map, request the thumbnail
+        for map_name in unique_maps.iter().map(|name|(*name).clone()) {
             if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
                 thumbnail_sender
-                    .send(map_name.clone())
+                    .send(map_name)
                     .unwrap_or_else(|e| eprintln!("thumbnail sender {}", e))
                     .now_or_never();
             }
-            self.filter.maps.dictionary.add(map_name);
         }
 
         // Request country for each server
@@ -229,21 +232,28 @@ impl TeamworkLauncher {
             }
             max
         });
+
+        for map_name in unique_maps.into_iter() {
+            self.filter.maps.dictionary.add(map_name.clone());
+        }
     }
 
     fn refresh_servers(&mut self) {
-        self.is_loading = true;
-        self.servers_counts.reset();
-        self.servers.clear();
-
-        self.filter.players.maximum_free_slots = 0;
-        self.filter.players.maximum_players = 0;
-
-        self.fetch_servers_subscription_id += 1;
+        if self.user_settings.teamwork_api_key.trim().is_empty() {
+            self.push_notification("No Teamwork.tf API key specified.\nSet your API key in the settings.", NotificationKind::Error);
+        } else {
+            self.is_loading = true;
+            self.servers_counts.reset();
+            self.servers.clear();
+            self.filter.players.maximum_free_slots = 0;
+            self.filter.players.maximum_players = 0;
+            self.fetch_servers_subscription_id += 1;
+        }
     }
 
     fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
         self.filter.country.dictionary.add(country.clone());
+
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             server.country = PromisedValue::Ready(country.clone());
         }
@@ -269,6 +279,17 @@ impl TeamworkLauncher {
         for server in self.servers.iter_mut().filter(|server| server.map == map_name) {
             if !server.map_thumbnail.is_ready() {
                 server.map_thumbnail = thumbnail.clone().into();
+            }
+        }
+    }
+
+    fn sort_server(&mut self) {
+        match self.filter.sort_direction {
+            SortDirection::Ascending => {
+                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, l, r));
+            }
+            SortDirection::Descending => {
+                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, r, l));
             }
         }
     }
@@ -425,14 +446,66 @@ impl TeamworkLauncher {
         }
     }
 
-    fn sort_server(&mut self) {
-        match self.filter.sort_direction {
-            SortDirection::Ascending => {
-                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, l, r));
+    fn process_thumbnail_message(&mut self, message: ThumbnailMessage) {
+        match message {
+            ThumbnailMessage::Started(sender) => {
+                self.map_thumbnail_request_sender = Some(sender);
+                eprintln!("thumbnail service started");
             }
-            SortDirection::Descending => {
-                self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, r, l));
+            ThumbnailMessage::Thumbnail(map_name, thumbnail) => {
+                self.thumbnail_ready(map_name, Some(thumbnail));
             }
+            ThumbnailMessage::Error(map_name, error) => {
+                self.thumbnail_ready(map_name, None);
+                eprintln!("Thumbnail service error: {}", error);
+            }
+        }
+    }
+
+    fn process_ping_message(&mut self, message: PingServiceMessage) {
+        match message {
+            PingServiceMessage::Started(sender) => {
+                self.ping_request_sender = Some(sender);
+                eprintln!("ping service started");
+            }
+            PingServiceMessage::Answer(ip, duration) => {
+                self.ping_found(ip, Some(duration));
+            }
+            PingServiceMessage::Error(ip, error) => {
+                eprintln!("Ping service error: {}", error);
+                self.ping_found(ip, None);
+            }
+        }
+    }
+
+    fn process_country_message(&mut self, message: CountryServiceMessage) {
+        match message {
+            CountryServiceMessage::Started(country_sender) => {
+                self.country_request_sender = Some(country_sender);
+                eprintln!("country service started");
+            }
+            CountryServiceMessage::CountryFound(ip, country) => {
+                self.country_found(ip, country);
+            }
+            CountryServiceMessage::Error(error) => {
+                eprintln!("Country service error: {}", error);
+            }
+        }
+    }
+
+    fn process_server_message(&mut self, message: FetchServersMessage) {
+        match message {
+            FetchServersMessage::FetchServersStart => {
+                println!("Start");
+            }
+            FetchServersMessage::FetchServersFinish => {
+                println!("Finish");
+                self.on_finish();
+            }
+            FetchServersMessage::FetchServersError(error) => {
+                eprintln!("Error: {}", error);
+            }
+            FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
         }
     }
 
@@ -446,7 +519,8 @@ impl TeamworkLauncher {
                     .extend(game_modes.into_iter().map(|mode| GameModeId::new(mode.id)));
             }
             GameModesMessage::Error(error) => {
-                self.push_notification(format!("Failed to fetch game modes: {}", error), NotificationKind::Error);
+                self.push_notification("Failed to fetch game modes.\nFiltering by game modes is disabled.", NotificationKind::Error);
+                eprintln!("Failed to fetch game modes: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, error.to_string()));
             }
         }
     }
@@ -465,7 +539,7 @@ impl TeamworkLauncher {
     fn process_notification_message(&mut self, message: NotificationMessage) {
         match message {
             NotificationMessage::Update => {
-                self.notifications.update();
+                self.notifications.update(Instant::now());
             }
             NotificationMessage::Clear => {
                 self.notifications.clear_current();
@@ -529,6 +603,7 @@ impl TeamworkLauncher {
                 self.push_notification(error, NotificationKind::Error);
             }
             Ok(()) => {
+                self.push_notification("Starting game!", NotificationKind::Feedback);
                 if self.user_settings.quit_on_launch {
                     return iced::window::close();
                 }
@@ -541,7 +616,7 @@ impl TeamworkLauncher {
     fn copy_connection_string(&mut self, ip_port: IpPort) -> Command<Message> {
         let connection_string = ip_port.steam_connection_string();
 
-        self.push_notification("Copied to clipboard", NotificationKind::Feedback);
+        self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
@@ -593,16 +668,21 @@ impl TeamworkLauncher {
     }
 
     fn push_notification(&mut self, text: impl ToString, kind: NotificationKind) {
-        let text = Self::remove_api_key(&self.user_settings, text);
+        const NOTIFICATION_DURATION_SECS: u64 = 2;
+        let text = Self::remove_api_key(&self.user_settings.teamwork_api_key, text);
         let duration = match kind {
             NotificationKind::Error => None,
-            NotificationKind::Feedback => Some(Duration::from_secs(5)),
+            NotificationKind::Feedback => Some(Duration::from_secs(NOTIFICATION_DURATION_SECS)),
         };
         self.notifications.push(Notification::new(text, duration, kind));
     }
 
-    fn remove_api_key(settings: &UserSettings, text: impl ToString) -> String {
-        text.to_string().replace(&settings.teamwork_api_key, "****")
+    fn remove_api_key(key: &str, text: impl ToString) -> String {
+        if key.is_empty() {
+            return text.to_string()
+        }
+
+        text.to_string().replace(key, "****")
     }
 }
 
@@ -719,49 +799,18 @@ impl iced::Application for TeamworkLauncher {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Message::Servers(FetchServersMessage::FetchServersStart) => {
-                println!("Start");
-            }
-            Message::Servers(FetchServersMessage::FetchServersFinish) => {
-                println!("Finish");
-                self.on_finish();
-            }
-            Message::Servers(FetchServersMessage::FetchServersError(error)) => {
-                eprintln!("Error: {}", error);
-            }
-            Message::Servers(FetchServersMessage::NewServers(new_servers)) => self.new_servers(new_servers),
             Message::RefreshServers => self.refresh_servers(),
-            Message::Country(CountryServiceMessage::Started(country_sender)) => {
-                self.country_request_sender = Some(country_sender);
-                eprintln!("country service started");
+            Message::Servers(message) => {
+                self.process_server_message(message);
             }
-            Message::Country(CountryServiceMessage::CountryFound(ip, country)) => {
-                self.country_found(ip, country);
+            Message::Country(message) => {
+                self.process_country_message(message);
             }
-            Message::Country(CountryServiceMessage::Error(error)) => {
-                eprintln!("Country service error: {}", error);
+            Message::Ping(message) => {
+                self.process_ping_message(message);
             }
-            Message::Ping(PingServiceMessage::Started(sender)) => {
-                self.ping_request_sender = Some(sender);
-                eprintln!("ping service started");
-            }
-            Message::Ping(PingServiceMessage::Answer(ip, duration)) => {
-                self.ping_found(ip, Some(duration));
-            }
-            Message::Ping(PingServiceMessage::Error(ip, error)) => {
-                eprintln!("Ping service error: {}", error);
-                self.ping_found(ip, None);
-            }
-            Message::Thumbnail(ThumbnailMessage::Started(sender)) => {
-                self.map_thumbnail_request_sender = Some(sender);
-                eprintln!("thumbnail service started");
-            }
-            Message::Thumbnail(ThumbnailMessage::Thumbnail(map_name, thumbnail)) => {
-                self.thumbnail_ready(map_name, Some(thumbnail));
-            }
-            Message::Thumbnail(ThumbnailMessage::Error(map_name, error)) => {
-                self.thumbnail_ready(map_name, None);
-                eprintln!("Thumbnail service error: {}", error);
+            Message::Thumbnail(message) => {
+                self.process_thumbnail_message(message);
             }
             Message::Filter(message) => {
                 self.process_filter_message(message);
@@ -775,6 +824,19 @@ impl iced::Application for TeamworkLauncher {
             Message::Notification(message) => {
                 self.process_notification_message(message);
             }
+            Message::Settings(settings_message) => {
+                self.process_settings_message(settings_message);
+            }
+            Message::Pane(message) => {
+                self.process_pane_message(message);
+            }
+            Message::Bookmarked(ip_port, bookmarked) => {
+                self.bookmark(ip_port, bookmarked);
+            }
+            Message::CopyToClipboard(text) => {
+                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
+                return iced::clipboard::write(text);
+            }
             Message::Back => {
                 self.views.pop();
             }
@@ -786,18 +848,6 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::CopyConnectionString(ip_port) => {
                 return self.copy_connection_string(ip_port);
-            }
-            Message::Settings(settings_message) => {
-                self.process_settings_message(settings_message);
-            }
-            Message::Pane(message) => {
-                self.process_pane_message(message);
-            }
-            Message::Bookmarked(ip_port, bookmarked) => {
-                self.bookmark(ip_port, bookmarked);
-            }
-            Message::CopyToClipboard(text) => {
-                return iced::clipboard::write(text);
             }
             Message::ShowServer(ip_port) => {
                 self.views.push(Screens::Server(ip_port));
