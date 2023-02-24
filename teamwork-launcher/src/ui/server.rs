@@ -2,11 +2,12 @@ use {
     super::widgets::{ping, region, thumbnail},
     crate::{
         application::{game_mode::GameModes, IpPort, Message, Server},
-        ui::widgets,
+        ui::{styles::BoxContainerStyle, widgets},
     },
     iced::{
-        widget::{column, horizontal_space, row, text},
-        Alignment, Element, Length,
+        theme,
+        widget::{column, container, horizontal_space, row, text, vertical_space},
+        Element, Length,
     },
 };
 
@@ -17,9 +18,10 @@ fn yes_no(value: bool) -> &'static str {
     }
 }
 
-pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l IpPort) -> Element<'l, Message> {
+fn content<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l IpPort) -> Element<'l, Message> {
     let server = servers.iter().find(|s| &s.ip_port == ip_port).expect("find server");
-    let mut c = column![
+    let mut details_column = column![
+        text(&server.name).size(28),
         row![text("Ping:"), ping(&server.ping)].spacing(4),
         region(server, 20, 0),
         text(&format!(
@@ -30,27 +32,32 @@ pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l I
     ]
     .padding(4)
     .spacing(4);
+
     if let Some(map) = &server.next_map {
-        c = c.push(text(format!("Next map: {}", map)));
+        details_column = details_column.push(text(format!("Next map: {}", map)));
     }
-    let c = c.push(row![text("Game modes:"), widgets::game_modes(game_modes, &server.game_modes)].spacing(4));
-    let c = c.push(text(format!("Valve secure: {}", yes_no(server.vac_secured))));
-    let c = c.push(text(format!("Role the dice: {}", yes_no(server.has_rtd))));
-    let c = c.push(text(format!("Password protected: {}", yes_no(server.need_password))));
-    let c = c.push(text(format!("Has \"all talk\" command: {}", yes_no(server.has_all_talk))));
-    let c = c.push(text(format!("No respawn time: {}", yes_no(server.has_no_respawn_time))));
+    let details_column = details_column.push(row![text("Game modes:"), widgets::game_modes(game_modes, &server.game_modes)].spacing(4));
+    let details_column = details_column.push(text(format!("Valve secure: {}", yes_no(server.vac_secured))));
+    let details_column = details_column.push(text(format!("Role the dice: {}", yes_no(server.has_rtd))));
+    let details_column = details_column.push(text(format!("Password protected: {}", yes_no(server.need_password))));
+    let details_column = details_column.push(text(format!("Has \"all talk\" command: {}", yes_no(server.has_all_talk))));
+    let details_column = details_column.push(text(format!("No respawn time: {}", yes_no(server.has_no_respawn_time))));
 
     column![
-        text(&server.name).size(28),
         row![
-            thumbnail(server, Length::Fixed(500.0), Length::Fixed(250.0)),
-            c,
+            container(thumbnail(server, Length::Fixed(500.0), Length::Fixed(250.0))).padding(16).center_y().center_x(),
+            details_column,
             horizontal_space(Length::Fill),
-        ]
-        .align_items(Alignment::Start)
+        ],
+        vertical_space(Length::Fill)
     ]
-    .height(Length::Fill)
-    .spacing(4)
-    .padding(4)
     .into()
+}
+
+pub fn view<'l>(servers: &'l [Server], game_modes: &'l GameModes, ip_port: &'l IpPort) -> Element<'l, Message> {
+    let content =
+        container(content(servers, game_modes, ip_port))
+            .style(theme::Container::Custom(Box::new(BoxContainerStyle {})));
+
+    container(content).width(Length::Fill).height(Length::Fill).padding(16).into()
 }
