@@ -13,15 +13,22 @@ use {
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
 pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Element<'l, Message> {
+    let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
+        true => text("API key specified as environment variable").into(),
+        false => {
+            text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key(), |text| Message::Settings(
+                SettingsMessage::TeamworkApiKeyChanged(text)
+            ))
+            .password().into()
+        }
+    };
+
     scrollable(
         column![
             field(
                 Some("Teamwork.tf API key"),
                 None,
-                text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key, |text| Message::Settings(
-                    SettingsMessage::TeamworkApiKeyChanged(text)
-                ))
-                .password()
+                teamwork_api_key_field
             ),
             field(
                 Some("Steam executable file path"),

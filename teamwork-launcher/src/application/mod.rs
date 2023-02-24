@@ -244,7 +244,7 @@ impl TeamworkLauncher {
     }
 
     fn refresh_servers(&mut self) {
-        if self.user_settings.teamwork_api_key.trim().is_empty() {
+        if self.user_settings.teamwork_api_key().trim().is_empty() {
             self.push_notification(
                 "No Teamwork.tf API key specified.\nSet your API key in the settings.",
                 NotificationKind::Error,
@@ -316,7 +316,7 @@ impl TeamworkLauncher {
     fn process_settings_message(&mut self, message: SettingsMessage) {
         match message {
             SettingsMessage::TeamworkApiKeyChanged(key) => {
-                self.user_settings.teamwork_api_key = key;
+                self.user_settings.set_teamwork_api_key(key);
             }
             SettingsMessage::SteamExecutableChanged(executable_path) => {
                 self.user_settings.steam_executable_path = executable_path;
@@ -467,7 +467,7 @@ impl TeamworkLauncher {
                 self.thumbnail_ready(map_name, None);
                 error!(
                     "Thumbnail error: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error)
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
         }
@@ -516,7 +516,7 @@ impl TeamworkLauncher {
             FetchServersMessage::FetchServersError(error) => {
                 error!(
                     "Error: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key, &error.to_string())
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), &error.to_string())
                 );
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
@@ -539,7 +539,7 @@ impl TeamworkLauncher {
                 );
                 error!(
                     "Failed to fetch game modes: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error)
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
         }
@@ -578,7 +578,7 @@ impl TeamworkLauncher {
             .filter_map(|source| match source.enabled() {
                 true => Some((
                     source.key().clone(),
-                    UrlWithKey::new(source.url(), &self.user_settings.teamwork_api_key),
+                    UrlWithKey::new(source.url(), &self.user_settings.teamwork_api_key()),
                 )),
                 false => None,
             })
@@ -694,7 +694,7 @@ impl TeamworkLauncher {
 
     fn push_notification(&mut self, text: impl ToString, kind: NotificationKind) {
         const NOTIFICATION_DURATION_SECS: u64 = 2;
-        let text = Self::remove_api_key(&self.user_settings.teamwork_api_key, text);
+        let text = Self::remove_api_key(&self.user_settings.teamwork_api_key(), text);
         let duration = match kind {
             NotificationKind::Error => None,
             NotificationKind::Feedback => Some(Duration::from_secs(NOTIFICATION_DURATION_SECS)),
@@ -928,9 +928,9 @@ impl iced::Application for TeamworkLauncher {
             subscription::run(self.fetch_servers_subscription_id, server_stream),
             geolocation::subscription().map(Message::from),
             ping::subscription().map(Message::from),
-            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
+            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
                 .map(Message::from),
-            game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
+            game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
                 .map(Message::from),
             keyboard::subscription().map(Message::from),
             window::subscription(),
