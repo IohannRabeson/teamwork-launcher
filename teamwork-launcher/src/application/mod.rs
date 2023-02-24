@@ -19,7 +19,6 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use std::time::Instant;
 use {
     iced::{
         theme,
@@ -29,9 +28,12 @@ use {
         },
         Background, Color, Theme,
     },
-    std::collections::{
-        btree_map::Entry::{Occupied, Vacant},
-        BTreeMap,
+    std::{
+        collections::{
+            btree_map::Entry::{Occupied, Vacant},
+            BTreeMap,
+        },
+        time::Instant,
     },
 };
 
@@ -73,6 +75,7 @@ use {
             map::MapName,
             message::{KeyboardMessage, NotificationMessage},
             notifications::{Notification, NotificationKind, Notifications},
+            process_detection::ProcessDetection,
             servers_source::{ServersSource, SourceKey},
         },
         common_settings::{get_configuration_directory, write_file},
@@ -80,7 +83,6 @@ use {
     },
     servers_counts::ServersCounts,
 };
-use crate::application::process_detection::ProcessDetection;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -173,7 +175,7 @@ impl TeamworkLauncher {
         let unique_maps: Vec<&MapName> = servers_refs.iter().map(|server| &server.map).unique().collect();
 
         // For each map, request the thumbnail
-        for map_name in unique_maps.iter().map(|name|(*name).clone()) {
+        for map_name in unique_maps.iter().map(|name| (*name).clone()) {
             if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
                 thumbnail_sender
                     .send(map_name)
@@ -242,7 +244,10 @@ impl TeamworkLauncher {
 
     fn refresh_servers(&mut self) {
         if self.user_settings.teamwork_api_key.trim().is_empty() {
-            self.push_notification("No Teamwork.tf API key specified.\nSet your API key in the settings.", NotificationKind::Error);
+            self.push_notification(
+                "No Teamwork.tf API key specified.\nSet your API key in the settings.",
+                NotificationKind::Error,
+            );
         } else {
             self.is_loading = true;
             self.servers_counts.reset();
@@ -521,8 +526,14 @@ impl TeamworkLauncher {
                     .extend(game_modes.into_iter().map(|mode| GameModeId::new(mode.id)));
             }
             GameModesMessage::Error(error) => {
-                self.push_notification("Failed to fetch game modes.\nFiltering by game modes is disabled.", NotificationKind::Error);
-                eprintln!("Failed to fetch game modes: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, error.to_string()));
+                self.push_notification(
+                    "Failed to fetch game modes.\nFiltering by game modes is disabled.",
+                    NotificationKind::Error,
+                );
+                eprintln!(
+                    "Failed to fetch game modes: {}",
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error.to_string())
+                );
             }
         }
     }
@@ -601,7 +612,10 @@ impl TeamworkLauncher {
 
     fn launch_game(&mut self, ip_port: &IpPort) -> Command<Message> {
         if self.user_settings.steam_executable_path.trim().is_empty() {
-            self.push_notification("Steam executable not specified.\nSet the Steam executable in the settings.", NotificationKind::Error);
+            self.push_notification(
+                "Steam executable not specified.\nSet the Steam executable in the settings.",
+                NotificationKind::Error,
+            );
         } else {
             match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
                 Err(error) => {
@@ -683,7 +697,7 @@ impl TeamworkLauncher {
 
     fn remove_api_key(key: &str, text: impl ToString) -> String {
         if key.is_empty() {
-            return text.to_string()
+            return text.to_string();
         }
 
         text.to_string().replace(key, "****")
@@ -850,7 +864,10 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::LaunchGame(ip_port) => {
                 return if self.process_detection.is_game_detected() {
-                    self.push_notification("The game is already started.\nConnection string copied to clipboard!", NotificationKind::Feedback);
+                    self.push_notification(
+                        "The game is already started.\nConnection string copied to clipboard!",
+                        NotificationKind::Feedback,
+                    );
                     self.copy_connection_string(ip_port)
                 } else {
                     self.launch_game(&ip_port)

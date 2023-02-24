@@ -80,8 +80,7 @@ impl Notifications {
     pub fn update(&mut self, now: Instant) {
         if let Some((notification, instant)) = &self.current {
             if let Some(duration) = notification.expiry {
-                if now - *instant >= duration
-                {
+                if now - *instant >= duration {
                     self.current = self.take_next_pending();
                 }
             }
@@ -124,7 +123,10 @@ mod tests_take_pending {
         notifications.push(Notification::new("test", None, NotificationKind::Feedback));
         notifications.push(notification.clone());
 
-        assert_eq!(notifications.take_next_pending().as_ref().map(|(n, _)|n), Some(&notification));
+        assert_eq!(
+            notifications.take_next_pending().as_ref().map(|(n, _)| n),
+            Some(&notification)
+        );
         assert_eq!(notifications.take_next_pending(), None);
     }
 
@@ -138,16 +140,24 @@ mod tests_take_pending {
         notifications.push(notification.clone());
         notifications.push(notification2.clone());
 
-        assert_eq!(notifications.take_next_pending().as_ref().map(|(n, _)|n), Some(&notification));
-        assert_eq!(notifications.take_next_pending().as_ref().map(|(n, _)|n), Some(&notification2));
+        assert_eq!(
+            notifications.take_next_pending().as_ref().map(|(n, _)| n),
+            Some(&notification)
+        );
+        assert_eq!(
+            notifications.take_next_pending().as_ref().map(|(n, _)| n),
+            Some(&notification2)
+        );
         assert_eq!(notifications.take_next_pending(), None);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::time::{Duration, Instant};
-    use crate::application::notifications::{Notification, NotificationKind, Notifications};
+    use {
+        crate::application::notifications::{Notification, NotificationKind, Notifications},
+        std::time::{Duration, Instant},
+    };
 
     #[test]
     fn test_clear_current() {
