@@ -23,6 +23,7 @@ const TITLE_FONT_SIZE: u16 = 44;
 const BIG_BUTTON_SIZE: u16 = 26;
 const VERSION_FONT_SIZE: u16 = 16;
 const VISUAL_SPACING_SMALL: u16 = 4;
+const NOTIFICATION_BORDER_RADIUS: f32 = 3.0;
 
 struct FeedbackNotificationStyle;
 
@@ -33,6 +34,7 @@ impl button::StyleSheet for FeedbackNotificationStyle {
         button::Appearance {
             background: Some(Background::Color(style.palette().success)),
             text_color: style.palette().text,
+            border_radius: NOTIFICATION_BORDER_RADIUS,
             ..Default::default()
         }
     }
@@ -47,6 +49,7 @@ impl button::StyleSheet for ErrorNotificationStyle {
         button::Appearance {
             background: Some(Background::Color(style.palette().danger)),
             text_color: style.palette().text,
+            border_radius: NOTIFICATION_BORDER_RADIUS,
             ..Default::default()
         }
     }
