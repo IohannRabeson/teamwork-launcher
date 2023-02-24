@@ -6,4 +6,7 @@ Launcher for Team Fortress 2 that uses Teamwork.tf as data source.
 
 # How to use it
 You must have a [Teamwork](https://teamwork.tf) API key.  
-To get one, connect to [teamwork.tf](https://teamwork.tf), go to https://teamwork.tf/settings and click "Show optional settings".
+To get one, connect to [teamwork.tf](https://teamwork.tf), go to https://teamwork.tf/settings and click "Show optional settings".  
+
+You must copy/paste your key in the settings page.  
+Alternatively you can specify an environment variable `TEAMWORK_API_KEY`.
