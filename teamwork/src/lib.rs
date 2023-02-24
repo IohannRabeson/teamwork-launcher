@@ -25,6 +25,8 @@ pub enum Error {
     HttpRequest(#[from] reqwest::Error),
     #[error("Failed to get {address} with error: {error}")]
     TeamworkError { address: String, error: String },
+    #[error("Too Many Attempts")]
+    TooManyAttempts,
 }
 
 #[derive(Clone)]
@@ -62,6 +64,7 @@ struct ThumbnailResponse {
 
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
 const TEAMWORK_TF_MAP_THUMBNAIL_API: &str = "https://teamwork.tf/api/v1/map-stats/mapthumbnail";
+const TEAMWORK_TOO_MANY_ATTEMPTS: &str = "Too Many Attempts.";
 
 impl Client {
     /// Get the thumbnail for a map.
@@ -99,7 +102,7 @@ impl Client {
             None => {
                 let query_url = UrlWithKey::new(format!("{}/{}", TEAMWORK_TF_MAP_THUMBNAIL_API, map_name), api_key);
 
-                self.get::<ThumbnailResponse>(&query_url).await?.url
+                self.get_thumbnail_response(&query_url).await?.url
             }
         };
 
@@ -137,19 +140,33 @@ impl Client {
         c.is_alphanumeric() || c.is_ascii_punctuation() || c.is_ascii_punctuation() || c.is_ascii_whitespace()
     }
 
-    async fn get<'a, T: DeserializeOwned + Send + Sync + Sized>(&self, url: &UrlWithKey) -> Result<T, Error> {
+    async fn get_raw_text(&self, url: &UrlWithKey) -> Result<String, Error> {
         trace!("GET '{}'", url);
 
-        let raw_text = self
+        Ok(self
             .reqwest
             .get(url.make_url())
             .send()
             .await
             .map_err(Error::HttpRequest)?
             .text()
-            .await?;
+            .await?)
+    }
+
+    async fn get<'a, T: DeserializeOwned + Send + Sync + Sized>(&self, url: &UrlWithKey) -> Result<T, Error> {
+        let raw_text = self.get_raw_text(url).await?;
 
         Self::try_parse_response::<T>(&raw_text, url)
+    }
+
+    async fn get_thumbnail_response(&self, url: &UrlWithKey) -> Result<ThumbnailResponse, Error> {
+        let raw_text = self.get_raw_text(url).await?;
+
+        if raw_text == TEAMWORK_TOO_MANY_ATTEMPTS {
+            return Err(Error::TooManyAttempts)
+        }
+
+        Self::try_parse_response::<ThumbnailResponse>(&raw_text, url)
     }
 
     /// Try to parse the value T from JSON.
