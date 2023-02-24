@@ -19,7 +19,6 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use log::{debug, error};
 use {
     iced::{
         theme,
@@ -29,6 +28,7 @@ use {
         },
         Background, Color, Theme,
     },
+    log::{debug, error},
     std::{
         collections::{
             btree_map::Entry::{Occupied, Vacant},
@@ -465,7 +465,10 @@ impl TeamworkLauncher {
             }
             ThumbnailMessage::Error(map_name, error) => {
                 self.thumbnail_ready(map_name, None);
-                error!("Thumbnail error: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, error));
+                error!(
+                    "Thumbnail error: {}",
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error)
+                );
             }
         }
     }
@@ -511,7 +514,10 @@ impl TeamworkLauncher {
                 self.on_finish();
             }
             FetchServersMessage::FetchServersError(error) => {
-                error!("Error: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, &error.to_string()));
+                error!(
+                    "Error: {}",
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key, &error.to_string())
+                );
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
         }
@@ -730,9 +736,8 @@ impl Drop for TeamworkLauncher {
                 error
             )
         });
-        write_file(&self.user_settings, &settings_file_path).unwrap_or_else(|error| {
-            error!("Failed to write settings file '{}': {}", settings_file_path.display(), error)
-        });
+        write_file(&self.user_settings, &settings_file_path)
+            .unwrap_or_else(|error| error!("Failed to write settings file '{}': {}", settings_file_path.display(), error));
         write_file(&self.filter, &filters_file_path)
             .unwrap_or_else(|error| error!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
         write_file(&self.servers_sources, &sources_file_path)
@@ -923,7 +928,8 @@ impl iced::Application for TeamworkLauncher {
             subscription::run(self.fetch_servers_subscription_id, server_stream),
             geolocation::subscription().map(Message::from),
             ping::subscription().map(Message::from),
-            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key).map(Message::from),
+            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
+                .map(Message::from),
             game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key)
                 .map(Message::from),
             keyboard::subscription().map(Message::from),

@@ -1,8 +1,6 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
-use std::fs::OpenOptions;
-use log::{error, info};
 use {
     crate::{
         application::{
@@ -12,6 +10,8 @@ use {
         common_settings::{get_configuration_directory, read_file},
     },
     iced::{window::Position, Application, Settings},
+    log::{error, info},
+    std::fs::OpenOptions,
 };
 
 mod application;
@@ -102,11 +102,13 @@ fn setup_logger() -> Result<(), fern::InitError> {
         .level(log::LevelFilter::Off)
         .level_for("teamwork_launcher", log::LevelFilter::Trace)
         .chain(std::io::stdout())
-        .chain(OpenOptions::new()
-                   .write(true)
-                   .create(true)
-                   .append(false)
-                   .open(output_log_file_path)?)
+        .chain(
+            OpenOptions::new()
+                .write(true)
+                .create(true)
+                .append(false)
+                .open(output_log_file_path)?,
+        )
         .apply()?;
     Ok(())
 }
