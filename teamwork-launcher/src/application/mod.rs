@@ -912,7 +912,7 @@ impl iced::Application for TeamworkLauncher {
                     &self.servers_counts,
                     self.is_loading,
                 ),
-                Screens::Server(ip_port) => ui::server::view(&self.servers, &self.game_modes, ip_port),
+                Screens::Server(ip_port) => ui::server_details::view(&self.servers, &self.game_modes, ip_port),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
         ])
