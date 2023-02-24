@@ -170,6 +170,14 @@ pub fn server_properties_filter<'l>(filter: &'l Filter, counts: &'l ServersCount
             |checked| Message::Filter(FilterMessage::NoRespawnTimeChanged(checked))
         ),
         property_switch(
+            format!(
+                "Random crits ({})",
+                counts.properties.get(&Property::RandomCrits).unwrap_or(&0)
+            ),
+            filter.random_crits,
+            |checked| Message::Filter(FilterMessage::RandomCritsChanged(checked))
+        ),
+        property_switch(
             format!("Password ({})", counts.properties.get(&Property::Password).unwrap_or(&0)),
             filter.password,
             |checked| Message::Filter(FilterMessage::PasswordChanged(checked))

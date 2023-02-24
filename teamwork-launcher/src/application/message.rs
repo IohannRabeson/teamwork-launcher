@@ -72,6 +72,7 @@ pub enum FilterMessage {
     AllTalkChanged(PropertyFilterSwitch),
     NoRespawnTimeChanged(PropertyFilterSwitch),
     PasswordChanged(PropertyFilterSwitch),
+    RandomCritsChanged(PropertyFilterSwitch),
     SortCriterionChanged(SortCriterion),
     SortDirectionChanged(SortDirection),
     MinimumPlayersChanged(u8),
