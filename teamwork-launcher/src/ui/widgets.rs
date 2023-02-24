@@ -67,17 +67,10 @@ pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     }
 }
 
-pub fn region<'a>(server: &Server, size: u16, padding: u16) -> Element<'a, Message> {
-    match &server.country {
-        PromisedValue::Ready(country) => row![text("Region:".to_string()), country_icon(country, size, padding)]
-            .spacing(4)
-            .into(),
-        PromisedValue::Loading => row![
-            text("Region:"),
-            spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0))
-        ]
-        .spacing(4)
-        .into(),
+pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> Element<'a, Message> {
+    match country {
+        PromisedValue::Ready(country) => country_icon(country, size, padding).into(),
+        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => text("Region: unknown").into(),
     }
 }

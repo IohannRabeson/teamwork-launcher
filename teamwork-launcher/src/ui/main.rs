@@ -88,7 +88,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                     .spacing(4),
                     horizontal_space(Length::Fill),
                     column![
-                        region(server, BUTTON_SIZE, 0),
+                        row![text("Region:"), region(&server.country, BUTTON_SIZE, 0)].spacing(4),
                         row![text("Ping:"), ping(&server.ping)].spacing(4),
                         game_modes
                     ]
