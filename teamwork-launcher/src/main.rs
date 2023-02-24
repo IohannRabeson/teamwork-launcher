@@ -1,6 +1,8 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
+use std::fs::OpenOptions;
+use log::{error, info};
 use {
     crate::{
         application::{
@@ -23,6 +25,8 @@ const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
 const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA_SHORT");
 
 fn main() -> iced::Result {
+    setup_logger().expect("setup logger");
+    info!("Teamwork Launcher v{}", APPLICATION_VERSION);
     application::TeamworkLauncher::run(load_settings())
 }
 
@@ -37,14 +41,14 @@ pub struct ApplicationFlags {
 fn load_settings() -> Settings<ApplicationFlags> {
     let configuration_directory = get_configuration_directory();
 
-    println!("Configuration directory: {}", configuration_directory.display());
+    info!("Configuration directory: {}", configuration_directory.display());
 
     let bookmarks: Bookmarks = read_file(configuration_directory.join("bookmarks.json")).unwrap_or_default();
     let mut user_settings: UserSettings = read_file(configuration_directory.join("settings.json")).unwrap_or_default();
     let filter: Filter = read_file(configuration_directory.join("filters.json")).unwrap_or_default();
     let servers_sources: Vec<ServersSource> =
         read_file(configuration_directory.join("sources.json")).unwrap_or_else(|error| {
-            eprintln!("Failed to read sources.json: {}", error);
+            error!("Failed to read sources.json: {}", error);
 
             vec![
                 ServersSource::new("Payload", "https://teamwork.tf/api/v1/quickplay/payload/servers"),
@@ -80,4 +84,29 @@ fn load_settings() -> Settings<ApplicationFlags> {
             servers_sources,
         })
     }
+}
+
+fn setup_logger() -> Result<(), fern::InitError> {
+    let output_log_file_path = get_configuration_directory().join("output.log");
+
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Off)
+        .level_for("teamwork_launcher", log::LevelFilter::Trace)
+        .chain(std::io::stdout())
+        .chain(OpenOptions::new()
+                   .write(true)
+                   .create(true)
+                   .append(false)
+                   .open(output_log_file_path)?)
+        .apply()?;
+    Ok(())
 }
