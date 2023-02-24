@@ -19,6 +19,7 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
+use log::{debug, error};
 use {
     iced::{
         theme,
@@ -179,7 +180,7 @@ impl TeamworkLauncher {
             if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
                 thumbnail_sender
                     .send(map_name)
-                    .unwrap_or_else(|e| eprintln!("thumbnail sender {}", e))
+                    .unwrap_or_else(|e| error!("thumbnail sender {}", e))
                     .now_or_never();
             }
         }
@@ -189,14 +190,14 @@ impl TeamworkLauncher {
             if let Some(country_sender) = &mut self.country_request_sender {
                 country_sender
                     .send(*ip)
-                    .unwrap_or_else(|e| eprintln!("country sender {}", e))
+                    .unwrap_or_else(|e| error!("country sender {}", e))
                     .now_or_never();
             }
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
                     .send(*ip)
-                    .unwrap_or_else(|e| eprintln!("ping sender {}", e))
+                    .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
             }
         }
@@ -457,14 +458,14 @@ impl TeamworkLauncher {
         match message {
             ThumbnailMessage::Started(sender) => {
                 self.map_thumbnail_request_sender = Some(sender);
-                eprintln!("thumbnail service started");
+                debug!("thumbnail service started");
             }
             ThumbnailMessage::Thumbnail(map_name, thumbnail) => {
                 self.thumbnail_ready(map_name, Some(thumbnail));
             }
             ThumbnailMessage::Error(map_name, error) => {
                 self.thumbnail_ready(map_name, None);
-                eprintln!("Thumbnail service error: {}", error);
+                error!("Thumbnail service error: {}", error);
             }
         }
     }
@@ -473,13 +474,13 @@ impl TeamworkLauncher {
         match message {
             PingServiceMessage::Started(sender) => {
                 self.ping_request_sender = Some(sender);
-                eprintln!("ping service started");
+                debug!("ping service started");
             }
             PingServiceMessage::Answer(ip, duration) => {
                 self.ping_found(ip, Some(duration));
             }
             PingServiceMessage::Error(ip, error) => {
-                eprintln!("Ping service error: {}", error);
+                error!("Ping service error: {}", error);
                 self.ping_found(ip, None);
             }
         }
@@ -489,13 +490,13 @@ impl TeamworkLauncher {
         match message {
             CountryServiceMessage::Started(country_sender) => {
                 self.country_request_sender = Some(country_sender);
-                eprintln!("country service started");
+                debug!("country service started");
             }
             CountryServiceMessage::CountryFound(ip, country) => {
                 self.country_found(ip, country);
             }
             CountryServiceMessage::Error(error) => {
-                eprintln!("Country service error: {}", error);
+                error!("Country service error: {}", error);
             }
         }
     }
@@ -503,14 +504,14 @@ impl TeamworkLauncher {
     fn process_server_message(&mut self, message: FetchServersMessage) {
         match message {
             FetchServersMessage::FetchServersStart => {
-                println!("Start");
+                debug!("Start");
             }
             FetchServersMessage::FetchServersFinish => {
-                println!("Finish");
+                debug!("Finish");
                 self.on_finish();
             }
             FetchServersMessage::FetchServersError(error) => {
-                eprintln!("Error: {}", error);
+                error!("Error: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, &error.to_string()));
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
         }
@@ -530,7 +531,7 @@ impl TeamworkLauncher {
                     "Failed to fetch game modes.\nFiltering by game modes is disabled.",
                     NotificationKind::Error,
                 );
-                eprintln!(
+                error!(
                     "Failed to fetch game modes: {}",
                     Self::remove_api_key(&self.user_settings.teamwork_api_key, error.to_string())
                 );
@@ -710,7 +711,7 @@ impl Drop for TeamworkLauncher {
 
         if !configuration_directory.is_dir() {
             std::fs::create_dir_all(&configuration_directory).unwrap_or_else(|error| {
-                eprintln!(
+                error!(
                     "Failed to create configuration directory '{}': {}",
                     configuration_directory.display(),
                     error
@@ -723,19 +724,19 @@ impl Drop for TeamworkLauncher {
         let sources_file_path = configuration_directory.join("sources.json");
 
         write_file(&self.bookmarks, &bookmarks_file_path).unwrap_or_else(|error| {
-            eprintln!(
+            error!(
                 "Failed to write bookmarks file '{}': {}",
                 bookmarks_file_path.display(),
                 error
             )
         });
         write_file(&self.user_settings, &settings_file_path).unwrap_or_else(|error| {
-            eprintln!("Failed to write settings file '{}': {}", settings_file_path.display(), error)
+            error!("Failed to write settings file '{}': {}", settings_file_path.display(), error)
         });
         write_file(&self.filter, &filters_file_path)
-            .unwrap_or_else(|error| eprintln!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
+            .unwrap_or_else(|error| error!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
         write_file(&self.servers_sources, &sources_file_path)
-            .unwrap_or_else(|error| eprintln!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
+            .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
     }
 }
 
