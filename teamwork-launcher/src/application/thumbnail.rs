@@ -24,9 +24,9 @@ struct Context {
     cache: BTreeMap<MapName, image::Handle>,
 }
 
-pub fn subscription(api_key: &str) -> Subscription<ThumbnailMessage> {
+pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
     subscription::unfold(
-        (),
+        id,
         State::Starting {
             api_key: api_key.to_string(),
         },
