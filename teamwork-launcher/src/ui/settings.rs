@@ -18,15 +18,15 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
             field(
                 Some("Teamwork.tf API key"),
                 None,
-                text_input("Teamwork.tf API key", &settings.teamwork_api_key, |text| Message::Settings(
+                text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key, |text| Message::Settings(
                     SettingsMessage::TeamworkApiKeyChanged(text)
                 ))
                 .password()
             ),
             field(
-                Some("Steam executable path"),
+                Some("Steam executable file path"),
                 None,
-                text_input("Steam executable path", &settings.steam_executable_path, |text| {
+                text_input("Put Steam executable file path here", &settings.steam_executable_path, |text| {
                     Message::Settings(SettingsMessage::SteamExecutableChanged(text))
                 })
             ),
@@ -54,7 +54,7 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                         Message::Settings(SettingsMessage::QuitWhenLaunchChecked(checked))
                     }),
                     checkbox(
-                        "Quit when the connection string is copied",
+                        "Quit when the connection string is copied to the clipboard",
                         settings.quit_on_copy,
                         |checked| Message::Settings(SettingsMessage::QuitWhenCopyChecked(checked))
                     ),
