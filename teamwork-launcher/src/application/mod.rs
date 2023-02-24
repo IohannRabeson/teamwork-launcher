@@ -80,6 +80,7 @@ use {
     },
     servers_counts::ServersCounts,
 };
+use crate::application::process_detection::ProcessDetection;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -128,6 +129,7 @@ pub struct TeamworkLauncher {
     filter: Filter,
     servers_sources: Vec<ServersSource>,
     launcher: ExecutableLauncher,
+    process_detection: ProcessDetection,
     bookmarks: Bookmarks,
     game_modes: GameModes,
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
@@ -598,25 +600,27 @@ impl TeamworkLauncher {
     }
 
     fn launch_game(&mut self, ip_port: &IpPort) -> Command<Message> {
-        match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
-            Err(error) => {
-                self.push_notification(error, NotificationKind::Error);
-            }
-            Ok(()) => {
-                self.push_notification("Starting game!", NotificationKind::Feedback);
-                if self.user_settings.quit_on_launch {
-                    return iced::window::close();
+        if self.user_settings.steam_executable_path.trim().is_empty() {
+            self.push_notification("Steam executable not specified.\nSet the Steam executable in the settings.", NotificationKind::Error);
+        } else {
+            match self.launcher.launch(&self.user_settings.steam_executable_path, ip_port) {
+                Err(error) => {
+                    self.push_notification(error, NotificationKind::Error);
+                }
+                Ok(()) => {
+                    self.push_notification("Starting game!", NotificationKind::Feedback);
+                    if self.user_settings.quit_on_launch {
+                        return iced::window::close();
+                    }
                 }
             }
         }
-
         Command::none()
     }
 
     fn copy_connection_string(&mut self, ip_port: IpPort) -> Command<Message> {
         let connection_string = ip_port.steam_connection_string();
 
-        self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
         match self.user_settings.quit_on_copy {
             false => Command::batch([iced::clipboard::write(connection_string)]),
             true => Command::batch([iced::clipboard::write(connection_string), iced::window::close()]),
@@ -779,6 +783,7 @@ impl iced::Application for TeamworkLauncher {
                 servers_sources: flags.servers_sources,
                 bookmarks: flags.bookmarks,
                 launcher: ExecutableLauncher::new(false),
+                process_detection: ProcessDetection::default(),
                 game_modes: GameModes::new(),
                 country_request_sender: None,
                 ping_request_sender: None,
@@ -844,9 +849,15 @@ impl iced::Application for TeamworkLauncher {
                 self.views.push(Screens::Settings);
             }
             Message::LaunchGame(ip_port) => {
-                return self.launch_game(&ip_port);
+                return if self.process_detection.is_game_detected() {
+                    self.push_notification("The game is already started.\nConnection string copied to clipboard!", NotificationKind::Feedback);
+                    self.copy_connection_string(ip_port)
+                } else {
+                    self.launch_game(&ip_port)
+                }
             }
             Message::CopyConnectionString(ip_port) => {
+                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
                 return self.copy_connection_string(ip_port);
             }
             Message::ShowServer(ip_port) => {
