@@ -73,6 +73,6 @@ pub fn sort_servers(criterion: SortCriterion, left: &Server, right: &Server) -> 
         SortCriterion::Ping => left.ping.cmp(&right.ping),
         SortCriterion::PlayerSlots => left.max_players_count.cmp(&right.max_players_count),
         SortCriterion::Players => left.current_players_count.cmp(&right.current_players_count),
-        SortCriterion::FreePlayerSlots => left.free_slots().cmp(&right.free_slots())
+        SortCriterion::FreePlayerSlots => left.free_slots().cmp(&right.free_slots()),
     }
 }

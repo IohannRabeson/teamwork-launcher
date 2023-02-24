@@ -12,10 +12,7 @@ use {
 
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
-pub fn view<'l>(
-    settings: &'l UserSettings,
-    sources: &'l [ServersSource],
-) -> Element<'l, Message> {
+pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Element<'l, Message> {
     scrollable(
         column![
             field(

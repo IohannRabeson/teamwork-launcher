@@ -1321,6 +1321,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced_aw"
+version = "0.4.0"
+source = "git+https://github.com/iced-rs/iced_aw#f2b1bbb743303ccac304e8c4e5f93336a7619628"
+dependencies = [
+ "iced_graphics",
+ "iced_native",
+ "iced_style",
+]
+
+[[package]]
 name = "iced_core"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3063,9 +3073,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "d56e159d99e6c2b93995d171050271edb50ecc5288fbc7cc17de8fdce4e58c14"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3124,8 +3134,8 @@ dependencies = [
  "async-stream",
  "bytesize",
  "iced",
+ "iced_aw",
  "iced_lazy",
- "iced_native",
  "iced_spinner",
  "include_dir",
  "iso_country",

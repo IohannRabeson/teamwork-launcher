@@ -1,7 +1,13 @@
-use iced::Length;
-use crate::application::filter::properties_filter::PropertyFilterSwitch;
-use crate::application::filter::sort_servers::{SortCriterion, SortDirection};
-use crate::application::SettingsMessage;
+use {
+    crate::application::{
+        filter::{
+            properties_filter::PropertyFilterSwitch,
+            sort_servers::{SortCriterion, SortDirection},
+        },
+        SettingsMessage,
+    },
+    iced::Length,
+};
 
 pub mod buttons;
 pub mod filter;
@@ -32,7 +38,4 @@ pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 7] = [
 ];
 
 /// List of criterion exposed by the UI
-pub(crate) const AVAILABLE_DIRECTIONS: [SortDirection; 2] = [
-    SortDirection::Ascending,
-    SortDirection::Descending
-];
+pub(crate) const AVAILABLE_DIRECTIONS: [SortDirection; 2] = [SortDirection::Ascending, SortDirection::Descending];
