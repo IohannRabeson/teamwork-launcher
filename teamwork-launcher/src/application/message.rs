@@ -50,7 +50,7 @@ pub enum NotificationMessage {
 #[derive(Debug, Clone)]
 pub enum ThumbnailMessage {
     Started(UnboundedSender<MapName>),
-    Thumbnail(MapName, image::Handle),
+    Thumbnail(MapName, Option<image::Handle>),
     Error(MapName, Arc<teamwork::Error>),
 }
 
