@@ -21,7 +21,7 @@ struct Context {
     requests_receiver: UnboundedReceiver<MapName>,
     client: teamwork::Client,
     teamwork_api_key: String,
-    cache: BTreeMap<MapName, image::Handle>,
+    cache: BTreeMap<MapName, Option<image::Handle>>,
 }
 
 pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {

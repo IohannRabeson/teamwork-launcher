@@ -57,7 +57,7 @@ struct TeamworkErrorResponse {
 #[derive(Deserialize)]
 struct ThumbnailResponse {
     #[serde(rename = "thumbnail")]
-    pub url: String,
+    pub url: Option<String>,
 }
 
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
@@ -70,24 +70,32 @@ impl Client {
         api_key: &str,
         map_name: &str,
         convert_to_image: F,
-    ) -> Result<I, Error> {
+    ) -> Result<Option<I>, Error> {
         if api_key.is_empty() {
             return Err(Error::NoTeamworkApiKey);
         }
 
         let image_url = self.get_map_thumbnail_url(api_key, map_name).await?;
-        let bytes = self.reqwest.get(image_url).send().await?.bytes().await?;
 
-        Ok(convert_to_image(bytes.as_ref().to_vec()))
+        Ok(match image_url {
+            Some(image_url) => {
+                let bytes = self.reqwest.get(image_url).send().await?.bytes().await?;
+
+                Some(convert_to_image(bytes.as_ref().to_vec()))
+            }
+            None => {
+                None
+            }
+        })
     }
 
-    pub async fn get_map_thumbnail_url(&self, api_key: &str, map_name: &str) -> Result<String, Error> {
+    pub async fn get_map_thumbnail_url(&self, api_key: &str, map_name: &str) -> Result<Option<String>, Error> {
         if api_key.is_empty() {
             return Err(Error::NoTeamworkApiKey);
         }
         let map_name = map_name.to_string();
         let image_url = match self.thumbnail_urls_cache.lock().await.get(&map_name) {
-            Some(thumbnail_url) => thumbnail_url.clone(),
+            Some(thumbnail_url) => Some(thumbnail_url.clone()),
             None => {
                 let query_url = UrlWithKey::new(format!("{}/{}", TEAMWORK_TF_MAP_THUMBNAIL_API, map_name), api_key);
 

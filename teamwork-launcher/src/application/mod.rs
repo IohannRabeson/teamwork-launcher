@@ -458,14 +458,14 @@ impl TeamworkLauncher {
         match message {
             ThumbnailMessage::Started(sender) => {
                 self.map_thumbnail_request_sender = Some(sender);
-                debug!("thumbnail service started");
+                debug!("Thumbnail service started");
             }
             ThumbnailMessage::Thumbnail(map_name, thumbnail) => {
-                self.thumbnail_ready(map_name, Some(thumbnail));
+                self.thumbnail_ready(map_name, thumbnail);
             }
             ThumbnailMessage::Error(map_name, error) => {
                 self.thumbnail_ready(map_name, None);
-                error!("Thumbnail service error: {}", error);
+                error!("Thumbnail error: {}", Self::remove_api_key(&self.user_settings.teamwork_api_key, error));
             }
         }
     }
@@ -474,7 +474,7 @@ impl TeamworkLauncher {
         match message {
             PingServiceMessage::Started(sender) => {
                 self.ping_request_sender = Some(sender);
-                debug!("ping service started");
+                debug!("Ping service started");
             }
             PingServiceMessage::Answer(ip, duration) => {
                 self.ping_found(ip, Some(duration));
@@ -533,7 +533,7 @@ impl TeamworkLauncher {
                 );
                 error!(
                     "Failed to fetch game modes: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error.to_string())
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key, error)
                 );
             }
         }
