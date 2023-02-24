@@ -32,6 +32,7 @@ struct Context {
 
 pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
     const SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS: u64 = 60;
+    const SECONDS_TO_WAIT_ON_ERROR: u64 = 5;
 
     subscription::unfold(
         id,
@@ -80,10 +81,14 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                                         State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
                                     )
                                 }
-                                Err(error) => (
-                                    Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
-                                    State::Ready(context),
-                                ),
+                                Err(error) => {
+                                    context.requests_sender.send(map_name.clone()).await.unwrap();
+
+                                    (
+                                        Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
+                                        State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
+                                    )
+                                },
                             }
                         }
                         Entry::Occupied(occupied) => (
