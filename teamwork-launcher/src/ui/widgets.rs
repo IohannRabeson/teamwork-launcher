@@ -69,7 +69,7 @@ pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
 
 pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> Element<'a, Message> {
     match country {
-        PromisedValue::Ready(country) => country_icon(country, size, padding).into(),
+        PromisedValue::Ready(country) => country_icon(country, size, padding),
         PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => text("Region: unknown").into(),
     }
@@ -80,7 +80,7 @@ use iced_spinner::spinner;
 pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
     match image {
         PromisedValue::Ready(image) => Image::new(image.clone()).into(),
-        PromisedValue::Loading => return spinner().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
+        PromisedValue::Loading => spinner().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
     }
 }

@@ -19,9 +19,9 @@ pub enum LauncherTheme {
     Blue,
 }
 
-impl Into<Theme> for LauncherTheme {
-    fn into(self) -> Theme {
-        match self {
+impl From<LauncherTheme> for Theme {
+    fn from(theme: LauncherTheme) -> Self {
+        match theme {
             LauncherTheme::Red => Theme::Custom(Box::new(palettes::create_red_palette())),
             LauncherTheme::Blue => Theme::Custom(Box::new(palettes::create_blue_palette())),
         }

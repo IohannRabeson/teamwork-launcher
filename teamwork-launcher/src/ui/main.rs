@@ -25,22 +25,24 @@ use {
     iced_spinner::spinner,
 };
 
-pub fn view<'l>(
-    view: &'l MainView,
-    servers: &'l [Server],
-    bookmarks: &'l Bookmarks,
-    filter: &'l Filter,
-    game_modes: &'l GameModes,
-    counts: &'l ServersCounts,
-    servers_list: &'l ServersList,
-    is_loading: bool,
-) -> Element<'l, Message> {
-    let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
-    let pane_grid = PaneGrid::new(&view.panes, |_id, pane, _is_maximized| {
+pub struct ViewContext<'l> {
+    pub view: &'l MainView,
+    pub servers: &'l [Server],
+    pub bookmarks: &'l Bookmarks,
+    pub filter: &'l Filter,
+    pub game_modes: &'l GameModes,
+    pub counts: &'l ServersCounts,
+    pub servers_list: &'l ServersList,
+    pub is_loading: bool,
+}
+
+pub fn view(context: ViewContext) -> Element<Message> {
+    let textual_filters = container(ui::filter::text_filter(context.filter)).padding([0, 8]);
+    let pane_grid = PaneGrid::new(&context.view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => {
-                match is_loading {
-                    false => servers_view(servers, bookmarks, filter, game_modes, servers_list),
+                match context.is_loading {
+                    false => servers_view(context.servers, context.bookmarks, context.filter, context.game_modes, context.servers_list),
                     true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
                         .width(Length::Fill)
                         .height(Length::Fill)
@@ -48,9 +50,8 @@ pub fn view<'l>(
                         .center_y()
                         .into(),
                 }
-            }
-            .into(),
-            PaneId::Filters => filter_view(filter, game_modes, counts).into(),
+            },
+            PaneId::Filters => filter_view(context.filter, context.game_modes, context.counts),
         }))
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));

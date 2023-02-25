@@ -78,7 +78,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
                 text(format!(
                     "{} / {}",
                     screenshots.current_index() + 1,
-                    screenshots.count().to_string()
+                    screenshots.count()
                 )),
                 svg_button(icons::ARROW_RIGHT_SHORT.clone(), 20).on_press(Message::Screenshots(ScreenshotsMessage::Next)),
             ]
@@ -87,7 +87,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
 
             column![
                 FloatingElement::new(screenshot(Some(image)), ||{
-                    container(text(map_name.as_str()).font(fonts::TF2_SECONDARY.clone()).size(24))
+                    container(text(map_name.as_str()).font(fonts::TF2_SECONDARY).size(24))
                         .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
                         .padding(4)
                         .into()
