@@ -14,7 +14,7 @@ use {
     },
     iced::{
         futures::channel::mpsc::UnboundedSender,
-        widget::{image, pane_grid},
+        widget::{image, pane_grid, scrollable::RelativeOffset},
     },
     std::{net::Ipv4Addr, sync::Arc, time::Duration},
 };
@@ -141,6 +141,7 @@ pub enum Message {
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
+    ServerListScroll(RelativeOffset),
     Back,
 }
 

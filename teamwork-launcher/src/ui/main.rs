@@ -1,8 +1,9 @@
+use iced::widget;
 use {
     crate::{
         application::{
             filter::filter_servers::Filter, game_mode::GameModes, servers_counts::ServersCounts, Bookmarks, FilterMessage,
-            MainView, Message, PaneId, PaneMessage, Server,
+            MainView, Message, PaneId, PaneMessage, Server, ServersList,
         },
         icons,
         ui::{
@@ -14,7 +15,11 @@ use {
     },
     iced::{
         theme,
-        widget::{column, container, horizontal_space, pane_grid, row, scrollable, text, toggler, Container, PaneGrid},
+        widget::{
+            column, container, horizontal_space, pane_grid, row,
+            scrollable::{self, RelativeOffset},
+            text, toggler, Container, PaneGrid,
+        },
         Alignment, Element, Length,
     },
     iced_lazy::responsive,
@@ -28,6 +33,7 @@ pub fn view<'l>(
     filter: &'l Filter,
     game_modes: &'l GameModes,
     counts: &'l ServersCounts,
+    servers_list: &'l ServersList,
     is_loading: bool,
 ) -> Element<'l, Message> {
     let textual_filters = container(ui::filter::text_filter(filter)).padding([0, 8]);
@@ -35,7 +41,7 @@ pub fn view<'l>(
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => {
                 match is_loading {
-                    false => servers_view(servers, bookmarks, filter, game_modes),
+                    false => servers_view(servers, bookmarks, filter, game_modes, servers_list),
                     true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
                         .width(Length::Fill)
                         .height(Length::Fill)
@@ -111,14 +117,19 @@ fn servers_view<'l>(
     bookmarks: &'l Bookmarks,
     filter: &'l Filter,
     game_modes: &'l GameModes,
+    servers_list: &'l ServersList,
 ) -> Element<'l, Message> {
     let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
-    let servers_list = container(scrollable(servers.fold(column![], |c, server| {
-        c.push(
-            container(server_view(server, bookmarks, game_modes))
-                .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]),
-        )
-    })))
+    let servers_list = container(
+        widget::scrollable(servers.fold(column![], |c, server| {
+            c.push(
+                container(server_view(server, bookmarks, game_modes))
+                    .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]),
+            )
+        }))
+        .on_scroll(Message::ServerListScroll)
+        .id(servers_list.id.clone()),
+    )
     .height(Length::Fill)
     .width(Length::Fill);
 
@@ -126,7 +137,7 @@ fn servers_view<'l>(
 }
 
 fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l ServersCounts) -> Element<'l, Message> {
-    let filter_panel = container(scrollable(
+    let filter_panel = container(widget::scrollable(
         column![
             filter_section(Some("Sort"), ui::filter::server_sort(filter)),
             filter_section(None, ui::filter::bookmark_filter(filter, counts)),
