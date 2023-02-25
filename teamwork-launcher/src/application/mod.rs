@@ -12,6 +12,7 @@ pub mod notifications;
 mod ping;
 mod process_detection;
 pub mod promised_value;
+pub mod screenshots;
 pub mod server;
 pub mod servers_counts;
 pub mod servers_source;
@@ -74,9 +75,10 @@ use {
             game_mode::{GameModeId, GameModes},
             launcher::ExecutableLauncher,
             map::MapName,
-            message::{KeyboardMessage, NotificationMessage},
+            message::{KeyboardMessage, NotificationMessage, ScreenshotsMessage},
             notifications::{Notification, NotificationKind, Notifications},
             process_detection::ProcessDetection,
+            screenshots::Screenshots,
             servers_source::{ServersSource, SourceKey},
         },
         common_settings::{get_configuration_directory, write_file},
@@ -136,6 +138,9 @@ pub struct TeamworkLauncher {
     process_detection: ProcessDetection,
     bookmarks: Bookmarks,
     game_modes: GameModes,
+    notifications: Notifications,
+    screenshots: Screenshots,
+
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
@@ -143,7 +148,6 @@ pub struct TeamworkLauncher {
     shift_pressed: bool,
     theme: Theme,
     is_loading: bool,
-    notifications: Notifications,
 }
 
 impl TeamworkLauncher {
@@ -571,6 +575,23 @@ impl TeamworkLauncher {
         }
     }
 
+    fn process_screenshots_message(&mut self, message: ScreenshotsMessage) {
+        match message {
+            ScreenshotsMessage::Screenshots(screenshots) => {
+                self.screenshots.set(PromisedValue::Ready(screenshots));
+            }
+            ScreenshotsMessage::Error(error) => {
+                error!("Screenshots fetch failed: {}", error);
+            }
+            ScreenshotsMessage::Next => {
+                self.screenshots.next();
+            }
+            ScreenshotsMessage::Previous => {
+                self.screenshots.previous();
+            }
+        }
+    }
+
     /// Get the list of URLS to get the servers information.
     ///
     /// The order is specified by the bookmarks. The rule is
@@ -819,6 +840,7 @@ impl iced::Application for TeamworkLauncher {
                 theme,
                 is_loading: false,
                 notifications: Notifications::new(),
+                screenshots: Screenshots::new(),
             },
             Command::none(),
         )
@@ -861,6 +883,9 @@ impl iced::Application for TeamworkLauncher {
             Message::Pane(message) => {
                 self.process_pane_message(message);
             }
+            Message::Screenshots(message) => {
+                self.process_screenshots_message(message);
+            }
             Message::Bookmarked(ip_port, bookmarked) => {
                 self.bookmark(ip_port, bookmarked);
             }
@@ -889,8 +914,10 @@ impl iced::Application for TeamworkLauncher {
                 self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
                 return self.copy_connection_string(ip_port);
             }
-            Message::ShowServer(ip_port) => {
+            Message::ShowServer(ip_port, map_name) => {
                 self.views.push(Screens::Server(ip_port));
+                self.screenshots.set(PromisedValue::Loading);
+                return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
             }
         }
 
@@ -912,7 +939,8 @@ impl iced::Application for TeamworkLauncher {
                     &self.servers_counts,
                     self.is_loading,
                 ),
-                Screens::Server(ip_port) => ui::server_details::view(&self.servers, &self.game_modes, ip_port),
+                Screens::Server(ip_port) =>
+                    ui::server_details::view(&self.servers, &self.game_modes, ip_port, &self.screenshots),
                 Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
             }
         ])

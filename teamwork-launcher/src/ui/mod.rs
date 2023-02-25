@@ -11,13 +11,13 @@ use {
 
 pub mod buttons;
 pub mod filter;
+mod form;
 pub mod header;
 pub mod main;
 pub mod server_details;
 pub mod settings;
 pub mod styles;
 pub mod widgets;
-mod form;
 
 const PICK_LIST_WIDTH: Length = Length::Fixed(120.0);
 

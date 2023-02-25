@@ -66,7 +66,8 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
-                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE).on_press(Message::ShowServer(server.ip_port.clone())),
+                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
                     favorite_button(is_bookmarked, BUTTON_SIZE)
                         .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)

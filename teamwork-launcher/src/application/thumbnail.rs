@@ -88,7 +88,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                                         Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
                                         State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
                                     )
-                                },
+                                }
                             }
                         }
                         Entry::Occupied(occupied) => (

@@ -9,7 +9,7 @@ use {
     },
     iced::{
         theme,
-        widget::{container, row, svg, text, tooltip as iced_tooltip, Image},
+        widget::{container, image, row, svg, text, tooltip as iced_tooltip, Image},
         Color, Element, Length,
         Theme::{self, Dark},
     },
@@ -77,8 +77,8 @@ pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> 
 
 use iced_spinner::spinner;
 
-fn image_thumbnail_content<'a>(server: &Server) -> Element<'a, Message> {
-    match &server.map_thumbnail {
+pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
+    match image {
         PromisedValue::Ready(image) => Image::new(image.clone()).into(),
         PromisedValue::Loading => return spinner().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
@@ -86,7 +86,7 @@ fn image_thumbnail_content<'a>(server: &Server) -> Element<'a, Message> {
 }
 
 pub fn thumbnail<'a>(server: &Server, width: Length, height: Length) -> Element<'a, Message> {
-    container(image_thumbnail_content(server))
+    container(image_thumbnail_content(&server.map_thumbnail))
         .width(width)
         .height(height)
         .center_x()
