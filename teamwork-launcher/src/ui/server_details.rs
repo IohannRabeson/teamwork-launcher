@@ -11,15 +11,16 @@ use {
     iced::{
         theme,
         widget::{column, container, image, row, text, vertical_space, Image},
-        Alignment, Color, ContentFit, Element, Length,
+        Alignment, ContentFit, Element, Length,
     },
     iced_spinner::spinner,
 };
+use crate::application::palettes;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {
-        true => text("Yes").style(Color::from([0.0, 0.7, 0.0])),
-        false => text("No").style(Color::from([0.7, 0.0, 0.0])),
+        true => text("Yes").style(*palettes::GREEN),
+        false => text("No").style(*palettes::RED),
     }
     .into()
 }
