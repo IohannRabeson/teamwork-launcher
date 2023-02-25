@@ -17,7 +17,6 @@ use {
         theme,
         widget::{
             column, container, horizontal_space, pane_grid, row,
-            scrollable::{self, RelativeOffset},
             text, toggler, Container, PaneGrid,
         },
         Alignment, Element, Length,
