@@ -6,7 +6,7 @@ pub mod game_mode;
 mod geolocation;
 pub mod ip_port;
 mod launcher;
-mod map;
+pub mod map;
 pub mod message;
 pub mod notifications;
 pub mod palettes;

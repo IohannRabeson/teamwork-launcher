@@ -1,3 +1,4 @@
+use iced_aw::floating_element::Anchor;
 use {
     super::widgets::{ping, region},
     crate::{
@@ -15,6 +16,9 @@ use {
     },
     iced_spinner::spinner,
 };
+use crate::application::map::MapName;
+use iced_aw::FloatingElement;
+use crate::fonts;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {
@@ -66,7 +70,7 @@ fn server_details_form<'l>(server: &'l Server, game_modes: &'l GameModes) -> Ele
 }
 
 /// A screenshot with buttons to select the screenshot to display
-fn screenshot_view(screenshots: &Screenshots) -> Element<Message> {
+fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> Element<'l, Message> {
     match screenshots.current() {
         PromisedValue::Ready(image) => {
             let navigation_buttons = row![
@@ -82,7 +86,13 @@ fn screenshot_view(screenshots: &Screenshots) -> Element<Message> {
             .spacing(4);
 
             column![
-                screenshot(Some(image)),
+                FloatingElement::new(screenshot(Some(image)), ||{
+                    container(text(map_name.as_str()).font(fonts::TF2_SECONDARY.clone()).size(24))
+                        .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+                        .padding(4)
+                        .into()
+                })
+                .anchor(Anchor::NorthWest),
                 container(navigation_buttons).width(Length::Fill).center_x(),
                 vertical_space(Length::Shrink),
             ]
@@ -103,7 +113,7 @@ fn screenshot_view(screenshots: &Screenshots) -> Element<Message> {
 
 fn content<'l>(server: &'l Server, game_modes: &'l GameModes, screenshots: &'l Screenshots) -> Element<'l, Message> {
     row![
-        screenshot_view(screenshots),
+        screenshot_view(screenshots, &server.map),
         column![text(&server.name).size(28), server_details_form(server, game_modes)]
             .spacing(4)
             .width(Length::Fill),
