@@ -87,17 +87,13 @@ mod map_details_response_json {
     }
 }
 
-
 impl Client {
-    async fn get_map_details(&self,
-                       api_key: &str,
-                       map_name: &str) -> Result<map_details_response_json::Response, Error>
-    {
+    async fn get_map_details(&self, api_key: &str, map_name: &str) -> Result<map_details_response_json::Response, Error> {
         let query_url = UrlWithKey::new(format!("{}/{}", TEAMWORK_TF_MAP_STATS_API, map_name), api_key);
         let raw_text = self.get_raw_text(&query_url).await?;
 
         if raw_text == TEAMWORK_TOO_MANY_ATTEMPTS {
-            return Err(Error::TooManyAttempts)
+            return Err(Error::TooManyAttempts);
         }
 
         Self::try_parse_response::<map_details_response_json::Response>(&raw_text, &query_url)
@@ -107,8 +103,8 @@ impl Client {
         &self,
         api_key: &str,
         map_name: &str,
-        convert_to_image: F) -> Result<Vec<I>, Error>
-    {
+        convert_to_image: F,
+    ) -> Result<Vec<I>, Error> {
         let details = self.get_map_details(api_key, map_name).await?;
         let mut images = Vec::new();
 
@@ -135,12 +131,8 @@ impl Client {
         let image_url = self.get_map_thumbnail_url(api_key, map_name).await?;
 
         Ok(match image_url {
-            Some(image_url) => {
-                Some(self.get_image(&image_url, &convert_to_image).await?)
-            }
-            None => {
-                None
-            }
+            Some(image_url) => Some(self.get_image(&image_url, &convert_to_image).await?),
+            None => None,
         })
     }
 
@@ -221,7 +213,7 @@ impl Client {
         let raw_text = self.get_raw_text(url).await?;
 
         if raw_text == TEAMWORK_TOO_MANY_ATTEMPTS {
-            return Err(Error::TooManyAttempts)
+            return Err(Error::TooManyAttempts);
         }
 
         Self::try_parse_response::<ThumbnailResponse>(&raw_text, url)

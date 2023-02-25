@@ -2,8 +2,8 @@ use {
     super::widgets::{ping, region},
     crate::{
         application::{
-            game_mode::GameModes, message::ScreenshotsMessage, screenshots::Screenshots, IpPort, Message, PromisedValue,
-            Server,
+            game_mode::GameModes, message::ScreenshotsMessage, palettes, screenshots::Screenshots, IpPort, Message,
+            PromisedValue, Server,
         },
         icons,
         ui::{buttons::svg_button, form::Form, styles::BoxContainerStyle, widgets},
@@ -15,7 +15,6 @@ use {
     },
     iced_spinner::spinner,
 };
-use crate::application::palettes;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {
@@ -79,16 +78,16 @@ fn screenshot_view(screenshots: &Screenshots) -> Element<Message> {
                 )),
                 svg_button(icons::ARROW_RIGHT_SHORT.clone(), 20).on_press(Message::Screenshots(ScreenshotsMessage::Next)),
             ]
-                .align_items(Alignment::Center)
-                .spacing(4);
+            .align_items(Alignment::Center)
+            .spacing(4);
 
             column![
                 screenshot(Some(image)),
                 container(navigation_buttons).width(Length::Fill).center_x(),
                 vertical_space(Length::Shrink),
             ]
-                .width(Length::FillPortion(2))
-                .into()
+            .width(Length::FillPortion(2))
+            .into()
         }
         PromisedValue::Loading => container(spinner().width(Length::Fixed(64.0)).height(Length::Fixed(64.0)))
             .center_x()
@@ -105,12 +104,9 @@ fn screenshot_view(screenshots: &Screenshots) -> Element<Message> {
 fn content<'l>(server: &'l Server, game_modes: &'l GameModes, screenshots: &'l Screenshots) -> Element<'l, Message> {
     row![
         screenshot_view(screenshots),
-        column![
-            text(&server.name).size(28),
-            server_details_form(server, game_modes)
-        ]
-        .spacing(4)
-        .width(Length::Fill),
+        column![text(&server.name).size(28), server_details_form(server, game_modes)]
+            .spacing(4)
+            .width(Length::Fill),
     ]
     .spacing(4)
     .padding(4)
@@ -124,8 +120,8 @@ pub fn view<'l>(
     screenshots: &'l Screenshots,
 ) -> Element<'l, Message> {
     let server = servers.iter().find(|s| &s.ip_port == ip_port).expect("find server");
-    let content = container(content(server, game_modes, screenshots))
-        .style(theme::Container::Custom(Box::new(BoxContainerStyle {})));
+    let content =
+        container(content(server, game_modes, screenshots)).style(theme::Container::Custom(Box::new(BoxContainerStyle {})));
 
     container(content).width(Length::Fill).height(Length::Fill).padding(16).into()
 }

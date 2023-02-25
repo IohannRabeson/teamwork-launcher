@@ -9,6 +9,7 @@ mod launcher;
 mod map;
 pub mod message;
 pub mod notifications;
+pub mod palettes;
 mod ping;
 mod process_detection;
 pub mod promised_value;
@@ -19,7 +20,6 @@ pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 mod views;
-pub mod palettes;
 
 use {
     iced::{
@@ -27,6 +27,8 @@ use {
         widget::{
             column, container,
             pane_grid::{self, Axis},
+            scrollable,
+            scrollable::RelativeOffset,
         },
         Background, Color, Theme,
     },
@@ -141,6 +143,7 @@ pub struct TeamworkLauncher {
     game_modes: GameModes,
     notifications: Notifications,
     screenshots: Screenshots,
+    servers_list: ServersList,
 
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
@@ -788,7 +791,19 @@ impl PaneView {
     }
 }
 
+pub struct ServersList {
+    pub scroll_position: RelativeOffset,
+    pub id: scrollable::Id,
+}
 
+impl ServersList {
+    pub fn new() -> Self {
+        Self {
+            scroll_position: RelativeOffset::START,
+            id: scrollable::Id::unique(),
+        }
+    }
+}
 
 impl iced::Application for TeamworkLauncher {
     type Executor = iced::executor::Default;
@@ -820,6 +835,7 @@ impl iced::Application for TeamworkLauncher {
                 is_loading: false,
                 notifications: Notifications::new(),
                 screenshots: Screenshots::new(),
+                servers_list: ServersList::new(),
             },
             Command::none(),
         )
@@ -874,6 +890,7 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::Back => {
                 self.views.pop();
+                return scrollable::snap_to(self.servers_list.id.clone(), self.servers_list.scroll_position);
             }
             Message::ShowSettings => {
                 self.views.push(Screens::Settings);
@@ -898,6 +915,9 @@ impl iced::Application for TeamworkLauncher {
                 self.screenshots.set(PromisedValue::Loading);
                 return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
             }
+            Message::ServerListScroll(position) => {
+                self.servers_list.scroll_position = position;
+            }
         }
 
         Command::none()
@@ -916,6 +936,7 @@ impl iced::Application for TeamworkLauncher {
                     &self.filter,
                     &self.game_modes,
                     &self.servers_counts,
+                    &self.servers_list,
                     self.is_loading,
                 ),
                 Screens::Server(ip_port) =>

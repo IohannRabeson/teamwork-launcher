@@ -1,5 +1,7 @@
-use iced::{theme, Color};
-use lazy_static::lazy_static;
+use {
+    iced::{theme, Color},
+    lazy_static::lazy_static,
+};
 
 lazy_static! {
     pub static ref GREEN: Color = Color::from_rgb8(75, 116, 28);
