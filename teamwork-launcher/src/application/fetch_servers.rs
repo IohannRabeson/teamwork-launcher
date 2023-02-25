@@ -35,7 +35,7 @@ pub fn fetch_servers(urls: Vec<(SourceKey, UrlWithKey)>) -> impl Stream<Item = F
     stream! {
         yield FetchServersEvent::Start;
         let client = teamwork::Client::default();
-        let mut request_servers = FuturesUnordered::from_iter(urls.into_iter().map(|(source_key, url)| get_servers(&client, url, source_key.clone())));
+        let mut request_servers = FuturesUnordered::from_iter(urls.into_iter().map(|(source_key, url)| get_servers(&client, url, source_key)));
 
         while let Some(result) = request_servers.next().await {
             match result {

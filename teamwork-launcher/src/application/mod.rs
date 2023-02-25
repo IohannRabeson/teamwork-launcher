@@ -41,7 +41,7 @@ use {
         time::Instant,
     },
 };
-
+use crate::ui::main::ViewContext;
 use {
     crate::{application::views::Views, ui},
     iced::{
@@ -156,14 +156,13 @@ pub struct TeamworkLauncher {
 
 impl TeamworkLauncher {
     fn new_servers(&mut self, new_servers: Vec<Server>) {
-        let countries: Vec<Country> = new_servers
+        let countries = new_servers
             .iter()
             .filter_map(|server| server.country.get())
             .unique()
-            .cloned()
-            .collect();
+            .cloned();
 
-        self.filter.country.dictionary.extend(countries.into_iter());
+        self.filter.country.dictionary.extend(countries);
 
         self.servers.extend(new_servers.into_iter());
         self.sort_server();
@@ -528,7 +527,7 @@ impl TeamworkLauncher {
             FetchServersMessage::FetchServersError(error) => {
                 error!(
                     "Error: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), &error.to_string())
+                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
@@ -930,14 +929,16 @@ impl iced::Application for TeamworkLauncher {
             ui::header::header_view("Teamwork Launcher", current, &self.notifications),
             match current {
                 Screens::Main(view) => ui::main::view(
-                    view,
-                    &self.servers,
-                    &self.bookmarks,
-                    &self.filter,
-                    &self.game_modes,
-                    &self.servers_counts,
-                    &self.servers_list,
-                    self.is_loading,
+                    ViewContext {
+                        view,
+                        servers: &self.servers,
+                        bookmarks: &self.bookmarks,
+                        filter: &self.filter,
+                        game_modes: &self.game_modes,
+                        counts: &self.servers_counts,
+                        servers_list: &self.servers_list,
+                        is_loading: self.is_loading,
+                    },
                 ),
                 Screens::Server(ip_port) =>
                     ui::server_details::view(&self.servers, &self.game_modes, ip_port, &self.screenshots),

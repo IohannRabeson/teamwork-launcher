@@ -50,7 +50,7 @@ impl Screenshots {
 
     pub fn current(&self) -> PromisedValue<&image::Handle> {
         match &self.screenshots {
-            PromisedValue::Ready(screenshots) if screenshots.len() > 0 => {
+            PromisedValue::Ready(screenshots) if !screenshots.is_empty() => {
                 let index = std::cmp::min(self.current, screenshots.len() - 1);
 
                 PromisedValue::Ready(&screenshots[index])
