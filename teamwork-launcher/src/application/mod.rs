@@ -19,6 +19,7 @@ pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 mod views;
+pub mod palettes;
 
 use {
     iced::{
@@ -787,29 +788,7 @@ impl PaneView {
     }
 }
 
-mod palettes {
-    use iced::{theme, Color};
 
-    pub fn create_blue_palette() -> theme::Custom {
-        theme::Custom::new(theme::palette::Palette {
-            background: Color::from_rgb8(38, 35, 33),
-            text: Color::from([0.9, 0.9, 0.9]),
-            primary: Color::from_rgb8(57, 92, 120),
-            success: Color::from_rgb8(75, 116, 28),
-            danger: Color::from_rgb8(189, 59, 59),
-        })
-    }
-
-    pub fn create_red_palette() -> theme::Custom {
-        theme::Custom::new(theme::palette::Palette {
-            background: Color::from_rgb8(38, 35, 33),
-            text: Color::from([0.9, 0.9, 0.9]),
-            primary: Color::from_rgb8(159, 49, 47),
-            success: Color::from_rgb8(75, 116, 28),
-            danger: Color::from_rgb8(189, 59, 59),
-        })
-    }
-}
 
 impl iced::Application for TeamworkLauncher {
     type Executor = iced::executor::Default;
