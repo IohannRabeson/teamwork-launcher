@@ -10,7 +10,7 @@ build = "build.rs"
 
 [dependencies]
 teamwork = { path = "../teamwork" }
-iced = { version = "0.8.0", features = ["tokio", "svg", "image", "system"] }
+iced = { version = "0.8.0", features = ["tokio", "svg", "image"] }
 iced_lazy = "0.5.0"
 # Next iced_aw release switch to version instead of git.
 iced_aw = { git = "https://github.com/iced-rs/iced_aw", default-features = false, features = ["floating_element"] }

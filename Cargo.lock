@@ -1558,7 +1558,6 @@ dependencies = [
  "iced_graphics",
  "iced_native",
  "log",
- "sysinfo 0.23.13",
  "thiserror",
  "web-sys",
  "winapi",
@@ -2102,15 +2101,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae01545c9c7fc4486ab7debaf2aad7003ac19431791868fb2e8066df97fad2f8"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "ntapi"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c28774a7fd2fbb4f0babd8237ce554b73af68021b5f695a3cebd6c59bac0980f"
-dependencies = [
- "winapi",
 ]
 
 [[package]]
@@ -3192,21 +3182,6 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.23.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3977ec2e0520829be45c8a2df70db2bf364714d8a748316a10c3c35d4d2b01c9"
-dependencies = [
- "cfg-if",
- "core-foundation-sys",
- "libc",
- "ntapi 0.3.7",
- "once_cell",
- "rayon",
- "winapi",
-]
-
-[[package]]
-name = "sysinfo"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "727220a596b4ca0af040a07091e49f5c105ec8f2592674339a5bf35be592f76e"
@@ -3214,7 +3189,7 @@ dependencies = [
  "cfg-if",
  "core-foundation-sys",
  "libc",
- "ntapi 0.4.0",
+ "ntapi",
  "once_cell",
  "rayon",
  "winapi",
@@ -3259,7 +3234,7 @@ dependencies = [
  "serde_json",
  "static_assertions",
  "surge-ping",
- "sysinfo 0.28.0",
+ "sysinfo",
  "teamwork",
  "test-case",
  "thiserror",
