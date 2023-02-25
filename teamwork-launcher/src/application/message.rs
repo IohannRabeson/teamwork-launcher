@@ -114,6 +114,14 @@ pub enum KeyboardMessage {
 }
 
 #[derive(Debug, Clone)]
+pub enum ScreenshotsMessage {
+    Screenshots(Vec<image::Handle>),
+    Next,
+    Previous,
+    Error(Arc<teamwork::Error>),
+}
+
+#[derive(Debug, Clone)]
 pub enum Message {
     Servers(FetchServersMessage),
     Country(CountryServiceMessage),
@@ -125,9 +133,10 @@ pub enum Message {
     GameModes(GameModesMessage),
     Keyboard(KeyboardMessage),
     Notification(NotificationMessage),
+    Screenshots(ScreenshotsMessage),
     RefreshServers,
     ShowSettings,
-    ShowServer(IpPort),
+    ShowServer(IpPort, MapName),
     LaunchGame(IpPort),
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
