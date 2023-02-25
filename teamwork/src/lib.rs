@@ -64,9 +64,63 @@ struct ThumbnailResponse {
 
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
 const TEAMWORK_TF_MAP_THUMBNAIL_API: &str = "https://teamwork.tf/api/v1/map-stats/mapthumbnail";
+const TEAMWORK_TF_MAP_STATS_API: &str = "https://teamwork.tf/api/v1/map-stats/map";
 const TEAMWORK_TOO_MANY_ATTEMPTS: &str = "Too Many Attempts.";
 
+mod map_details_response_json {
+    use serde::Deserialize;
+
+    #[derive(Deserialize, Debug, Clone)]
+    pub struct MapContext {
+        pub screenshots: Vec<String>,
+    }
+
+    #[derive(Deserialize, Debug, Clone)]
+    pub struct Response {
+        #[serde(rename = "map")]
+        pub name: String,
+        #[serde(rename = "thumbnail")]
+        pub thumbnail_url: String,
+        pub context: Option<MapContext>,
+        #[serde(rename = "official_map")]
+        pub is_official: bool,
+    }
+}
+
+
 impl Client {
+    async fn get_map_details(&self,
+                       api_key: &str,
+                       map_name: &str) -> Result<map_details_response_json::Response, Error>
+    {
+        let query_url = UrlWithKey::new(format!("{}/{}", TEAMWORK_TF_MAP_STATS_API, map_name), api_key);
+        let raw_text = self.get_raw_text(&query_url).await?;
+
+        if raw_text == TEAMWORK_TOO_MANY_ATTEMPTS {
+            return Err(Error::TooManyAttempts)
+        }
+
+        Self::try_parse_response::<map_details_response_json::Response>(&raw_text, &query_url)
+    }
+
+    pub async fn get_map_screenshots<I: Send + Sync, F: Fn(Vec<u8>) -> I>(
+        &self,
+        api_key: &str,
+        map_name: &str,
+        convert_to_image: F) -> Result<Vec<I>, Error>
+    {
+        let details = self.get_map_details(api_key, map_name).await?;
+        let mut images = Vec::new();
+
+        if let Some(context) = details.context {
+            for screenshot_url in context.screenshots {
+                images.push(self.get_image(&screenshot_url, &convert_to_image).await?);
+            }
+        }
+
+        Ok(images)
+    }
+
     /// Get the thumbnail for a map.
     pub async fn get_map_thumbnail<I: Send + Sync, F: Fn(Vec<u8>) -> I>(
         &self,
@@ -82,14 +136,18 @@ impl Client {
 
         Ok(match image_url {
             Some(image_url) => {
-                let bytes = self.reqwest.get(image_url).send().await?.bytes().await?;
-
-                Some(convert_to_image(bytes.as_ref().to_vec()))
+                Some(self.get_image(&image_url, &convert_to_image).await?)
             }
             None => {
                 None
             }
         })
+    }
+
+    async fn get_image<I: Send + Sync, F: Fn(Vec<u8>) -> I>(&self, url: &str, convert_to_image: &F) -> Result<I, Error> {
+        let bytes = self.reqwest.get(url).send().await?.bytes().await?;
+
+        Ok(convert_to_image(bytes.as_ref().to_vec()))
     }
 
     pub async fn get_map_thumbnail_url(&self, api_key: &str, map_name: &str) -> Result<Option<String>, Error> {
