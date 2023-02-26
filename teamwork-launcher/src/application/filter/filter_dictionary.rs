@@ -13,8 +13,7 @@ where
     entries: BTreeMap<K, bool>,
 }
 
-impl<K: Ord> Default for FilterDictionary<K>
-{
+impl<K: Ord> Default for FilterDictionary<K> {
     fn default() -> Self {
         Self::new()
     }

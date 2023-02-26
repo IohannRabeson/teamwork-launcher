@@ -22,36 +22,31 @@ pub mod user_settings;
 mod views;
 
 use {
-    iced::{
-        theme,
-        widget::{
-            column, container,
-            pane_grid::{self, Axis},
-            scrollable,
-            scrollable::RelativeOffset,
-        },
-        Background, Color, Theme,
+    crate::{
+        application::views::Views,
+        ui::{self, main::ViewContext},
     },
+    iced::{
+        futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
+        subscription, theme,
+        widget::{
+            column, container, image,
+            pane_grid::{self, Axis},
+            scrollable::{self, RelativeOffset},
+        },
+        Background, Color, Command, Element, Renderer, Subscription, Theme,
+    },
+    itertools::Itertools,
     log::{debug, error},
     std::{
         collections::{
             btree_map::Entry::{Occupied, Vacant},
             BTreeMap,
         },
-        time::Instant,
+        net::Ipv4Addr,
+        sync::Arc,
+        time::{Duration, Instant},
     },
-};
-use crate::ui::main::ViewContext;
-use {
-    crate::{application::views::Views, ui},
-    iced::{
-        futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
-        subscription,
-        widget::image,
-        Command, Element, Renderer, Subscription,
-    },
-    itertools::Itertools,
-    std::{net::Ipv4Addr, sync::Arc, time::Duration},
     teamwork::UrlWithKey,
 };
 
@@ -100,7 +95,7 @@ pub enum SettingsError {
 
 pub enum Screens {
     Main(MainView),
-    Server(IpPort),
+    Server(ServerView),
     Settings,
 }
 
@@ -117,6 +112,16 @@ impl MainView {
         }
 
         Self { panes }
+    }
+}
+
+pub struct ServerView {
+    pub ip_port: IpPort,
+}
+
+impl ServerView {
+    pub fn new(ip_port: IpPort) -> Self {
+        Self { ip_port }
     }
 }
 
@@ -156,11 +161,7 @@ pub struct TeamworkLauncher {
 
 impl TeamworkLauncher {
     fn new_servers(&mut self, new_servers: Vec<Server>) {
-        let countries = new_servers
-            .iter()
-            .filter_map(|server| server.country.get())
-            .unique()
-            .cloned();
+        let countries = new_servers.iter().filter_map(|server| server.country.get()).unique().cloned();
 
         self.filter.country.dictionary.extend(countries);
 
@@ -910,7 +911,7 @@ impl iced::Application for TeamworkLauncher {
                 return self.copy_connection_string(ip_port);
             }
             Message::ShowServer(ip_port, map_name) => {
-                self.views.push(Screens::Server(ip_port));
+                self.views.push(Screens::Server(ServerView::new(ip_port)));
                 self.screenshots.set(PromisedValue::Loading);
                 return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
             }
@@ -928,8 +929,8 @@ impl iced::Application for TeamworkLauncher {
         container(column![
             ui::header::header_view("Teamwork Launcher", current, &self.notifications),
             match current {
-                Screens::Main(view) => ui::main::view(
-                    ViewContext {
+                Screens::Main(view) => {
+                    ui::main::view(ViewContext {
                         view,
                         servers: &self.servers,
                         bookmarks: &self.bookmarks,
@@ -938,11 +939,14 @@ impl iced::Application for TeamworkLauncher {
                         counts: &self.servers_counts,
                         servers_list: &self.servers_list,
                         is_loading: self.is_loading,
-                    },
-                ),
-                Screens::Server(ip_port) =>
-                    ui::server_details::view(&self.servers, &self.game_modes, ip_port, &self.screenshots),
-                Screens::Settings => ui::settings::view(&self.user_settings, &self.servers_sources),
+                    })
+                }
+                Screens::Server(view) => {
+                    ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
+                }
+                Screens::Settings => {
+                    ui::settings::view(&self.user_settings, &self.servers_sources)
+                }
             }
         ])
         .style(theme::Container::Custom(Box::new(MainBackground {})))

@@ -9,10 +9,11 @@ use {
     },
     iced::{
         theme,
-        widget::{container, image, row, svg, text, tooltip as iced_tooltip, Image},
+        widget::{container, horizontal_space, image, row, svg, text, tooltip as iced_tooltip, Image},
         Color, Element, Length,
         Theme::{self, Dark},
     },
+    iced_spinner::spinner,
     std::time::Duration,
 };
 
@@ -25,7 +26,7 @@ pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'
             country,
             iced_tooltip::Position::Left,
         ),
-        None => text(format!("Region: {} ({})", country, country.code())).into(),
+        None => text(country).into(),
     }
 }
 
@@ -67,6 +68,14 @@ pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     }
 }
 
+pub fn ping_time<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
+    match value {
+        PromisedValue::Ready(duration) => text(format!("{}ms", duration.as_millis())).into(),
+        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::None => horizontal_space(Length::Shrink).into(),
+    }
+}
+
 pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> Element<'a, Message> {
     match country {
         PromisedValue::Ready(country) => country_icon(country, size, padding),
@@ -74,8 +83,6 @@ pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> 
         PromisedValue::None => text("Region: unknown").into(),
     }
 }
-
-use iced_spinner::spinner;
 
 pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
     match image {

@@ -1,4 +1,3 @@
-use iced::widget;
 use {
     crate::{
         application::{
@@ -15,10 +14,7 @@ use {
     },
     iced::{
         theme,
-        widget::{
-            column, container, horizontal_space, pane_grid, row,
-            text, toggler, Container, PaneGrid,
-        },
+        widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, PaneGrid},
         Alignment, Element, Length,
     },
     iced_lazy::responsive,
@@ -40,16 +36,20 @@ pub fn view(context: ViewContext) -> Element<Message> {
     let textual_filters = container(ui::filter::text_filter(context.filter)).padding([0, 8]);
     let pane_grid = PaneGrid::new(&context.view.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
-            PaneId::Servers => {
-                match context.is_loading {
-                    false => servers_view(context.servers, context.bookmarks, context.filter, context.game_modes, context.servers_list),
-                    true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .center_x()
-                        .center_y()
-                        .into(),
-                }
+            PaneId::Servers => match context.is_loading {
+                false => servers_view(
+                    context.servers,
+                    context.bookmarks,
+                    context.filter,
+                    context.game_modes,
+                    context.servers_list,
+                ),
+                true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .center_x()
+                    .center_y()
+                    .into(),
             },
             PaneId::Filters => filter_view(context.filter, context.game_modes, context.counts),
         }))

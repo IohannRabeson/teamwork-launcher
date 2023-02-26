@@ -28,6 +28,14 @@ impl Screenshots {
         }
     }
 
+    pub fn can_move_next(&self) -> bool {
+        matches!(&self.screenshots, PromisedValue::Ready(screenshots) if self.current + 1 < screenshots.len())
+    }
+
+    pub fn can_move_previous(&self) -> bool {
+        matches!(&self.screenshots, PromisedValue::Ready(_) if self.current > 0)
+    }
+
     pub fn next(&mut self) {
         if let PromisedValue::Ready(screenshots) = &self.screenshots {
             if self.current + 1 < screenshots.len() {
