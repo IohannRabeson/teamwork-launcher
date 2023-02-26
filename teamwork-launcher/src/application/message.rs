@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use {
     crate::application::{
         filter::{
@@ -94,6 +95,7 @@ pub enum SettingsMessage {
     WindowMoved { x: i32, y: i32 },
     WindowResized { width: u32, height: u32 },
     ThemeChanged(LauncherTheme),
+    OpenDirectory(PathBuf),
 }
 
 #[derive(Debug, Clone)]
