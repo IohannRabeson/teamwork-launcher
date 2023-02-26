@@ -15,7 +15,7 @@ impl<'l, T, Message: 'l> Form<'l, T, Message> {
     pub fn new() -> Self {
         Self {
             fields: Vec::new(),
-            spacing: 4,
+            spacing: 0,
             padding: Padding::new(0.0),
         }
     }
