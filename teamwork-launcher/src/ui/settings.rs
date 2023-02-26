@@ -5,14 +5,18 @@ use {
     },
     iced::{
         theme,
-        widget::{checkbox, column, container, pick_list, scrollable, text, text_input},
+        widget::{checkbox, column, container, pick_list, scrollable, text, text_input, row},
         Element, Length,
     },
 };
+use crate::common_settings::get_configuration_directory;
+use crate::icons;
+use crate::ui::buttons::svg_button;
 
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
 pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Element<'l, Message> {
+    let configuration_directory = get_configuration_directory();
     let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
         true => text("API key specified as environment variable").into(),
         false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key(), |text| {
@@ -64,6 +68,14 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                     ),
                 ]
                 .spacing(4)
+            ),
+            field(
+                Some("Configuration directory"),
+                None,
+                row![
+                    text(configuration_directory.display()),
+                    svg_button(icons::FOLDER2_OPEN.clone(), 10).on_press(Message::Settings(SettingsMessage::OpenDirectory(configuration_directory.clone())))
+                ].spacing(4),
             ),
         ]
         .padding(8)

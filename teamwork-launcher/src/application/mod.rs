@@ -357,6 +357,13 @@ impl TeamworkLauncher {
                 self.user_settings.theme = theme;
                 self.theme = theme.into();
             }
+            SettingsMessage::OpenDirectory(directory) => {
+                if directory.is_dir() {
+                    if let Err(error) = open::that(&directory) {
+                        self.push_notification(format!("Failed to open configuration directory:\n{}", error), NotificationKind::Error);
+                    }
+                }
+            }
         }
     }
 
