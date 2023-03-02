@@ -45,6 +45,8 @@ pub struct UserSettings {
     pub quit_on_copy: bool,
     pub theme: LauncherTheme,
     #[serde(default)]
+    pub max_cache_size: u64,
+    #[serde(default)]
     pub window: Option<WindowSettings>,
     teamwork_api_key: String,
 }
@@ -59,6 +61,8 @@ impl Default for UserSettings {
             quit_on_copy: false,
             window: None,
             theme: LauncherTheme::Red,
+            // 50Mb by default
+            max_cache_size: 50 * 1024 * 1024,
         }
     }
 }
