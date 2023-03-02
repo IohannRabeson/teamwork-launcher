@@ -1,3 +1,4 @@
+use iced_aw::NumberInput;
 use {
     crate::{
         application::{servers_source::ServersSource, user_settings::LauncherTheme, Message, UserSettings},
@@ -76,6 +77,11 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                     text(configuration_directory.display()),
                     svg_button(icons::FOLDER2_OPEN.clone(), 10).on_press(Message::Settings(SettingsMessage::OpenDirectory(configuration_directory.clone())))
                 ].spacing(4),
+            ),
+            field(
+                Some("Max cache size in MB"),
+                None,
+                NumberInput::new(settings.max_thumbnails_cache_size_mb, 50, |value|Message::Settings(SettingsMessage::MaxCacheSizeChanged(value))),
             ),
         ]
         .padding(8)

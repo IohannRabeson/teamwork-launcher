@@ -22,6 +22,7 @@ pub mod user_settings;
 mod views;
 
 use std::collections::BTreeSet;
+use log::trace;
 use {
     crate::{
         application::views::Views,
@@ -180,6 +181,7 @@ impl TeamworkLauncher {
 
         for server in self.servers.iter_mut() {
             if let Some(image) = self.thumbnails_cache.get(&server.map) {
+                trace!("Image for {} fetch from cache", &server.map);
                 server.map_thumbnail = PromisedValue::Ready(image);
             }
         }
@@ -270,7 +272,7 @@ impl TeamworkLauncher {
     }
 
     fn refresh_servers(&mut self) {
-        if self.user_settings.teamwork_api_key().trim().is_empty() {
+        if !self.user_settings.has_teamwork_api_key() {
             self.push_notification(
                 "No Teamwork.tf API key specified.\nSet your API key in the settings.",
                 NotificationKind::Error,
@@ -384,6 +386,9 @@ impl TeamworkLauncher {
                         self.push_notification(format!("Failed to open configuration directory:\n{}", error), NotificationKind::Error);
                     }
                 }
+            }
+            SettingsMessage::MaxCacheSizeChanged(value) => {
+                self.user_settings.max_thumbnails_cache_size_mb = value;
             }
         }
     }
@@ -802,7 +807,7 @@ impl Drop for TeamworkLauncher {
         write_file(&self.servers_sources, &sources_file_path)
             .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
 
-        if let Err(error) = self.thumbnails_cache.write(self.user_settings.max_cache_size) {
+        if let Err(error) = self.thumbnails_cache.write(self.user_settings.max_thumbnails_cache_size_mb * 1024 * 1024) {
             error!("Failed to write thumbnails cache: {}", error);
         }
     }
@@ -847,9 +852,18 @@ impl iced::Application for TeamworkLauncher {
         let theme: Theme = flags.user_settings.theme.into();
         let thumbnail_cache_directory = get_configuration_directory().join("thumbnails");
         let mut thumbnail_cache = ThumbnailCache::new(thumbnail_cache_directory);
+        let mut notifications = Notifications::new();
 
         if let Err(error) = thumbnail_cache.load() {
             error!("Failed to load thumbnails cache: {}", error);
+        }
+
+        if !flags.user_settings.has_teamwork_api_key() {
+            notifications.push(Notification::new(
+                "No Teamwork.tf API key specified.\nSet your API key in the settings.",
+                None,
+                NotificationKind::Error,
+            ));
         }
 
         (
@@ -871,7 +885,7 @@ impl iced::Application for TeamworkLauncher {
                 shift_pressed: false,
                 theme,
                 is_loading: false,
-                notifications: Notifications::new(),
+                notifications,
                 screenshots: Screenshots::new(),
                 servers_list: ServersList::new(),
                 thumbnails_cache: thumbnail_cache,
@@ -929,6 +943,13 @@ impl iced::Application for TeamworkLauncher {
             }
             Message::Back => {
                 self.views.pop();
+
+                // This is the case where the user has just pasted his API key.
+                // Instead of waiting for the user, we refresh spontaneously.
+                if !self.is_loading && self.servers.is_empty() && self.user_settings.has_teamwork_api_key() {
+                    self.refresh_servers();
+                }
+
                 return scrollable::snap_to(self.servers_list.id.clone(), self.servers_list.scroll_position);
             }
             Message::ShowSettings => {
