@@ -96,6 +96,7 @@ pub enum SettingsMessage {
     WindowResized { width: u32, height: u32 },
     ThemeChanged(LauncherTheme),
     OpenDirectory(PathBuf),
+    MaxCacheSizeChanged(u64),
 }
 
 #[derive(Debug, Clone)]

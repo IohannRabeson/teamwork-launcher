@@ -1,4 +1,3 @@
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use iced_native::image::Data;
 use log::{error, trace};
@@ -15,7 +14,7 @@ use {
         Subscription,
     },
     std::{
-        collections::{btree_map::Entry, BTreeMap},
+        collections::BTreeMap,
         sync::Arc,
         time::Duration,
     },
@@ -32,7 +31,6 @@ struct Context {
     requests_receiver: UnboundedReceiver<MapName>,
     client: teamwork::Client,
     teamwork_api_key: String,
-    cache: BTreeMap<MapName, Option<image::Handle>>,
 }
 
 pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
@@ -57,7 +55,6 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                         requests_receiver: receiver,
                         teamwork_api_key: api_key,
                         client: teamwork::Client::default(),
-                        cache: BTreeMap::new(),
                     };
 
                     (Some(ThumbnailMessage::Started(sender)), State::Ready(context))
@@ -67,39 +64,30 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
 
                     let map_name = context.requests_receiver.select_next_some().await;
 
-                    match context.cache.entry(map_name.clone()) {
-                        Entry::Vacant(vacant) => {
-                            match context
-                                .client
-                                .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
-                                .await
-                            {
-                                Ok(thumbnail) => {
-                                    vacant.insert(thumbnail.clone());
-                                    (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context))
-                                }
-                                Err(teamwork::Error::TooManyAttempts) => {
-                                    context.requests_sender.send(map_name.clone()).await.unwrap();
-
-                                    (
-                                        Some(ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts))),
-                                        State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
-                                    )
-                                }
-                                Err(error) => {
-                                    context.requests_sender.send(map_name.clone()).await.unwrap();
-
-                                    (
-                                        Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
-                                        State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
-                                    )
-                                }
-                            }
+                    match context
+                        .client
+                        .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
+                        .await
+                    {
+                        Ok(thumbnail) => {
+                            (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context))
                         }
-                        Entry::Occupied(occupied) => (
-                            Some(ThumbnailMessage::Thumbnail(map_name, occupied.get().clone())),
-                            State::Ready(context),
-                        ),
+                        Err(teamwork::Error::TooManyAttempts) => {
+                            context.requests_sender.send(map_name.clone()).await.unwrap();
+
+                            (
+                                Some(ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts))),
+                                State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
+                            )
+                        }
+                        Err(error) => {
+                            context.requests_sender.send(map_name.clone()).await.unwrap();
+
+                            (
+                                Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
+                                State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
+                            )
+                        }
                     }
                 }
             }

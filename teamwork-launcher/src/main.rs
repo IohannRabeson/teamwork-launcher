@@ -25,6 +25,7 @@ const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
 const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA_SHORT");
 
 fn main() -> iced::Result {
+    create_configuration_directory().expect("create configuration directory");
     setup_logger().expect("setup logger");
     info!("Teamwork Launcher v{}", APPLICATION_VERSION);
     application::TeamworkLauncher::run(load_settings())
@@ -36,6 +37,10 @@ pub struct ApplicationFlags {
     pub user_settings: UserSettings,
     pub filter: Filter,
     pub servers_sources: Vec<ServersSource>,
+}
+
+fn create_configuration_directory() -> Result<(), std::io::Error> {
+    std::fs::create_dir_all(&get_configuration_directory())
 }
 
 fn load_settings() -> Settings<ApplicationFlags> {
