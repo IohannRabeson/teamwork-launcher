@@ -21,6 +21,7 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
+use std::collections::BTreeSet;
 use {
     crate::{
         application::views::Views,
@@ -84,6 +85,7 @@ use {
     },
     servers_counts::ServersCounts,
 };
+use crate::application::thumbnail::ThumbnailCache;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -153,6 +155,8 @@ pub struct TeamworkLauncher {
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
+    thumbnails_cache: ThumbnailCache,
+
     fetch_servers_subscription_id: u64,
     shift_pressed: bool,
     theme: Theme,
@@ -171,7 +175,14 @@ impl TeamworkLauncher {
 
     fn on_finish(&mut self) {
         self.is_loading = false;
+
         self.sort_server();
+
+        for server in self.servers.iter_mut() {
+            if let Some(image) = self.thumbnails_cache.get(&server.map) {
+                server.map_thumbnail = PromisedValue::Ready(image);
+            }
+        }
 
         let mut servers_refs: Vec<&Server> = self.servers.iter().collect();
 
@@ -182,13 +193,19 @@ impl TeamworkLauncher {
             right.cmp(&left)
         });
 
-        let unique_maps: Vec<&MapName> = servers_refs.iter().map(|server| &server.map).unique().collect();
-
         // For each map, request the thumbnail
-        for map_name in unique_maps.iter().map(|name| (*name).clone()) {
+        let mut unique_map_names: BTreeSet<MapName> = BTreeSet::new();
+
+        for server in servers_refs.iter() {
+            if unique_map_names.contains(&server.map) || server.map_thumbnail.is_ready() {
+                continue
+            }
+
+            unique_map_names.insert(server.map.clone());
+
             if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
                 thumbnail_sender
-                    .send(map_name)
+                    .send(server.map.clone())
                     .unwrap_or_else(|e| error!("thumbnail sender {}", e))
                     .now_or_never();
             }
@@ -247,7 +264,7 @@ impl TeamworkLauncher {
             max
         });
 
-        for map_name in unique_maps.into_iter() {
+        for map_name in unique_map_names.into_iter() {
             self.filter.maps.dictionary.add(map_name.clone());
         }
     }
@@ -293,6 +310,10 @@ impl TeamworkLauncher {
     }
 
     fn thumbnail_ready(&mut self, map_name: MapName, thumbnail: Option<image::Handle>) {
+        if let Some(image) = thumbnail.as_ref() {
+            self.thumbnails_cache.insert(map_name.clone(), image.clone());
+        }
+
         for server in self.servers.iter_mut().filter(|server| server.map == map_name) {
             if !server.map_thumbnail.is_ready() {
                 server.map_thumbnail = thumbnail.clone().into();
@@ -780,6 +801,10 @@ impl Drop for TeamworkLauncher {
             .unwrap_or_else(|error| error!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
         write_file(&self.servers_sources, &sources_file_path)
             .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
+
+        if let Err(error) = self.thumbnails_cache.write(self.user_settings.max_cache_size) {
+            error!("Failed to write thumbnails cache: {}", error);
+        }
     }
 }
 
@@ -820,6 +845,12 @@ impl iced::Application for TeamworkLauncher {
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let theme: Theme = flags.user_settings.theme.into();
+        let thumbnail_cache_directory = get_configuration_directory().join("thumbnails");
+        let mut thumbnail_cache = ThumbnailCache::new(thumbnail_cache_directory);
+
+        if let Err(error) = thumbnail_cache.load() {
+            error!("Failed to load thumbnails cache: {}", error);
+        }
 
         (
             Self {
@@ -843,6 +874,7 @@ impl iced::Application for TeamworkLauncher {
                 notifications: Notifications::new(),
                 screenshots: Screenshots::new(),
                 servers_list: ServersList::new(),
+                thumbnails_cache: thumbnail_cache,
             },
             Command::none(),
         )
