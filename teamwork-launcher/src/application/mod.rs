@@ -497,6 +497,9 @@ impl TeamworkLauncher {
             FilterMessage::MapNameFilterChanged(text) => {
                 self.filter.maps.text = text;
             }
+            FilterMessage::PlayerFilterEnabled(enabled) => {
+                self.filter.players.enabled = enabled;
+            }
         }
     }
 

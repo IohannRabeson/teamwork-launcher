@@ -77,6 +77,7 @@ pub enum FilterMessage {
     SortDirectionChanged(SortDirection),
     MinimumPlayersChanged(u8),
     MinimumFreeSlotsChanged(u8),
+    PlayerFilterEnabled(bool),
     MapChecked(MapName, bool),
     MapFilterEnabled(bool),
     ProviderChecked(String, bool),
