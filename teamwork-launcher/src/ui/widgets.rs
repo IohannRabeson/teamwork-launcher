@@ -1,3 +1,4 @@
+use iced_aw::Spinner;
 use {
     crate::{
         application::{
@@ -13,7 +14,6 @@ use {
         Color, Element, Length,
         Theme::{self, Dark},
     },
-    iced_spinner::spinner,
     std::time::Duration,
 };
 
@@ -63,7 +63,7 @@ pub fn tooltip<'a>(
 pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
         PromisedValue::Ready(duration) => ping_icon(duration, 20),
-        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => text("Timeout").into(),
     }
 }
@@ -71,7 +71,7 @@ pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
 pub fn ping_time<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
         PromisedValue::Ready(duration) => text(format!("{}ms", duration.as_millis())).into(),
-        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => horizontal_space(Length::Shrink).into(),
     }
 }
@@ -79,7 +79,7 @@ pub fn ping_time<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
 pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> Element<'a, Message> {
     match country {
         PromisedValue::Ready(country) => country_icon(country, size, padding),
-        PromisedValue::Loading => spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
         PromisedValue::None => text("Region: unknown").into(),
     }
 }
@@ -87,7 +87,7 @@ pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> 
 pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
     match image {
         PromisedValue::Ready(image) => Image::new(image.clone()).into(),
-        PromisedValue::Loading => spinner().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
+        PromisedValue::Loading => Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
     }
 }

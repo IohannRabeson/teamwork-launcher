@@ -1,3 +1,4 @@
+use iced_aw::Spinner;
 use {
     crate::{
         application::{
@@ -18,7 +19,6 @@ use {
         Alignment, Element, Length,
     },
     iced_lazy::responsive,
-    iced_spinner::spinner,
 };
 
 pub struct ViewContext<'l> {
@@ -44,7 +44,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
                     context.game_modes,
                     context.servers_list,
                 ),
-                true => container(spinner().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
+                true => container(Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .center_x()

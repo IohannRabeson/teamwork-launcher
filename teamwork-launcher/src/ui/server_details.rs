@@ -1,3 +1,4 @@
+use iced_aw::Spinner;
 use {
     super::widgets::{ping, ping_time, region},
     crate::{
@@ -14,7 +15,6 @@ use {
         Alignment, ContentFit, Element, Length,
     },
     iced_aw::{floating_element::Anchor, FloatingElement},
-    iced_spinner::spinner,
 };
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
@@ -126,7 +126,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
             .width(Length::FillPortion(2))
             .into()
         }
-        PromisedValue::Loading => container(spinner().width(Length::Fixed(64.0)).height(Length::Fixed(64.0)))
+        PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(64.0)).height(Length::Fixed(64.0)))
             .center_x()
             .center_y()
             .width(Length::FillPortion(2))
