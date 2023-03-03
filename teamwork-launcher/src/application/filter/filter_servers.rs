@@ -1,18 +1,19 @@
 use {
     crate::application::{
+        Bookmarks,
         filter::{
             country_filter::CountryFilter,
-            filter_servers::{map_filter::MapFilter, player_filter::PlayerFilter},
             game_mode_filter::GameModeFilter,
             properties_filter::PropertyFilterSwitch,
             provider_filter::ProviderFilter,
             sort_servers::{SortCriterion, SortDirection},
             text_filter::TextFilter,
-        },
-        Bookmarks, PromisedValue, Server,
+        }, PromisedValue, Server,
     },
     serde::{Deserialize, Serialize},
 };
+use crate::application::filter::map_filter::MapFilter;
+use crate::application::filter::player_filter::PlayerFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -109,49 +110,3 @@ impl Filter {
     }
 }
 
-mod map_filter {
-    use {
-        crate::application::{filter::filter_dictionary::FilterDictionary, map::MapName},
-        serde::{Deserialize, Serialize},
-    };
-
-    #[derive(Serialize, Deserialize)]
-    pub struct MapFilter {
-        pub dictionary: FilterDictionary<MapName>,
-        pub enabled: bool,
-        pub text: String,
-    }
-
-    impl Default for MapFilter {
-        fn default() -> Self {
-            Self {
-                dictionary: FilterDictionary::new(),
-                enabled: false,
-                text: String::new(),
-            }
-        }
-    }
-}
-
-mod player_filter {
-    use {
-        crate::application::Server,
-        serde::{Deserialize, Serialize},
-    };
-
-    #[derive(Serialize, Deserialize, Default)]
-    pub struct PlayerFilter {
-        pub minimum_players: u8,
-        #[serde(skip)]
-        pub maximum_players: u8,
-        pub minimum_free_slots: u8,
-        #[serde(skip)]
-        pub maximum_free_slots: u8,
-    }
-
-    impl PlayerFilter {
-        pub fn accept(&self, server: &Server) -> bool {
-            server.current_players_count >= self.minimum_players && server.free_slots() >= self.minimum_free_slots
-        }
-    }
-}

@@ -6,3 +6,5 @@ pub mod properties_filter;
 pub mod provider_filter;
 pub mod sort_servers;
 pub mod text_filter;
+mod player_filter;
+mod map_filter;
