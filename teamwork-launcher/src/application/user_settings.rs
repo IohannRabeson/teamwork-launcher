@@ -72,7 +72,9 @@ impl Default for UserSettings {
     }
 }
 
-const fn default_max_thumbnails_cache_size() -> u64 { 20 }
+const fn default_max_thumbnails_cache_size() -> u64 {
+    20
+}
 
 impl UserSettings {
     const TEAMWORK_API_KEY_ENV: &'static str = "TEAMWORK_API_KEY";

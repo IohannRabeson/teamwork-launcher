@@ -1,18 +1,17 @@
-use iced_aw::NumberInput;
 use {
     crate::{
         application::{servers_source::ServersSource, user_settings::LauncherTheme, Message, UserSettings},
-        ui::{styles::BoxContainerStyle, SettingsMessage},
+        common_settings::get_configuration_directory,
+        icons,
+        ui::{buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
     },
     iced::{
         theme,
-        widget::{checkbox, column, container, pick_list, scrollable, text, text_input, row},
+        widget::{checkbox, column, container, pick_list, row, scrollable, text, text_input},
         Element, Length,
     },
+    iced_aw::NumberInput,
 };
-use crate::common_settings::get_configuration_directory;
-use crate::icons;
-use crate::ui::buttons::svg_button;
 
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
@@ -75,13 +74,18 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                 None,
                 row![
                     text(configuration_directory.display()),
-                    svg_button(icons::FOLDER2_OPEN.clone(), 10).on_press(Message::Settings(SettingsMessage::OpenDirectory(configuration_directory.clone())))
-                ].spacing(4),
+                    svg_button(icons::FOLDER2_OPEN.clone(), 10).on_press(Message::Settings(SettingsMessage::OpenDirectory(
+                        configuration_directory.clone()
+                    )))
+                ]
+                .spacing(4),
             ),
             field(
                 Some("Max cache size in MB"),
                 None,
-                NumberInput::new(settings.max_thumbnails_cache_size_mb, 50, |value|Message::Settings(SettingsMessage::MaxCacheSizeChanged(value))),
+                NumberInput::new(settings.max_thumbnails_cache_size_mb, 50, |value| Message::Settings(
+                    SettingsMessage::MaxCacheSizeChanged(value)
+                )),
             ),
         ]
         .padding(8)

@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use {
     crate::application::{
         filter::{
@@ -17,7 +16,7 @@ use {
         futures::channel::mpsc::UnboundedSender,
         widget::{image, pane_grid, scrollable::RelativeOffset},
     },
-    std::{net::Ipv4Addr, sync::Arc, time::Duration},
+    std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
 };
 
 #[derive(Debug, Clone)]
