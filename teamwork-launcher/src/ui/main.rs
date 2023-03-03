@@ -1,4 +1,3 @@
-use iced_aw::Spinner;
 use {
     crate::{
         application::{
@@ -18,6 +17,7 @@ use {
         widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, PaneGrid},
         Alignment, Element, Length,
     },
+    iced_aw::Spinner,
     iced_lazy::responsive,
 };
 
@@ -141,7 +141,12 @@ fn filter_view<'l>(filter: &'l Filter, game_modes: &'l GameModes, counts: &'l Se
         column![
             filter_section(Some("Sort"), ui::filter::server_sort(filter)),
             filter_section(None, ui::filter::bookmark_filter(filter, counts)),
-            filter_section(Some("Ping filter"), ui::filter::ping_filter(filter, counts)),
+            filter_section_with_switch(
+                Some("Ping filter"),
+                ui::filter::ping_filter(filter, counts),
+                filter.ping.enabled,
+                |checked| Message::Filter(FilterMessage::PingFilterEnabled(checked))
+            ),
             filter_section_with_switch(
                 Some("Players filter"),
                 ui::filter::players_filter(filter),

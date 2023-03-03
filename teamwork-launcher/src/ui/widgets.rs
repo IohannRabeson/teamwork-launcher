@@ -1,4 +1,3 @@
-use iced_aw::Spinner;
 use {
     crate::{
         application::{
@@ -14,6 +13,7 @@ use {
         Color, Element, Length,
         Theme::{self, Dark},
     },
+    iced_aw::Spinner,
     std::time::Duration,
 };
 

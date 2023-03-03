@@ -1,4 +1,3 @@
-use iced_aw::Spinner;
 use {
     super::widgets::{ping, ping_time, region},
     crate::{
@@ -14,7 +13,7 @@ use {
         widget::{column, container, image, row, text, vertical_space, Image},
         Alignment, ContentFit, Element, Length,
     },
-    iced_aw::{floating_element::Anchor, FloatingElement},
+    iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
 };
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {

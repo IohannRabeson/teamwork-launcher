@@ -64,6 +64,7 @@ pub enum FilterMessage {
     IgnoreAccentChanged(bool),
     MaxPingChanged(u32),
     AcceptPingTimeoutChanged(bool),
+    PingFilterEnabled(bool),
     GameModeChecked(GameModeId, bool),
     CountryFilterEnabled(bool),
     GameModeFilterEnabled(bool),

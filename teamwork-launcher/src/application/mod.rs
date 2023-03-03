@@ -422,10 +422,13 @@ impl TeamworkLauncher {
                 self.filter.text.ignore_accents = checked;
             }
             FilterMessage::MaxPingChanged(max_ping) => {
-                self.filter.max_ping = max_ping;
+                self.filter.ping.max_ping = max_ping;
             }
             FilterMessage::AcceptPingTimeoutChanged(checked) => {
-                self.filter.accept_ping_timeout = checked;
+                self.filter.ping.accept_ping_timeout = checked;
+            }
+            FilterMessage::PingFilterEnabled(enabled) => {
+                self.filter.ping.enabled = enabled;
             }
             FilterMessage::GameModeChecked(id, checked) => {
                 if self.shift_pressed {
