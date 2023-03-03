@@ -1,6 +1,8 @@
-use std::path::{Path, PathBuf};
-use iced_native::image::Data;
-use log::{error, trace};
+use {
+    iced_native::image::Data,
+    log::{error, trace},
+    std::path::{Path, PathBuf},
+};
 
 use {
     crate::application::{map::MapName, message::ThumbnailMessage},
@@ -13,11 +15,7 @@ use {
         widget::image,
         Subscription,
     },
-    std::{
-        collections::BTreeMap,
-        sync::Arc,
-        time::Duration,
-    },
+    std::{collections::BTreeMap, sync::Arc, time::Duration},
 };
 
 enum State {
@@ -69,9 +67,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                         .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
                         .await
                     {
-                        Ok(thumbnail) => {
-                            (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context))
-                        }
+                        Ok(thumbnail) => (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context)),
                         Err(teamwork::Error::TooManyAttempts) => {
                             context.requests_sender.send(map_name.clone()).await.unwrap();
 
@@ -127,7 +123,7 @@ impl ThumbnailCache {
 
     pub fn load(&mut self) -> Result<(), ThumbnailCacheError> {
         if !self.directory_path.is_dir() {
-            return Err(ThumbnailCacheError::InvalidDirectoryPath(self.directory_path.clone()))
+            return Err(ThumbnailCacheError::InvalidDirectoryPath(self.directory_path.clone()));
         }
 
         for entry in std::fs::read_dir(&self.directory_path)? {
@@ -156,14 +152,14 @@ impl ThumbnailCache {
         Self::clear_cache(&self.directory_path)?;
 
         if !self.directory_path.is_dir() {
-            return Err(ThumbnailCacheError::InvalidDirectoryPath(self.directory_path.clone()))
+            return Err(ThumbnailCacheError::InvalidDirectoryPath(self.directory_path.clone()));
         }
 
         let mut current_bytes = 0u64;
 
         for (map_name, handle) in self.cache.iter() {
             if max_bytes > 0 && current_bytes >= max_bytes {
-                break
+                break;
             }
 
             if let Data::Bytes(bytes) = handle.data() {

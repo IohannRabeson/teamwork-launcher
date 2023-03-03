@@ -21,8 +21,6 @@ mod thumbnail;
 pub mod user_settings;
 mod views;
 
-use std::collections::BTreeSet;
-use log::trace;
 use {
     crate::{
         application::views::Views,
@@ -39,11 +37,11 @@ use {
         Background, Color, Command, Element, Renderer, Subscription, Theme,
     },
     itertools::Itertools,
-    log::{debug, error},
+    log::{debug, error, trace},
     std::{
         collections::{
             btree_map::Entry::{Occupied, Vacant},
-            BTreeMap,
+            BTreeMap, BTreeSet,
         },
         net::Ipv4Addr,
         sync::Arc,
@@ -80,13 +78,13 @@ use {
             process_detection::ProcessDetection,
             screenshots::Screenshots,
             servers_source::{ServersSource, SourceKey},
+            thumbnail::ThumbnailCache,
         },
         common_settings::{get_configuration_directory, write_file},
         ApplicationFlags,
     },
     servers_counts::ServersCounts,
 };
-use crate::application::thumbnail::ThumbnailCache;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -200,7 +198,7 @@ impl TeamworkLauncher {
 
         for server in servers_refs.iter() {
             if unique_map_names.contains(&server.map) || server.map_thumbnail.is_ready() {
-                continue
+                continue;
             }
 
             unique_map_names.insert(server.map.clone());
@@ -383,7 +381,10 @@ impl TeamworkLauncher {
             SettingsMessage::OpenDirectory(directory) => {
                 if directory.is_dir() {
                     if let Err(error) = open::that(&directory) {
-                        self.push_notification(format!("Failed to open configuration directory:\n{}", error), NotificationKind::Error);
+                        self.push_notification(
+                            format!("Failed to open configuration directory:\n{}", error),
+                            NotificationKind::Error,
+                        );
                     }
                 }
             }
@@ -807,7 +808,10 @@ impl Drop for TeamworkLauncher {
         write_file(&self.servers_sources, &sources_file_path)
             .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
 
-        if let Err(error) = self.thumbnails_cache.write(self.user_settings.max_thumbnails_cache_size_mb * 1024 * 1024) {
+        if let Err(error) = self
+            .thumbnails_cache
+            .write(self.user_settings.max_thumbnails_cache_size_mb * 1024 * 1024)
+        {
             error!("Failed to write thumbnails cache: {}", error);
         }
     }
