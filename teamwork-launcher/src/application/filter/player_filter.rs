@@ -1,9 +1,7 @@
 use {
-    crate::application::Server,
+    crate::application::{filter::default_true, Server},
     serde::{Deserialize, Serialize},
 };
-
-fn default_true() -> bool { true }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct PlayerFilter {
@@ -20,7 +18,7 @@ pub struct PlayerFilter {
 impl PlayerFilter {
     pub fn accept(&self, server: &Server) -> bool {
         if !self.enabled {
-            return true
+            return true;
         }
 
         server.current_players_count >= self.minimum_players && server.free_slots() >= self.minimum_free_slots

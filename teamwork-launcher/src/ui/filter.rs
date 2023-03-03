@@ -81,15 +81,15 @@ pub fn ping_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element
     column![
         row![
             text("Max:"),
-            slider(MIN_PING..=MAX_PING, filter.max_ping, |value| Message::Filter(
+            slider(MIN_PING..=MAX_PING, filter.ping.max_ping, |value| Message::Filter(
                 FilterMessage::MaxPingChanged(value)
             )),
-            text(format!("{}ms", filter.max_ping))
+            text(format!("{}ms", filter.ping.max_ping))
         ]
         .spacing(8),
         checkbox(
             format!("Timeouts ({})", counts.timeouts),
-            filter.accept_ping_timeout,
+            filter.ping.accept_ping_timeout,
             |checked| Message::Filter(FilterMessage::AcceptPingTimeoutChanged(checked))
         )
     ]

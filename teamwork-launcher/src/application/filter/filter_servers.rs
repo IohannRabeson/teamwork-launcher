@@ -1,19 +1,20 @@
 use {
     crate::application::{
-        Bookmarks,
         filter::{
             country_filter::CountryFilter,
             game_mode_filter::GameModeFilter,
+            map_filter::MapFilter,
+            ping_filter::PingFilter,
+            player_filter::PlayerFilter,
             properties_filter::PropertyFilterSwitch,
             provider_filter::ProviderFilter,
             sort_servers::{SortCriterion, SortDirection},
             text_filter::TextFilter,
-        }, PromisedValue, Server,
+        },
+        Bookmarks, Server,
     },
     serde::{Deserialize, Serialize},
 };
-use crate::application::filter::map_filter::MapFilter;
-use crate::application::filter::player_filter::PlayerFilter;
 
 #[derive(Serialize, Deserialize)]
 pub struct Filter {
@@ -24,8 +25,7 @@ pub struct Filter {
     pub maps: MapFilter,
     pub providers: ProviderFilter,
     pub bookmarked_only: bool,
-    pub max_ping: u32,
-    pub accept_ping_timeout: bool,
+    pub ping: PingFilter,
     pub vac_secured: PropertyFilterSwitch,
     pub rtd: PropertyFilterSwitch,
     pub all_talk: PropertyFilterSwitch,
@@ -46,8 +46,7 @@ impl Default for Filter {
             maps: MapFilter::default(),
             providers: ProviderFilter::default(),
             bookmarked_only: false,
-            max_ping: 50,
-            accept_ping_timeout: true,
+            ping: PingFilter::default(),
             vac_secured: PropertyFilterSwitch::With,
             rtd: PropertyFilterSwitch::Ignore,
             all_talk: PropertyFilterSwitch::Ignore,
@@ -83,11 +82,7 @@ impl Filter {
         !self.bookmarked_only || bookmarks.is_bookmarked(&server.ip_port)
     }
     fn filter_by_ping(&self, server: &Server) -> bool {
-        match server.ping {
-            PromisedValue::Ready(ping) => ping.as_millis() <= self.max_ping as u128,
-            PromisedValue::Loading => true,
-            PromisedValue::None => self.accept_ping_timeout,
-        }
+        self.ping.accept(server)
     }
     fn filter_by_game_mode(&self, server: &Server) -> bool {
         self.game_modes.accept(server)
@@ -109,4 +104,3 @@ impl Filter {
         self.providers.accept(server)
     }
 }
-
