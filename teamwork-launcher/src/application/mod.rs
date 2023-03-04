@@ -20,6 +20,7 @@ pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 mod views;
+pub mod progress;
 
 use {
     crate::{
@@ -85,6 +86,7 @@ use {
     },
     servers_counts::ServersCounts,
 };
+use crate::application::progress::Progress;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -155,6 +157,7 @@ pub struct TeamworkLauncher {
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
     thumbnails_cache: ThumbnailCache,
+    progress: Progress,
 
     fetch_servers_subscription_id: u64,
     shift_pressed: bool,
@@ -208,6 +211,8 @@ impl TeamworkLauncher {
                     .send(server.map.clone())
                     .unwrap_or_else(|e| error!("thumbnail sender {}", e))
                     .now_or_never();
+
+                self.progress.increment_total();
             }
         }
 
@@ -218,6 +223,8 @@ impl TeamworkLauncher {
                     .send(*ip)
                     .unwrap_or_else(|e| error!("country sender {}", e))
                     .now_or_never();
+
+                self.progress.increment_total();
             }
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
@@ -225,6 +232,8 @@ impl TeamworkLauncher {
                     .send(*ip)
                     .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
+
+                self.progress.increment_total();
             }
         }
 
@@ -276,6 +285,7 @@ impl TeamworkLauncher {
             );
         } else {
             self.is_loading = true;
+            self.progress.reset();
             self.servers_counts.reset();
             self.servers.clear();
             self.filter.players.maximum_free_slots = 0;
@@ -294,6 +304,8 @@ impl TeamworkLauncher {
         self.servers_counts.add_country(country);
 
         self.sort_server();
+
+        self.progress.increment_current();
     }
 
     fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
@@ -306,6 +318,8 @@ impl TeamworkLauncher {
         }
 
         self.sort_server();
+
+        self.progress.increment_current();
     }
 
     fn thumbnail_ready(&mut self, map_name: MapName, thumbnail: Option<image::Handle>) {
@@ -318,6 +332,8 @@ impl TeamworkLauncher {
                 server.map_thumbnail = thumbnail.clone().into();
             }
         }
+
+        self.progress.increment_current();
     }
 
     fn sort_server(&mut self) {
@@ -898,6 +914,7 @@ impl iced::Application for TeamworkLauncher {
                 screenshots: Screenshots::new(),
                 servers_list: ServersList::new(),
                 thumbnails_cache: thumbnail_cache,
+                progress: Progress::default(),
             },
             Command::none(),
         )
@@ -1007,6 +1024,7 @@ impl iced::Application for TeamworkLauncher {
                         game_modes: &self.game_modes,
                         counts: &self.servers_counts,
                         servers_list: &self.servers_list,
+                        progress: &self.progress,
                         is_loading: self.is_loading,
                     })
                 }

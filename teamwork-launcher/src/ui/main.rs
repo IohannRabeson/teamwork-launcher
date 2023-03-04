@@ -1,3 +1,6 @@
+use iced_aw::floating_element::Anchor;
+use iced_aw::FloatingElement;
+use iced_native::widget::progress_bar;
 use {
     crate::{
         application::{
@@ -20,6 +23,7 @@ use {
     iced_aw::Spinner,
     iced_lazy::responsive,
 };
+use crate::application::progress::Progress;
 
 pub struct ViewContext<'l> {
     pub view: &'l MainView,
@@ -29,6 +33,7 @@ pub struct ViewContext<'l> {
     pub game_modes: &'l GameModes,
     pub counts: &'l ServersCounts,
     pub servers_list: &'l ServersList,
+    pub progress: &'l Progress,
     pub is_loading: bool,
 }
 
@@ -56,7 +61,15 @@ pub fn view(context: ViewContext) -> Element<Message> {
     })
     .on_resize(10, |e| Message::Pane(PaneMessage::Resized(e)));
 
-    column![textual_filters, pane_grid,].padding([8, 0]).spacing(4).into()
+    let mut main_column = column![textual_filters, pane_grid];
+
+    if !context.progress.is_finished() {
+        let progress_bar = progress_bar(0.0f32..=1.0f32, context.progress.current_progress()).height(Length::Fixed(4.0));
+
+        main_column = main_column.push(progress_bar);
+    }
+
+    main_column.spacing(4).into()
 }
 
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
