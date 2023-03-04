@@ -24,7 +24,9 @@ serde_json = "1"
 async-stream = "0.3.3"
 iso_country = "0.1"
 reqwest = "0.11.14"
-surge-ping = "0.7.3"
+# Using the repository on Github for 0.7.4 that does not
+# require privileges anymore.
+surge-ping = { git = "https://github.com/kolapapa/surge-ping" }
 include_dir = "0.7.3"
 lazy_static = "1.4.0"
 itertools = "0.10.5"

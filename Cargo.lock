@@ -3172,9 +3172,8 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "surge-ping"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d1d85515268a4d0c8dd43f79fae4001d0f47cdce006482b7917af4e3b9fcd79"
+version = "0.7.4"
+source = "git+https://github.com/kolapapa/surge-ping#1a5ae14deadfdf8b064a15de7fde10c941971007"
 dependencies = [
  "hex",
  "parking_lot 0.12.1",
