@@ -93,11 +93,16 @@ impl Filter {
             && self.rtd.accept(|s| s.has_rtd, server)
             && self.no_respawn_time.accept(|s| s.has_no_respawn_time, server)
             && self.password.accept(|s| s.need_password, server)
+            && self.random_crits.accept(|s| s.has_random_crits, server)
     }
     fn filter_by_player(&self, server: &Server) -> bool {
         self.players.accept(server)
     }
     fn filter_by_maps(&self, server: &Server) -> bool {
+        if !self.maps.enabled {
+            return true
+        }
+
         self.maps.dictionary.is_checked(&server.map)
     }
     fn filter_by_providers(&self, server: &Server) -> bool {

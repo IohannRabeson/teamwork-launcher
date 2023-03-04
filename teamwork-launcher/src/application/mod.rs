@@ -236,8 +236,7 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries =
-            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
@@ -264,7 +263,7 @@ impl TeamworkLauncher {
             max
         });
 
-        for map_name in unique_map_names.into_iter() {
+        for map_name in self.servers.iter().map(|server|&server.map) {
             self.filter.maps.dictionary.add(map_name.clone());
         }
     }
