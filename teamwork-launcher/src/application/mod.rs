@@ -534,7 +534,7 @@ impl TeamworkLauncher {
                 self.thumbnail_ready(map_name, None);
                 error!(
                     "Thumbnail error: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
+                    Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
         }
@@ -583,7 +583,7 @@ impl TeamworkLauncher {
             FetchServersMessage::FetchServersError(error) => {
                 error!(
                     "Error: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
+                    Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
@@ -606,7 +606,7 @@ impl TeamworkLauncher {
                 );
                 error!(
                     "Failed to fetch game modes: {}",
-                    Self::remove_api_key(&self.user_settings.teamwork_api_key(), error)
+                    Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
         }
@@ -640,7 +640,7 @@ impl TeamworkLauncher {
                 self.screenshots.set(PromisedValue::Ready(screenshots));
             }
             ScreenshotsMessage::Error(error) => {
-                error!("Screenshots fetch failed: {}", error);
+                error!("Screenshots fetch failed: {}", Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error));
             }
             ScreenshotsMessage::Next => {
                 self.screenshots.next();
@@ -780,7 +780,7 @@ impl TeamworkLauncher {
 
     fn push_notification(&mut self, text: impl ToString, kind: NotificationKind) {
         const NOTIFICATION_DURATION_SECS: u64 = 2;
-        let text = Self::remove_api_key(&self.user_settings.teamwork_api_key(), text);
+        let text = Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), text);
         let duration = match kind {
             NotificationKind::Error => None,
             NotificationKind::Feedback => Some(Duration::from_secs(NOTIFICATION_DURATION_SECS)),
@@ -788,7 +788,7 @@ impl TeamworkLauncher {
         self.notifications.push(Notification::new(text, duration, kind));
     }
 
-    fn remove_api_key(key: &str, text: impl ToString) -> String {
+    fn obfuscate_api_key(key: &str, text: impl ToString) -> String {
         if key.is_empty() {
             return text.to_string();
         }
@@ -870,7 +870,7 @@ impl ServersList {
 impl iced::Application for TeamworkLauncher {
     type Executor = iced::executor::Default;
     type Message = Message;
-    type Theme = iced::Theme;
+    type Theme = Theme;
     type Flags = ApplicationFlags;
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
