@@ -1,5 +1,3 @@
-use iced_aw::floating_element::Anchor;
-use iced_aw::FloatingElement;
 use iced_native::widget::progress_bar;
 use {
     crate::{
