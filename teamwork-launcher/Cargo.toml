@@ -15,7 +15,7 @@ iced = { version = "0.8.0", features = ["tokio", "svg", "image"] }
 iced_native = "0.9.1"
 iced_lazy = "0.5.0"
 # Change to the next version after 0.4.1
-iced_aw = { path = "../../../libraries/iced_aw", default-features = false, features = ["floating_element", "number_input", "spinner"] }
+iced_aw = { git = "https://github.com/iced-rs/iced_aw", default-features = false, features = ["floating_element", "number_input", "spinner"] }
 thiserror = "1"
 static_assertions = "1"
 serde = { version = "1", features = ["derive", "rc"] }
