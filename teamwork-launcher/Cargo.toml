@@ -38,6 +38,7 @@ log = "0.4"
 fern = { version = "0.6", features = ["chrono"] }
 chrono = "0.4"
 open = "3.2.0"
+iced_views = "0.1.0"
 
 [dev-dependencies]
 test-case = "3.0.0"
