@@ -1542,6 +1542,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "iced_views"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "711aca23738a6198ae703378760f4fd2b7ee78d147e0600de529ef7dd900f6f4"
+
+[[package]]
 name = "iced_wgpu"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3264,6 +3270,7 @@ dependencies = [
  "iced_aw",
  "iced_lazy",
  "iced_native",
+ "iced_views",
  "include_dir",
  "iso_country",
  "itertools",

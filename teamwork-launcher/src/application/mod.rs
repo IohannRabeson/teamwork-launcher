@@ -19,12 +19,11 @@ pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
-mod views;
 pub mod progress;
 
 use {
+    iced_views::Views,
     crate::{
-        application::views::Views,
         ui::{self, main::ViewContext},
     },
     iced::{

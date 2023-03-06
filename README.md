@@ -4,6 +4,10 @@ Launcher for Team Fortress 2 that uses Teamwork.tf as data source.
 
 ![Main view screenshot](/screenshots/main_view.png?raw=true)
 
+# How to clone
+Mind to also clone sub modules with `--recursive`:
+`git clone --recursive https://github.com/IohannRabeson/teamwork-launcher.git`
+
 # How to use it
 You must have a [Teamwork](https://teamwork.tf) API key.  
 To get one, connect to [teamwork.tf](https://teamwork.tf), go to https://teamwork.tf/settings and click "Show optional settings".  
