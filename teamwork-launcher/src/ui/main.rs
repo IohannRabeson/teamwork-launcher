@@ -1,9 +1,12 @@
-use iced_native::widget::progress_bar;
 use {
     crate::{
         application::{
-            filter::filter_servers::Filter, game_mode::GameModes, servers_counts::ServersCounts, Bookmarks, FilterMessage,
-            MainView, Message, PaneId, PaneMessage, Server, ServersList,
+            filter::filter_servers::Filter,
+            game_mode::GameModes,
+            progress::Progress,
+            screens::{MainView, PaneId},
+            servers_counts::ServersCounts,
+            Bookmarks, FilterMessage, Message, PaneMessage, Server,
         },
         icons,
         ui::{
@@ -20,8 +23,11 @@ use {
     },
     iced_aw::Spinner,
     iced_lazy::responsive,
+    iced_native::widget::{
+        progress_bar,
+        scrollable::{self, RelativeOffset},
+    },
 };
-use crate::application::progress::Progress;
 
 pub struct ViewContext<'l> {
     pub view: &'l MainView,
@@ -233,4 +239,18 @@ fn filter_section_with_switch<'l>(
         .width(Length::Fill)
         .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
         .padding(8)
+}
+
+pub struct ServersList {
+    pub scroll_position: RelativeOffset,
+    pub id: scrollable::Id,
+}
+
+impl ServersList {
+    pub fn new() -> Self {
+        Self {
+            scroll_position: RelativeOffset::START,
+            id: scrollable::Id::unique(),
+        }
+    }
 }

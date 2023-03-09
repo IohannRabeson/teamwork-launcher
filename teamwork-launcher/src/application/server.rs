@@ -88,3 +88,13 @@ impl From<teamwork::Server> for Server {
         }
     }
 }
+
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Property {
+    Rtd,
+    AllTalk,
+    NoRespawnTime,
+    Password,
+    VacSecured,
+    RandomCrits,
+}

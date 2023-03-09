@@ -1,5 +1,5 @@
 use {
-    crate::application::{game_mode::GameModeId, map::MapName, Country, Property},
+    crate::application::{game_mode::GameModeId, map::MapName, server::Property, Country},
     std::collections::{
         btree_map::Entry::{Occupied, Vacant},
         BTreeMap,

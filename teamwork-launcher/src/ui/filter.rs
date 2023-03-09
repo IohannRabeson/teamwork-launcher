@@ -3,8 +3,9 @@ use {
         application::{
             filter::{filter_servers::Filter, properties_filter::PropertyFilterSwitch},
             game_mode::GameModes,
+            server::Property,
             servers_counts::ServersCounts,
-            FilterMessage, Message, Property,
+            FilterMessage, Message,
         },
         icons,
         ui::{
