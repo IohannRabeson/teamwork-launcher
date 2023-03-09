@@ -65,3 +65,16 @@ impl container::StyleSheet for BoxContainerStyle {
         }
     }
 }
+
+pub struct MainBackground;
+
+impl container::StyleSheet for MainBackground {
+    type Style = Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(Background::Color(Color::from_rgb8(23, 21, 20))),
+            ..Default::default()
+        }
+    }
+}

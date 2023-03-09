@@ -9,7 +9,8 @@ use {
         application::{
             message::NotificationMessage,
             notifications::{Notification, NotificationKind, Notifications},
-            Message, Screens,
+            screens::Screens,
+            Message,
         },
         icons, APPLICATION_VERSION, GIT_SHA_SHORT,
     },

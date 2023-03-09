@@ -20,7 +20,7 @@ impl Progress {
 
     pub fn current_progress(&self) -> f32 {
         if self.total == 0 {
-            return 0.0
+            return 0.0;
         }
 
         self.current as f32 / self.total as f32

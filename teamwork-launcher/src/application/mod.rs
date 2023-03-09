@@ -12,30 +12,25 @@ pub mod notifications;
 pub mod palettes;
 mod ping;
 mod process_detection;
+pub mod progress;
 pub mod promised_value;
+pub mod screens;
 pub mod screenshots;
 pub mod server;
 pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
-pub mod progress;
 
 use {
-    iced_views::Views,
-    crate::{
-        ui::{self, main::ViewContext},
-    },
+    crate::ui::{self, main::ViewContext},
     iced::{
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
         subscription, theme,
-        widget::{
-            column, container, image,
-            pane_grid::{self, Axis},
-            scrollable::{self, RelativeOffset},
-        },
+        widget::{column, container, image, pane_grid, scrollable},
         Background, Color, Command, Element, Renderer, Subscription, Theme,
     },
+    iced_views::Views,
     itertools::Itertools,
     log::{debug, error, trace},
     std::{
@@ -76,16 +71,19 @@ use {
             message::{KeyboardMessage, NotificationMessage, ScreenshotsMessage},
             notifications::{Notification, NotificationKind, Notifications},
             process_detection::ProcessDetection,
+            progress::Progress,
             screenshots::Screenshots,
             servers_source::{ServersSource, SourceKey},
             thumbnail::ThumbnailCache,
         },
         common_settings::{get_configuration_directory, write_file},
+        ui::{main::ServersList, styles::MainBackground},
         ApplicationFlags,
     },
+    screens::{MainView, Screens, ServerView},
+    server::Property,
     servers_counts::ServersCounts,
 };
-use crate::application::progress::Progress;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -93,48 +91,6 @@ pub enum SettingsError {
     Json(#[from] Arc<serde_json::Error>),
     #[error("IO error: {0}")]
     Io(#[from] Arc<std::io::Error>),
-}
-
-pub enum Screens {
-    Main(MainView),
-    Server(ServerView),
-    Settings,
-}
-
-pub struct MainView {
-    pub panes: pane_grid::State<PaneView>,
-}
-
-impl MainView {
-    pub fn new(pane_ratio: f32) -> Self {
-        let (mut panes, servers_pane) = pane_grid::State::new(PaneView::new(PaneId::Servers));
-
-        if let Some((_filter_pane, split)) = panes.split(Axis::Vertical, &servers_pane, PaneView::new(PaneId::Filters)) {
-            panes.resize(&split, pane_ratio);
-        }
-
-        Self { panes }
-    }
-}
-
-pub struct ServerView {
-    pub ip_port: IpPort,
-}
-
-impl ServerView {
-    pub fn new(ip_port: IpPort) -> Self {
-        Self { ip_port }
-    }
-}
-
-#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Property {
-    Rtd,
-    AllTalk,
-    NoRespawnTime,
-    Password,
-    VacSecured,
-    RandomCrits,
 }
 
 pub struct TeamworkLauncher {
@@ -244,7 +200,8 @@ impl TeamworkLauncher {
                     true => count + 1,
                     false => count,
                 });
-        self.servers_counts.countries = Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
+        self.servers_counts.countries =
+            Self::histogram(self.servers.iter().filter_map(|server| server.country.get()).cloned());
         self.servers_counts.properties = Self::count_properties(&self.servers);
         self.servers_counts.game_modes = Self::histogram(self.servers.iter().flat_map(|server| server.game_modes.clone()));
         self.servers_counts.timeouts = self.servers.iter().filter(|server| server.ping.is_none()).count();
@@ -271,7 +228,7 @@ impl TeamworkLauncher {
             max
         });
 
-        for map_name in self.servers.iter().map(|server|&server.map) {
+        for map_name in self.servers.iter().map(|server| &server.map) {
             self.filter.maps.dictionary.add(map_name.clone());
         }
     }
@@ -639,7 +596,10 @@ impl TeamworkLauncher {
                 self.screenshots.set(PromisedValue::Ready(screenshots));
             }
             ScreenshotsMessage::Error(error) => {
-                error!("Screenshots fetch failed: {}", Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error));
+                error!(
+                    "Screenshots fetch failed: {}",
+                    Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error)
+                );
             }
             ScreenshotsMessage::Next => {
                 self.screenshots.next();
@@ -833,35 +793,6 @@ impl Drop for TeamworkLauncher {
             .write(self.user_settings.max_thumbnails_cache_size_mb * 1024 * 1024)
         {
             error!("Failed to write thumbnails cache: {}", error);
-        }
-    }
-}
-
-pub enum PaneId {
-    Servers,
-    Filters,
-}
-
-pub struct PaneView {
-    pub id: PaneId,
-}
-
-impl PaneView {
-    fn new(id: PaneId) -> Self {
-        Self { id }
-    }
-}
-
-pub struct ServersList {
-    pub scroll_position: RelativeOffset,
-    pub id: scrollable::Id,
-}
-
-impl ServersList {
-    pub fn new() -> Self {
-        Self {
-            scroll_position: RelativeOffset::START,
-            id: scrollable::Id::unique(),
         }
     }
 }
@@ -1061,19 +992,6 @@ impl iced::Application for TeamworkLauncher {
             window::subscription(),
             self.notifications.subscription().map(Message::from),
         ])
-    }
-}
-
-struct MainBackground;
-
-impl container::StyleSheet for MainBackground {
-    type Style = Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
-        container::Appearance {
-            background: Some(Background::Color(Color::from_rgb8(23, 21, 20))),
-            ..Default::default()
-        }
     }
 }
 

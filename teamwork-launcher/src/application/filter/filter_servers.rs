@@ -100,7 +100,7 @@ impl Filter {
     }
     fn filter_by_maps(&self, server: &Server) -> bool {
         if !self.maps.enabled {
-            return true
+            return true;
         }
 
         self.maps.dictionary.is_checked(&server.map)
