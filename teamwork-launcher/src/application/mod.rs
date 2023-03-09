@@ -21,6 +21,7 @@ pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
+pub mod paths;
 
 use {
     crate::ui::{self, main::ViewContext},
@@ -76,7 +77,7 @@ use {
             servers_source::{ServersSource, SourceKey},
             thumbnail::ThumbnailCache,
         },
-        common_settings::{get_configuration_directory, write_file},
+        common_settings::write_file,
         ui::{main::ServersList, styles::MainBackground},
         ApplicationFlags,
     },
@@ -84,6 +85,7 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
+use crate::application::paths::{DefaultPathsProvider, PathsProvider, TestPathsProvider};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -107,6 +109,8 @@ pub struct TeamworkLauncher {
     notifications: Notifications,
     screenshots: Screenshots,
     servers_list: ServersList,
+    paths: Box<dyn PathsProvider>,
+    testing_mode_enabled: bool,
 
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
     ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
@@ -758,7 +762,7 @@ impl TeamworkLauncher {
 
 impl Drop for TeamworkLauncher {
     fn drop(&mut self) {
-        let configuration_directory = get_configuration_directory();
+        let configuration_directory = self.paths.get_configuration_directory();
 
         if !configuration_directory.is_dir() {
             std::fs::create_dir_all(&configuration_directory).unwrap_or_else(|error| {
@@ -805,11 +809,11 @@ impl iced::Application for TeamworkLauncher {
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let theme: Theme = flags.user_settings.theme.into();
-        let thumbnail_cache_directory = get_configuration_directory().join("thumbnails");
-        let mut thumbnail_cache = ThumbnailCache::new(thumbnail_cache_directory);
+        let thumbnail_cache_directory = flags.paths.get_thumbnails_directory();
+        let mut thumbnails_cache = ThumbnailCache::new(thumbnail_cache_directory);
         let mut notifications = Notifications::new();
 
-        if let Err(error) = thumbnail_cache.load() {
+        if let Err(error) = thumbnails_cache.load() {
             error!("Failed to load thumbnails cache: {}", error);
         }
 
@@ -843,15 +847,23 @@ impl iced::Application for TeamworkLauncher {
                 notifications,
                 screenshots: Screenshots::new(),
                 servers_list: ServersList::new(),
-                thumbnails_cache: thumbnail_cache,
+                thumbnails_cache,
                 progress: Progress::default(),
+                paths: flags.paths,
+                testing_mode_enabled: flags.testing_mode_enabled,
             },
             Command::none(),
         )
     }
 
     fn title(&self) -> String {
-        String::from("Teamwork launcher")
+        let mut title = String::from("Teamwork launcher");
+
+        if self.testing_mode_enabled {
+            title.push_str(" - TESTING MODE");
+        }
+
+        title
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -962,7 +974,7 @@ impl iced::Application for TeamworkLauncher {
                     ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
                 }
                 Screens::Settings => {
-                    ui::settings::view(&self.user_settings, &self.servers_sources)
+                    ui::settings::view(&self.user_settings, &self.servers_sources, self.paths.get_configuration_directory())
                 }
             }
         ])
