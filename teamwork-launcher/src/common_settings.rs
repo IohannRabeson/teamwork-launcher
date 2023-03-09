@@ -24,9 +24,3 @@ where
 
     serde_json::from_reader(file).map_err(|e| SettingsError::Json(Arc::new(e)))
 }
-
-pub fn get_configuration_directory() -> PathBuf {
-    platform_dirs::AppDirs::new(APPLICATION_NAME.into(), false)
-        .map(|dirs| dirs.config_dir)
-        .expect("config directory path")
-}

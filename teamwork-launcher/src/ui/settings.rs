@@ -1,7 +1,6 @@
 use {
     crate::{
         application::{servers_source::ServersSource, user_settings::LauncherTheme, Message, UserSettings},
-        common_settings::get_configuration_directory,
         icons,
         ui::{buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
     },
@@ -12,11 +11,11 @@ use {
     },
     iced_aw::NumberInput,
 };
+use std::path::{Path, PathBuf};
 
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
-pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Element<'l, Message> {
-    let configuration_directory = get_configuration_directory();
+pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], configuration_directory_path: PathBuf) -> Element<'l, Message> {
     let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
         true => text("API key specified as environment variable").into(),
         false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key(), |text| {
@@ -73,9 +72,9 @@ pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource]) -> Ele
                 Some("Configuration directory"),
                 None,
                 row![
-                    text(configuration_directory.display()),
+                    text(configuration_directory_path.display()),
                     svg_button(icons::FOLDER2_OPEN.clone(), 10).on_press(Message::Settings(SettingsMessage::OpenDirectory(
-                        configuration_directory.clone()
+                        configuration_directory_path.to_path_buf()
                     )))
                 ]
                 .spacing(4),
