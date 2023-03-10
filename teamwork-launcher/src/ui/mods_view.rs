@@ -14,6 +14,7 @@ use {
     iced_aw::Spinner,
     mods_manager::{Install, ModInfo, ModName, Registry},
 };
+use crate::ui::widgets::tooltip;
 
 pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Element<'a, Message> {
     row![
@@ -165,11 +166,21 @@ fn installed_badge<'a>() -> Element<'a, Message> {
         .into()
 }
 
+fn error_badge<'a>(error: &str) -> Element<'a, Message> {
+    let content = container(text("Failed").size(16))
+        .style(theme::Container::Custom(Box::new(InstalledBadge {})))
+        .padding(2);
+
+    tooltip(content, error, iced::widget::tooltip::Position::Bottom)
+        .into()
+}
+
 fn mod_info_view(info: &ModInfo, is_selected: bool) -> Element<Message> {
-    let content_row = match info.install {
-        Install::Installed { .. } => row![installed_badge(), text(&info.name)].spacing(DEFAULT_SPACING),
+    let content_row = match &info.install {
+        Install::Installed { .. } => {row![installed_badge(), text(&info.name)] },
+        Install::Failed { error } => { row![error_badge(error), text(&info.name)]}
         _ => row![text(&info.name)],
-    };
+    }.spacing(DEFAULT_SPACING);
     let mut button = button(content_row)
         .on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::ModClicked(
             info.name.clone(),
