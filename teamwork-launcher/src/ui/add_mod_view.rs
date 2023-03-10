@@ -1,3 +1,4 @@
+use iced::theme;
 use {
     crate::{
         application::{
@@ -29,7 +30,7 @@ pub fn view(context: &AddModView) -> Element<Message> {
         .center_y()
         .into(),
         false => {
-            let mut add_button = button("Add HUB!");
+            let mut add_button = button("Add mod!").style(theme::Button::Positive);
             let scan_package_message = Message::Mods(ModsMessage::AddView(ScanPackageToAdd(Source::DownloadUrl(
                 context.download_url.clone(),
             ))));
