@@ -79,6 +79,7 @@ pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notificat
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),
+                mods_button(Message::ShowMods),
                 settings_button(),
                 refresh_button(Message::RefreshServers),
             ]
@@ -87,6 +88,12 @@ pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notificat
             row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
         }
         Screens::Settings => {
+            row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
+        }
+        Screens::Mods => {
+            row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
+        }
+        Screens::AddMod(_) => {
             row![title_widget, horizontal_space(iced::Length::Fill), back_button(),]
         }
     }
@@ -131,6 +138,14 @@ fn refresh_button<'a>(message: Message) -> Element<'a, Message> {
     tooltip(
         svg_button(icons::REFRESH_ICON.clone(), BIG_BUTTON_SIZE).on_press(message),
         "Refresh the servers information",
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
+fn mods_button<'a>(message: Message) -> Element<'a, Message> {
+    tooltip(
+        svg_button(icons::PLUGIN.clone(), BIG_BUTTON_SIZE).on_press(message),
+        "Mods manager",
         iced::widget::tooltip::Position::Bottom,
     )
 }

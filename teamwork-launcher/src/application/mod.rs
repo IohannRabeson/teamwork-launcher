@@ -87,6 +87,8 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
+use mods_manager::{ModName, Registry};
+use crate::common_settings::write_bin_file;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -94,6 +96,8 @@ pub enum SettingsError {
     Json(#[from] Arc<serde_json::Error>),
     #[error("IO error: {0}")]
     Io(#[from] Arc<std::io::Error>),
+    #[error("Invalid file format")]
+    InvalidFileFormat
 }
 
 pub struct TeamworkLauncher {
@@ -110,6 +114,8 @@ pub struct TeamworkLauncher {
     notifications: Notifications,
     screenshots: Screenshots,
     servers_list: ServersList,
+    mods_registry: Registry,
+    selected_mod: Option<ModName>,
     paths: Box<dyn PathsProvider>,
     testing_mode_enabled: bool,
 
@@ -123,6 +129,7 @@ pub struct TeamworkLauncher {
     shift_pressed: bool,
     theme: Theme,
     is_loading: bool,
+    is_loading_mods: bool,
 }
 
 impl TeamworkLauncher {
@@ -778,6 +785,7 @@ impl Drop for TeamworkLauncher {
         let settings_file_path = configuration_directory.join("settings.json");
         let filters_file_path = configuration_directory.join("filters.json");
         let sources_file_path = configuration_directory.join("sources.json");
+        let mods_registry_file_path = configuration_directory.join("mods.registry");
 
         write_file(&self.bookmarks, &bookmarks_file_path).unwrap_or_else(|error| {
             error!(
@@ -799,6 +807,9 @@ impl Drop for TeamworkLauncher {
         {
             error!("Failed to write thumbnails cache: {}", error);
         }
+
+        write_bin_file(&self.mods_registry, &mods_registry_file_path)
+            .unwrap_or_else(|error| error!("Failed to write mods registry file '{}': {}", mods_registry_file_path.display(), error));
     }
 }
 
@@ -813,7 +824,7 @@ impl iced::Application for TeamworkLauncher {
         let thumbnail_cache_directory = flags.paths.get_thumbnails_directory();
         let mut thumbnails_cache = ThumbnailCache::new(thumbnail_cache_directory);
         let mut notifications = Notifications::new();
-
+        let mods_directory = flags.paths.get_mods_directory();
         if let Err(error) = thumbnails_cache.load() {
             error!("Failed to load thumbnails cache: {}", error);
         }
@@ -852,8 +863,11 @@ impl iced::Application for TeamworkLauncher {
                 progress: Progress::default(),
                 paths: flags.paths,
                 testing_mode_enabled: flags.testing_mode_enabled,
+                mods_registry: Registry::new(),
+                selected_mod: None,
+                is_loading_mods: false,
             },
-            Command::none(),
+            mods_management::commands::scan_mods_directory(mods_directory),
         )
     }
 
@@ -872,6 +886,9 @@ impl iced::Application for TeamworkLauncher {
             Message::RefreshServers => self.refresh_servers(),
             Message::Servers(message) => {
                 self.process_server_message(message);
+            }
+            Message::Mods(message) => {
+                return self.process_mods_message(message);
             }
             Message::Country(message) => {
                 self.process_country_message(message);
@@ -947,6 +964,9 @@ impl iced::Application for TeamworkLauncher {
             Message::ServerListScroll(position) => {
                 self.servers_list.scroll_position = position;
             }
+            Message::ShowMods => {
+                self.views.push(Screens::Mods);
+            }
         }
 
         Command::none()
@@ -980,6 +1000,12 @@ impl iced::Application for TeamworkLauncher {
                         &self.servers_sources,
                         self.paths.get_configuration_directory(),
                     )
+                }
+                Screens::Mods => {
+                    ui::mods_view::view(&self.mods_registry, self.selected_mod.as_ref(), self.is_loading_mods)
+                }
+                Screens::AddMod(context) => {
+                    ui::add_mod_view::view(context)
                 }
             }
         ])
