@@ -18,8 +18,12 @@ pub mod server_details;
 pub mod settings;
 pub mod styles;
 pub mod widgets;
+pub mod mods_view;
+pub mod add_mod_view;
+pub mod color;
 
 const PICK_LIST_WIDTH: Length = Length::Fixed(120.0);
+const DEFAULT_SPACING: f32 = 8.0;
 
 const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
     PropertyFilterSwitch::With,

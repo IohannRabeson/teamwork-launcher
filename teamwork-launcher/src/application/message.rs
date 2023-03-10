@@ -18,6 +18,7 @@ use {
     },
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
 };
+use mods_manager::{Install, ModName, PackageEntry, Source};
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -125,6 +126,39 @@ pub enum ScreenshotsMessage {
     Error(Arc<teamwork::Error>),
 }
 
+
+#[derive(Clone, Debug)]
+pub enum AddViewMessage {
+    Show,
+    DownloadUrlChanged(String),
+    ScanPackageToAdd(Source),
+}
+
+#[derive(Clone, Debug)]
+pub enum ListViewMessage {
+    ModClicked(ModName),
+    RemoveMod(ModName),
+}
+
+#[derive(Clone, Debug)]
+pub enum ModsMessage {
+    AddView(AddViewMessage),
+    ListView(ListViewMessage),
+    AddMods(Source, Vec<ModName>),
+    Install(ModName),
+    Uninstall(ModName),
+    InstallationFinished(ModName, Install),
+    UninstallationFinished(ModName),
+    FoundInstalledMods(Vec<PackageEntry>),
+    Error(String, String),
+}
+
+impl ModsMessage {
+    pub fn error(title: impl ToString, message: impl ToString) -> Self {
+        Self::Error(title.to_string(), message.to_string())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     Servers(FetchServersMessage),
@@ -138,9 +172,11 @@ pub enum Message {
     Keyboard(KeyboardMessage),
     Notification(NotificationMessage),
     Screenshots(ScreenshotsMessage),
+    Mods(ModsMessage),
     RefreshServers,
     ShowSettings,
     ShowServer(IpPort, MapName),
+    ShowMods,
     LaunchGame(IpPort),
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),

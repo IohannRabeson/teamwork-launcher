@@ -1,3 +1,4 @@
+use iced::widget::text_input;
 use {
     crate::application::IpPort,
     iced_native::widget::{pane_grid, pane_grid::Axis},
@@ -6,6 +7,8 @@ use {
 pub enum Screens {
     Main(MainView),
     Server(ServerView),
+    Mods,
+    AddMod(AddModView),
     Settings,
 }
 
@@ -47,5 +50,25 @@ pub struct PaneView {
 impl PaneView {
     fn new(id: PaneId) -> Self {
         Self { id }
+    }
+}
+
+pub struct AddModView {
+    pub download_url: String,
+    pub is_form_valid: bool,
+    pub error: Option<String>,
+    pub download_url_text_input: text_input::Id,
+    pub scanning: bool,
+}
+
+impl Default for AddModView {
+    fn default() -> Self {
+        Self {
+            download_url: String::new(),
+            is_form_valid: false,
+            error: None,
+            download_url_text_input: text_input::Id::unique(),
+            scanning: false,
+        }
     }
 }

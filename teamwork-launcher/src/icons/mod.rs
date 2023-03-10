@@ -31,6 +31,7 @@ lazy_static! {
     pub static ref FOLDER2_OPEN: SvgHandle = SvgHandle::from_memory(include_bytes!("folder2-open.svg").as_slice());
     pub static ref ARROW_LEFT_SHORT: SvgHandle = SvgHandle::from_memory(include_bytes!("arrow-left-short.svg").as_slice());
     pub static ref ARROW_RIGHT_SHORT: SvgHandle = SvgHandle::from_memory(include_bytes!("arrow-right-short.svg").as_slice());
+    pub static ref PLUGIN: SvgHandle = SvgHandle::from_memory(include_bytes!("plugin.svg").as_slice());
     pub static ref FLAGS: BTreeMap<String, SvgHandle> = FLAGS_SVG_ICONS
         .files()
         .filter_map(|entry| {

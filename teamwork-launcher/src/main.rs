@@ -16,6 +16,8 @@ use {
     log::{error, info},
     std::{fs::OpenOptions, path::Path},
 };
+use mods_manager::Registry;
+use crate::common_settings::read_bin_file;
 
 mod application;
 mod common_settings;
@@ -44,6 +46,7 @@ pub struct ApplicationFlags {
     pub filter: Filter,
     pub servers_sources: Vec<ServersSource>,
     pub paths: Box<dyn PathsProvider>,
+    pub mods: Registry,
     pub testing_mode_enabled: bool,
 }
 
@@ -56,6 +59,7 @@ impl Default for ApplicationFlags {
             servers_sources: Vec::new(),
             testing_mode_enabled: false,
             paths: Box::new(DefaultPathsProvider::new()),
+            mods: Registry::new(),
         }
     }
 }
@@ -84,6 +88,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
                 ServersSource::new("Medieval Mode", "https://teamwork.tf/api/v1/quickplay/medieval-mode/servers"),
             ]
         });
+    let mods = read_bin_file(configuration_directory.join("mods.registry")).unwrap_or_default();
 
     if let Some(window_settings) = user_settings.window.clone() {
         let mut settings = Settings::with_flags(ApplicationFlags {
@@ -93,6 +98,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             servers_sources,
             paths,
             testing_mode_enabled,
+            mods,
         });
 
         settings.window.position = Position::Specific(window_settings.window_x, window_settings.window_y);
@@ -110,6 +116,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             servers_sources,
             paths,
             testing_mode_enabled,
+            mods,
         })
     }
 }
