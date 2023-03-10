@@ -1,16 +1,28 @@
-use crate::ui::{color, DEFAULT_SPACING};
-use mods_manager::{ModInfo, ModName, Install, Registry};
-use iced::widget::{button, column, container, row, scrollable, text, vertical_space, Container};
-use iced::{theme, Alignment, Background, Color, Element, Length, Theme};
-use iced_aw::Spinner;
-use crate::application::Message;
-use crate::application::message::{AddViewMessage, ListViewMessage, ModsMessage};
-use crate::ui::styles::BoxContainerStyle;
+use {
+    crate::{
+        application::{
+            message::{AddViewMessage, ListViewMessage, ModsMessage},
+            Message,
+        },
+        ui::{color, styles::BoxContainerStyle, DEFAULT_SPACING},
+    },
+    iced::{
+        theme,
+        widget::{button, column, container, row, scrollable, text, vertical_space, Container},
+        Alignment, Background, Color, Element, Length, Theme,
+    },
+    iced_aw::Spinner,
+    mods_manager::{Install, ModInfo, ModName, Registry},
+};
 
 pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Element<'a, Message> {
     row![
-        mod_list(registry, selected_mod).width(Length::FillPortion(4)).height(Length::Fill),
-        action_list(registry, selected_mod, is_loading).width(Length::Fill).height(Length::Fill)
+        mod_list(registry, selected_mod)
+            .width(Length::FillPortion(4))
+            .height(Length::Fill),
+        action_list(registry, selected_mod, is_loading)
+            .width(Length::Fill)
+            .height(Length::Fill)
     ]
     .spacing(DEFAULT_SPACING)
     .padding(DEFAULT_SPACING)
@@ -20,7 +32,7 @@ pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_lo
 fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Container<'a, Message> {
     if is_loading {
         return container(Spinner::new())
-            .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+            .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
             .center_x()
             .center_y()
             .width(Length::Fill)
@@ -34,19 +46,25 @@ fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is
             None => {}
             Some(info) => match info.install {
                 Install::None => {
-                    content = content.push(button("Install").on_press(Message::Mods(ModsMessage::Install(info.name.clone()))));
+                    content =
+                        content.push(button("Install").on_press(Message::Mods(ModsMessage::Install(info.name.clone()))));
                 }
                 Install::Installed { .. } => {
-                    content = content.push(button("Uninstall").on_press(Message::Mods(ModsMessage::Uninstall(info.name.clone()))));
+                    content =
+                        content.push(button("Uninstall").on_press(Message::Mods(ModsMessage::Uninstall(info.name.clone()))));
                 }
                 Install::Failed { .. } => {
-                    content = content.push(button("Install").on_press(Message::Mods(ModsMessage::Install(info.name.clone()))));
+                    content =
+                        content.push(button("Install").on_press(Message::Mods(ModsMessage::Install(info.name.clone()))));
                 }
             },
         }
 
-        content =
-            content.push(button("Remove").on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::RemoveMod(selected_mod.clone())))));
+        content = content.push(
+            button("Remove").on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::RemoveMod(
+                selected_mod.clone(),
+            )))),
+        );
     }
 
     content = content.push(vertical_space(Length::Fill));
@@ -63,7 +81,7 @@ fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is
             .align_items(Alignment::Center)
             .width(Length::Fill),
     )
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle{})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
     .padding(DEFAULT_SPACING)
     .width(Length::Fill)
 }
@@ -73,7 +91,9 @@ fn mod_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>) -> Co
         registry.iter().fold(column![].spacing(DEFAULT_SPACING), |c, info| {
             c.push(mod_info_view(info, selected_mod == Some(&info.name)))
         }),
-    )).style(theme::Container::Custom(Box::new(BoxContainerStyle{}))).padding(DEFAULT_SPACING)
+    ))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .padding(DEFAULT_SPACING)
 }
 
 struct UnselectedInfoView;
@@ -140,7 +160,7 @@ impl container::StyleSheet for InstalledBadge {
 
 fn installed_badge<'a>() -> Element<'a, Message> {
     container(text("Installed").size(16))
-        .style(theme::Container::Custom(Box::new(InstalledBadge{})))
+        .style(theme::Container::Custom(Box::new(InstalledBadge {})))
         .padding(2)
         .into()
 }
@@ -151,7 +171,9 @@ fn mod_info_view(info: &ModInfo, is_selected: bool) -> Element<Message> {
         _ => row![text(&info.name)],
     };
     let mut button = button(content_row)
-        .on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::ModClicked(info.name.clone()))))
+        .on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::ModClicked(
+            info.name.clone(),
+        ))))
         .width(Length::Fill)
         .style(theme::Button::Custom(match is_selected {
             true => Box::new(SelectedInfoView {}),

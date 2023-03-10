@@ -16,9 +16,9 @@ use {
         futures::channel::mpsc::UnboundedSender,
         widget::{image, pane_grid, scrollable::RelativeOffset},
     },
+    mods_manager::{Install, ModName, PackageEntry, Source},
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
 };
-use mods_manager::{Install, ModName, PackageEntry, Source};
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -125,7 +125,6 @@ pub enum ScreenshotsMessage {
     Previous,
     Error(Arc<teamwork::Error>),
 }
-
 
 #[derive(Clone, Debug)]
 pub enum AddViewMessage {

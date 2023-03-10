@@ -1,15 +1,19 @@
-use crate::ui::DEFAULT_SPACING;
-use mods_manager::Source;
-use iced::widget::{button, column, container, horizontal_space, row, text, text_input};
-use iced::{Alignment, Element, Length};
-use iced_aw::floating_element::Anchor;
-use iced_aw::native::FloatingElement;
-use iced_aw::Spinner;
-use crate::application::Message;
-use crate::application::message::AddViewMessage::ScanPackageToAdd;
-use crate::application::message::ModsMessage;
-use crate::application::screens::AddModView;
-use crate::application::message::AddViewMessage;
+use {
+    crate::{
+        application::{
+            message::{AddViewMessage, AddViewMessage::ScanPackageToAdd, ModsMessage},
+            screens::AddModView,
+            Message,
+        },
+        ui::DEFAULT_SPACING,
+    },
+    iced::{
+        widget::{button, column, container, horizontal_space, row, text, text_input},
+        Alignment, Element, Length,
+    },
+    iced_aw::{floating_element::Anchor, native::FloatingElement, Spinner},
+    mods_manager::Source,
+};
 
 pub fn view(context: &AddModView) -> Element<Message> {
     match context.scanning {
