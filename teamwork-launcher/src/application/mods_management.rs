@@ -1,10 +1,14 @@
-use iced::widget::text_input;
-use iced_native::Command;
-use reqwest::Url;
-use mods_manager::{Install, Source};
-use crate::application::message::{AddViewMessage, ListViewMessage, ModsMessage};
-use crate::application::{Message, TeamworkLauncher};
-use crate::application::screens::{AddModView, Screens};
+use {
+    crate::application::{
+        message::{AddViewMessage, ListViewMessage, ModsMessage},
+        screens::{AddModView, Screens},
+        Message, TeamworkLauncher,
+    },
+    iced::widget::text_input,
+    iced_native::Command,
+    mods_manager::{Install, Source},
+    reqwest::Url,
+};
 
 impl TeamworkLauncher {
     pub(crate) fn process_mods_message(&mut self, message: ModsMessage) -> Command<Message> {
@@ -149,12 +153,13 @@ impl TeamworkLauncher {
 }
 
 pub mod commands {
-    use iced::Command;
-    use std::path::{Path, PathBuf};
-    use tempdir::TempDir;
-    use mods_manager::{fetch_package, FetchError, install, Install, ModInfo, ModName, PackageEntry, Source, uninstall};
-    use crate::application::Message;
-    use crate::application::message::ModsMessage;
+    use {
+        crate::application::{message::ModsMessage, Message},
+        iced::Command,
+        mods_manager::{fetch_package, install, uninstall, FetchError, Install, ModInfo, ModName, PackageEntry, Source},
+        std::path::{Path, PathBuf},
+        tempdir::TempDir,
+    };
 
     #[derive(thiserror::Error, Debug)]
     enum ScanPackageError {
@@ -203,10 +208,9 @@ pub mod commands {
 
     pub fn scan_mods_directory(mods_directory: Option<PathBuf>) -> Command<Message> {
         match mods_directory {
-            Some(mods_directory) => Command::perform(
-                async move { search_mod_install(&mods_directory) },
-                |mods|Message::Mods(ModsMessage::FoundInstalledMods(mods)),
-            ),
+            Some(mods_directory) => Command::perform(async move { search_mod_install(&mods_directory) }, |mods| {
+                Message::Mods(ModsMessage::FoundInstalledMods(mods))
+            }),
             None => Command::none(),
         }
     }
@@ -229,7 +233,9 @@ pub mod commands {
                 async move { uninstall(&mod_path, mods_directory).await },
                 move |result| match result {
                     Ok(()) => Message::Mods(ModsMessage::UninstallationFinished(mod_name)),
-                    Err(error) => Message::Mods(ModsMessage::error(format!("Failed to uninstall mod '{0}'", mod_name), error)),
+                    Err(error) => {
+                        Message::Mods(ModsMessage::error(format!("Failed to uninstall mod '{0}'", mod_name), error))
+                    }
                 },
             )
         } else {

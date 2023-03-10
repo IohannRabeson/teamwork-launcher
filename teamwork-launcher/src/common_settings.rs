@@ -36,8 +36,8 @@ pub fn write_bin_file(settings: &impl Serialize, file_path: impl AsRef<Path>) ->
 }
 
 pub fn read_bin_file<S>(file_path: impl AsRef<Path>) -> Result<S, SettingsError>
-    where
-        S: DeserializeOwned + Default,
+where
+    S: DeserializeOwned + Default,
 {
     use std::sync::Arc;
 

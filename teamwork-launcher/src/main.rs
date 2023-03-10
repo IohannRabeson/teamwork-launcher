@@ -10,14 +10,13 @@ use {
             user_settings::WindowSettings,
             Bookmarks, UserSettings,
         },
-        common_settings::read_file,
+        common_settings::{read_bin_file, read_file},
     },
     iced::{window::Position, Application, Settings},
     log::{error, info},
+    mods_manager::Registry,
     std::{fs::OpenOptions, path::Path},
 };
-use mods_manager::Registry;
-use crate::common_settings::read_bin_file;
 
 mod application;
 mod common_settings;

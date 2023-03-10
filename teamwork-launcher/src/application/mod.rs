@@ -79,16 +79,15 @@ use {
             servers_source::{ServersSource, SourceKey},
             thumbnail::ThumbnailCache,
         },
-        common_settings::write_file,
+        common_settings::{write_bin_file, write_file},
         ui::{main::ServersList, styles::MainBackground},
         ApplicationFlags,
     },
+    mods_manager::{ModName, Registry},
     screens::{MainView, Screens, ServerView},
     server::Property,
     servers_counts::ServersCounts,
 };
-use mods_manager::{ModName, Registry};
-use crate::common_settings::write_bin_file;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -97,7 +96,7 @@ pub enum SettingsError {
     #[error("IO error: {0}")]
     Io(#[from] Arc<std::io::Error>),
     #[error("Invalid file format")]
-    InvalidFileFormat
+    InvalidFileFormat,
 }
 
 pub struct TeamworkLauncher {
@@ -808,8 +807,13 @@ impl Drop for TeamworkLauncher {
             error!("Failed to write thumbnails cache: {}", error);
         }
 
-        write_bin_file(&self.mods_registry, &mods_registry_file_path)
-            .unwrap_or_else(|error| error!("Failed to write mods registry file '{}': {}", mods_registry_file_path.display(), error));
+        write_bin_file(&self.mods_registry, &mods_registry_file_path).unwrap_or_else(|error| {
+            error!(
+                "Failed to write mods registry file '{}': {}",
+                mods_registry_file_path.display(),
+                error
+            )
+        });
     }
 }
 
