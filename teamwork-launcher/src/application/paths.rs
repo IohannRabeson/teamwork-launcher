@@ -1,9 +1,10 @@
-use std::cell::RefCell;
-use std::path::PathBuf;
-use platform_dirs::AppDirs;
-use steamlocate::SteamDir;
-use tempdir::TempDir;
-use crate::APPLICATION_NAME;
+use {
+    crate::APPLICATION_NAME,
+    platform_dirs::AppDirs,
+    std::{cell::RefCell, path::PathBuf},
+    steamlocate::SteamDir,
+    tempdir::TempDir,
+};
 
 /// Provides all the paths needed by this application.
 pub trait PathsProvider {
@@ -15,7 +16,8 @@ pub trait PathsProvider {
     }
 
     fn get_mods_directory(&self) -> Option<PathBuf> {
-        self.get_team_fortress_directory().map(|directory| directory.join("tf").join("custom"))
+        self.get_team_fortress_directory()
+            .map(|directory| directory.join("tf").join("custom"))
     }
 }
 
@@ -42,7 +44,11 @@ impl PathsProvider for DefaultPathsProvider {
     fn get_team_fortress_directory(&self) -> Option<PathBuf> {
         const TEAM_FORTRESS_2_STEAM_APP_ID: u32 = 440;
 
-        return self.steam_directory.borrow_mut().app(&TEAM_FORTRESS_2_STEAM_APP_ID).map(|dir| dir.path.clone());
+        return self
+            .steam_directory
+            .borrow_mut()
+            .app(&TEAM_FORTRESS_2_STEAM_APP_ID)
+            .map(|dir| dir.path.clone());
     }
 }
 

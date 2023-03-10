@@ -1,7 +1,7 @@
 use {
-    crate::{application::SettingsError, APPLICATION_NAME},
+    crate::application::SettingsError,
     serde::{de::DeserializeOwned, Serialize},
-    std::path::{Path, PathBuf},
+    std::path::Path,
 };
 
 pub fn write_file(settings: &impl Serialize, file_path: impl AsRef<Path>) -> Result<(), SettingsError> {

@@ -1,20 +1,21 @@
 // Prevent a console to pop on Windows
 #![windows_subsystem = "windows"]
 
-use std::path::Path;
 use {
     crate::{
         application::{
-            filter::filter_servers::Filter, servers_source::ServersSource, user_settings::WindowSettings, Bookmarks,
-            UserSettings,
+            filter::filter_servers::Filter,
+            paths::{DefaultPathsProvider, PathsProvider, TestPathsProvider},
+            servers_source::ServersSource,
+            user_settings::WindowSettings,
+            Bookmarks, UserSettings,
         },
         common_settings::read_file,
     },
     iced::{window::Position, Application, Settings},
     log::{error, info},
-    std::fs::OpenOptions,
+    std::{fs::OpenOptions, path::Path},
 };
-use crate::application::paths::{DefaultPathsProvider, PathsProvider, TestPathsProvider};
 
 mod application;
 mod common_settings;
@@ -61,12 +62,8 @@ impl Default for ApplicationFlags {
 
 fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
     let paths: Box<dyn PathsProvider> = match testing_mode_enabled {
-        true => {
-            Box::new(TestPathsProvider::new())
-        }
-        false => {
-            Box::new(DefaultPathsProvider::new())
-        }
+        true => Box::new(TestPathsProvider::new()),
+        false => Box::new(DefaultPathsProvider::new()),
     };
     let configuration_directory = paths.get_configuration_directory();
     info!("Configuration directory: {}", configuration_directory.display());
