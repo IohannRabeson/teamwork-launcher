@@ -55,9 +55,3 @@ vergen = { version = "7", default-features = false, features = ["build", "rustc"
 identifier = "com.io.teamwork-launcher"
 copyright = "Copyright (c) Iohann Rabeson 2023. All rights reserved."
 osx_minimum_system_version = "10.8"
-
-[profile.release]
-opt-level = 3
-lto = true
-panic = 'abort'
-strip = true
