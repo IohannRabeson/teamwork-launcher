@@ -10,6 +10,7 @@ build = "build.rs"
 
 [dependencies]
 teamwork = { path = "../teamwork" }
+mods-manager = { path = "../mods-manager" }
 iced = { version = "0.8.0", features = ["tokio", "svg", "image"] }
 # For access to image::Data
 iced_native = "0.9.1"

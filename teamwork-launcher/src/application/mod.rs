@@ -8,8 +8,10 @@ pub mod ip_port;
 mod launcher;
 pub mod map;
 pub mod message;
+mod mods_management;
 pub mod notifications;
 pub mod palettes;
+pub mod paths;
 mod ping;
 mod process_detection;
 pub mod progress;
@@ -21,7 +23,6 @@ pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
-pub mod paths;
 
 use {
     crate::ui::{self, main::ViewContext},
@@ -29,7 +30,7 @@ use {
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
         subscription, theme,
         widget::{column, container, image, pane_grid, scrollable},
-        Background, Color, Command, Element, Renderer, Subscription, Theme,
+        Command, Element, Renderer, Subscription, Theme,
     },
     iced_views::Views,
     itertools::Itertools,
@@ -71,6 +72,7 @@ use {
             map::MapName,
             message::{KeyboardMessage, NotificationMessage, ScreenshotsMessage},
             notifications::{Notification, NotificationKind, Notifications},
+            paths::PathsProvider,
             process_detection::ProcessDetection,
             progress::Progress,
             screenshots::Screenshots,
@@ -85,7 +87,6 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
-use crate::application::paths::{DefaultPathsProvider, PathsProvider, TestPathsProvider};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -974,7 +975,11 @@ impl iced::Application for TeamworkLauncher {
                     ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
                 }
                 Screens::Settings => {
-                    ui::settings::view(&self.user_settings, &self.servers_sources, self.paths.get_configuration_directory())
+                    ui::settings::view(
+                        &self.user_settings,
+                        &self.servers_sources,
+                        self.paths.get_configuration_directory(),
+                    )
                 }
             }
         ])

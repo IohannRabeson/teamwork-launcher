@@ -1,0 +1,24 @@
+[package]
+name = "mods-manager"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.23", features = ["serde"] }
+enum-as-inner = "0.5.1"
+fs_extra = "1.3.0"
+reqwest = "0.11.14"
+serde = { version = "1.0.152", features = ["derive"] }
+tempdir = "0.3.7"
+thiserror = "1.0.38"
+tokio = { version = "1.26.0", features = ["fs", "macros"] }
+walkdir = "2.3.2"
+
+zip = "0.6.4"
+sevenz-rust = { version = "0.2.8", default-features = false, features = ["zstd"] }
+unrar = { git = "https://github.com/IohannRabeson/unrar.rs", branch = "macos_fix" }
+
+[dev-dependencies]
+test-case = "3.0.0"

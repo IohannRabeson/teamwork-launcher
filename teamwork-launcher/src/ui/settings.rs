@@ -10,12 +10,16 @@ use {
         Element, Length,
     },
     iced_aw::NumberInput,
+    std::path::PathBuf,
 };
-use std::path::{Path, PathBuf};
 
 const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 
-pub fn view<'l>(settings: &'l UserSettings, sources: &'l [ServersSource], configuration_directory_path: PathBuf) -> Element<'l, Message> {
+pub fn view<'l>(
+    settings: &'l UserSettings,
+    sources: &'l [ServersSource],
+    configuration_directory_path: PathBuf,
+) -> Element<'l, Message> {
     let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
         true => text("API key specified as environment variable").into(),
         false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key(), |text| {
