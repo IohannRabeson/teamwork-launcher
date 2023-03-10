@@ -127,7 +127,7 @@ pub struct TeamworkLauncher {
     fetch_servers_subscription_id: u64,
     shift_pressed: bool,
     theme: Theme,
-    is_loading: bool,
+    is_loading_servers: bool,
     is_loading_mods: bool,
 }
 
@@ -142,7 +142,7 @@ impl TeamworkLauncher {
     }
 
     fn on_finish(&mut self) {
-        self.is_loading = false;
+        self.is_loading_servers = false;
 
         self.sort_server();
 
@@ -251,7 +251,7 @@ impl TeamworkLauncher {
                 NotificationKind::Error,
             );
         } else {
-            self.is_loading = true;
+            self.is_loading_servers = true;
             self.progress.reset();
             self.servers_counts.reset();
             self.servers.clear();
@@ -859,7 +859,7 @@ impl iced::Application for TeamworkLauncher {
                 fetch_servers_subscription_id: 0,
                 shift_pressed: false,
                 theme,
-                is_loading: false,
+                is_loading_servers: false,
                 notifications,
                 screenshots: Screenshots::new(),
                 servers_list: ServersList::new(),
@@ -936,7 +936,7 @@ impl iced::Application for TeamworkLauncher {
 
                 // This is the case where the user has just pasted his API key.
                 // Instead of waiting for the user, we refresh spontaneously.
-                if !self.is_loading && self.servers.is_empty() && self.user_settings.has_teamwork_api_key() {
+                if !self.is_loading_servers && self.servers.is_empty() && self.user_settings.has_teamwork_api_key() {
                     self.refresh_servers();
                 }
 
@@ -992,7 +992,7 @@ impl iced::Application for TeamworkLauncher {
                         counts: &self.servers_counts,
                         servers_list: &self.servers_list,
                         progress: &self.progress,
-                        is_loading: self.is_loading,
+                        is_loading: self.is_loading_servers,
                     })
                 }
                 Screens::Server(view) => {
