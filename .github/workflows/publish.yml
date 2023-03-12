@@ -13,11 +13,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: teamwork-launcher-installer-${{ github.ref_name }}.exe
-            asset_name: teamwork-launcher-windows.exe
+            artifact_name: teamwork-launcher-installer.exe
+            asset_name: teamwork-launcher-installer-windows-${{ github.ref_name }}.exe
           - os: macos-latest
             artifact_name: teamwork-launcher.zip
-            asset_name: teamwork-launcher-macos.zip
+            asset_name: teamwork-launcher-macos-${{ github.ref_name }}.zip
 
     steps:
       - uses: actions/checkout@v3
@@ -38,7 +38,6 @@ jobs:
       - name: Bundle Windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          cd teamwork-launcher
           iscc.exe teamwork-launcher\innosetup\installer.iss /DMyAppVersion="${{  github.ref_name }}"
 
       - uses: thedoctor0/zip-release@0.7.1

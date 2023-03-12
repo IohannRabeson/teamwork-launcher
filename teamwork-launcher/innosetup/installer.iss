@@ -23,7 +23,7 @@ DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
-OutputBaseFilename=teamwork-launcher-installer-{#MyAppVersion}
+OutputBaseFilename=teamwork-launcher-installer
 OutputDir=..\..\target\release
 Compression=lzma
 SolidCompression=yes
