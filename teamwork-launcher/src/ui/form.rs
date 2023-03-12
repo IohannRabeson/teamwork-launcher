@@ -1,4 +1,7 @@
-use iced::{widget::{column, row, text}, Element, Padding, Length};
+use iced::{
+    widget::{column, row, text},
+    Element, Length, Padding,
+};
 
 type FieldFn<'l, T, Message> = Box<dyn Fn(&'l T) -> Element<'l, Message> + 'l>;
 
@@ -46,8 +49,11 @@ impl<'l, T, Message: 'l> Form<'l, T, Message> {
     }
 
     pub fn view(&self, context: &'l T) -> Element<'l, Message> {
-        self.fields.iter().fold(column![], |column, (label, field_fn)| {
-            column.push(row![text(label).width(Length::Fixed(160.0)), (field_fn)(context)])
-        }).into()
+        self.fields
+            .iter()
+            .fold(column![], |column, (label, field_fn)| {
+                column.push(row![text(label).width(Length::Fixed(160.0)), (field_fn)(context)])
+            })
+            .into()
     }
 }

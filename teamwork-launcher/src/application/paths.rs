@@ -76,7 +76,7 @@ impl PathsProvider for TestPathsProvider {
 }
 
 pub fn get_default_steam_executable() -> Option<PathBuf> {
-    SteamDir::locate().map(|steam_dir|steam_dir.path.join(steam_executable_name()))
+    SteamDir::locate().map(|steam_dir| steam_dir.path.join(steam_executable_name()))
 }
 
 #[cfg(target_os = "windows")]

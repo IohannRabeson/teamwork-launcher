@@ -118,6 +118,6 @@ fn field<'a>(
     }
 
     container(content.push(container(field).padding(8).width(Length::Fill)))
-        .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+        .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
         .into()
 }

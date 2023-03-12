@@ -114,7 +114,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
             column![
                 FloatingElement::new(screenshot(Some(image)), || {
                     container(text(map_name.as_str()).font(fonts::TF2_SECONDARY).size(28))
-                        .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+                        .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
                         .padding(4)
                         .into()
                 })
@@ -157,7 +157,7 @@ pub fn view<'l>(
 ) -> Element<'l, Message> {
     let server = servers.iter().find(|s| &s.ip_port == ip_port).expect("find server");
     let content =
-        container(content(server, game_modes, screenshots)).style(theme::Container::Custom(Box::new(BoxContainerStyle {})));
+        container(content(server, game_modes, screenshots)).style(theme::Container::Custom(Box::new(BoxContainerStyle)));
 
     container(content).width(Length::Fill).height(Length::Fill).padding(16).into()
 }

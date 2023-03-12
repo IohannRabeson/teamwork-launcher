@@ -1,13 +1,12 @@
-use iced::widget::Image;
 use {
     crate::{
         application::{
             filter::filter_servers::Filter,
             game_mode::GameModes,
             progress::Progress,
-            screens::PaneId,
+            screens::{PaneId, PaneView},
             servers_counts::ServersCounts,
-            Bookmarks, FilterMessage, Message, PaneMessage, Server,
+            Bookmarks, FilterMessage, Message, PaneMessage, PromisedValue, Server,
         },
         icons,
         ui::{
@@ -19,7 +18,7 @@ use {
     },
     iced::{
         theme,
-        widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, PaneGrid},
+        widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, Image, PaneGrid},
         Alignment, Element, Length,
     },
     iced_aw::Spinner,
@@ -29,8 +28,6 @@ use {
         scrollable::{self, RelativeOffset},
     },
 };
-use crate::application::PromisedValue;
-use crate::application::screens::PaneView;
 
 pub struct ViewContext<'l> {
     pub panes: &'l pane_grid::State<PaneView>,
@@ -131,10 +128,9 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
         .spacing(4),
     )
     .padding(8)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
     .into()
 }
-
 
 fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
@@ -144,25 +140,19 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
     const BUTTON_SIZE: u16 = 20;
 
     let thumbnail: Element<'l, Message> = match &server.map_thumbnail {
-        PromisedValue::Ready(image) => {
-            Image::new(image.clone()).width(Length::Fill).into()
-        },
-        PromisedValue::Loading => {
-            container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
-                .width(Length::Fill)
-                .height(Length::Fixed(250.0))
-                .center_x()
-                .center_y()
-                .into()
-        },
-        PromisedValue::None => {
-            container(Image::new(icons::NO_IMAGE.clone()))
-                .width(Length::Fill)
-                .height(Length::Fixed(250.0))
-                .center_x()
-                .center_y()
-                .into()
-        },
+        PromisedValue::Ready(image) => Image::new(image.clone()).width(Length::Fill).into(),
+        PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
+            .width(Length::Fill)
+            .height(Length::Fixed(250.0))
+            .center_x()
+            .center_y()
+            .into(),
+        PromisedValue::None => container(Image::new(icons::NO_IMAGE.clone()))
+            .width(Length::Fill)
+            .height(Length::Fixed(250.0))
+            .center_x()
+            .center_y()
+            .into(),
     };
 
     container(
@@ -177,7 +167,8 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
                     svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
                         .on_press(Message::CopyConnectionString(server.ip_port.clone())),
                     svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
-                ].spacing(4)
+                ]
+                .spacing(4)
             ]
             .spacing(4),
             text(&server.name).size(28).width(Length::Fill),
@@ -186,66 +177,25 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
                 svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
             ]
             .spacing(4),
-            row![text(&server.map), text(&format!("{} / {}", server.current_players_count, server.max_players_count))].spacing(4),
             row![
-                text("Region:"), region(&server.country, BUTTON_SIZE, 0),
-                text("Ping:"), ping(&server.ping),
-                game_modes
-            ].spacing(4)
-        ].align_items(Alignment::Start)
-    )
-    .padding(8)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
-    .into()
-
-/*
-    container(
-        row![
-            thumbnail(server, Length::Fixed(250.0), Length::Fixed(125.0)),
-            column![
-                row![
-                    text(&server.name).size(28).width(Length::Fill),
-                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
-                    favorite_button(is_bookmarked, BUTTON_SIZE)
-                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
-                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
-                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
-                ]
-                .padding(4)
-                .spacing(4),
-                row![
-                    column![
-                        row![
-                            text(&ip_port_text),
-                            svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
-                        ]
-                        .spacing(4),
-                        text(&server.map),
-                        text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
-                    ]
-                    .spacing(4),
-                    horizontal_space(Length::Fill),
-                    column![
-                        row![text("Region:"), region(&server.country, BUTTON_SIZE, 0)].spacing(4),
-                        row![text("Ping:"), ping(&server.ping)].spacing(4),
-                        game_modes
-                    ]
-                    .padding(4)
-                    .spacing(4)
-                    .align_items(Alignment::End)
-                ]
-            ],
-        ]
+                text(&server.map),
+                text(&format!("{} / {}", server.current_players_count, server.max_players_count))
+            ]
             .spacing(4),
+            row![
+                text("Region:"),
+                region(&server.country, BUTTON_SIZE, 0),
+                text("Ping:"),
+                ping(&server.ping),
+                game_modes
+            ]
+            .spacing(4)
+        ]
+        .align_items(Alignment::Start),
     )
     .padding(8)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
     .into()
-    text("Compact Yo!").into()
-
- */
 }
 
 fn servers_view<'l>(
@@ -342,7 +292,7 @@ fn filter_section<'l>(title: Option<&str>, content: impl Into<Element<'l, Messag
         .spacing(8),
     )
     .width(Length::Fill)
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
     .padding(8)
 }
 
@@ -361,7 +311,7 @@ fn filter_section_with_switch<'l>(
 
     container(main_column.spacing(8))
         .width(Length::Fill)
-        .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+        .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
         .padding(8)
 }
 

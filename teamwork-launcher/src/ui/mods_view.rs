@@ -4,7 +4,7 @@ use {
             message::{AddViewMessage, ListViewMessage, ModsMessage},
             Message,
         },
-        ui::{color, styles::BoxContainerStyle, DEFAULT_SPACING},
+        ui::{color, styles::BoxContainerStyle, widgets::tooltip, DEFAULT_SPACING},
     },
     iced::{
         theme,
@@ -14,7 +14,6 @@ use {
     iced_aw::Spinner,
     mods_manager::{Install, ModInfo, ModName, Registry},
 };
-use crate::ui::widgets::tooltip;
 
 pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Element<'a, Message> {
     row![
@@ -33,7 +32,7 @@ pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_lo
 fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Container<'a, Message> {
     if is_loading {
         return container(Spinner::new())
-            .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+            .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
             .center_x()
             .center_y()
             .width(Length::Fill)
@@ -82,7 +81,7 @@ fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is
             .align_items(Alignment::Center)
             .width(Length::Fill),
     )
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
     .padding(DEFAULT_SPACING)
     .width(Length::Fill)
 }
@@ -93,7 +92,7 @@ fn mod_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>) -> Co
             c.push(mod_info_view(info, selected_mod == Some(&info.name)))
         }),
     ))
-    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
     .padding(DEFAULT_SPACING)
 }
 
@@ -171,16 +170,20 @@ fn error_badge<'a>(error: &str) -> Element<'a, Message> {
         .style(theme::Container::Custom(Box::new(InstalledBadge {})))
         .padding(2);
 
-    tooltip(content, error, iced::widget::tooltip::Position::Bottom)
-        .into()
+    tooltip(content, error, iced::widget::tooltip::Position::Bottom).into()
 }
 
 fn mod_info_view(info: &ModInfo, is_selected: bool) -> Element<Message> {
     let content_row = match &info.install {
-        Install::Installed { .. } => {row![installed_badge(), text(&info.name)] },
-        Install::Failed { error } => { row![error_badge(error), text(&info.name)]}
+        Install::Installed { .. } => {
+            row![installed_badge(), text(&info.name)]
+        }
+        Install::Failed { error } => {
+            row![error_badge(error), text(&info.name)]
+        }
         _ => row![text(&info.name)],
-    }.spacing(DEFAULT_SPACING);
+    }
+    .spacing(DEFAULT_SPACING);
     let mut button = button(content_row)
         .on_press(Message::Mods(ModsMessage::ListView(ListViewMessage::ModClicked(
             info.name.clone(),
