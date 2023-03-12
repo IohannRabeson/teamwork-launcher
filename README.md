@@ -29,5 +29,5 @@ writes files but the temporary directory is deleted when the application quits a
 To enable this mode, pass the flag `--testing-mode`.  
 
 # Icons
-https://www.freeiconspng.com/img/23494
-https://icons.getbootstrap.com/
+https://www.freeiconspng.com/img/23494  
+https://icons.getbootstrap.com/  
