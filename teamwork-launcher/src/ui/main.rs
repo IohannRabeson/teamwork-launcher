@@ -1,3 +1,4 @@
+use iced::widget::Image;
 use {
     crate::{
         application::{
@@ -28,6 +29,7 @@ use {
         scrollable::{self, RelativeOffset},
     },
 };
+use crate::application::PromisedValue;
 use crate::application::screens::PaneView;
 
 pub struct ViewContext<'l> {
@@ -41,6 +43,7 @@ pub struct ViewContext<'l> {
     pub servers_list: &'l ServersList,
     pub progress: &'l Progress,
     pub is_loading: bool,
+    pub compact_mode: bool,
 }
 
 pub fn view(context: ViewContext) -> Element<Message> {
@@ -54,6 +57,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
                     context.filter,
                     context.game_modes,
                     context.servers_list,
+                    context.compact_mode,
                 ),
                 true => container(Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
                     .width(Length::Fill)
@@ -131,18 +135,136 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
     .into()
 }
 
+
+fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
+    let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
+    let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
+    let game_modes = widgets::game_modes(game_modes, &server.game_modes);
+
+    const BUTTON_SIZE: u16 = 20;
+
+    let thumbnail: Element<'l, Message> = match &server.map_thumbnail {
+        PromisedValue::Ready(image) => {
+            Image::new(image.clone()).width(Length::Fill).into()
+        },
+        PromisedValue::Loading => {
+            container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
+                .width(Length::Fill)
+                .height(Length::Fixed(250.0))
+                .center_x()
+                .center_y()
+                .into()
+        },
+        PromisedValue::None => {
+            container(Image::new(icons::NO_IMAGE.clone()))
+                .width(Length::Fill)
+                .height(Length::Fixed(250.0))
+                .center_x()
+                .center_y()
+                .into()
+        },
+    };
+
+    container(
+        column![
+            row![
+                thumbnail,
+                column![
+                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
+                    favorite_button(is_bookmarked, BUTTON_SIZE)
+                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
+                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
+                ].spacing(4)
+            ]
+            .spacing(4),
+            text(&server.name).size(28).width(Length::Fill),
+            row![
+                text(&ip_port_text),
+                svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
+            ]
+            .spacing(4),
+            row![text(&server.map), text(&format!("{} / {}", server.current_players_count, server.max_players_count))].spacing(4),
+            row![
+                text("Region:"), region(&server.country, BUTTON_SIZE, 0),
+                text("Ping:"), ping(&server.ping),
+                game_modes
+            ].spacing(4)
+        ].align_items(Alignment::Start)
+    )
+    .padding(8)
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .into()
+
+/*
+    container(
+        row![
+            thumbnail(server, Length::Fixed(250.0), Length::Fixed(125.0)),
+            column![
+                row![
+                    text(&server.name).size(28).width(Length::Fill),
+                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
+                    favorite_button(is_bookmarked, BUTTON_SIZE)
+                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
+                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
+                ]
+                .padding(4)
+                .spacing(4),
+                row![
+                    column![
+                        row![
+                            text(&ip_port_text),
+                            svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
+                        ]
+                        .spacing(4),
+                        text(&server.map),
+                        text(&format!("{} / {}", server.current_players_count, server.max_players_count)),
+                    ]
+                    .spacing(4),
+                    horizontal_space(Length::Fill),
+                    column![
+                        row![text("Region:"), region(&server.country, BUTTON_SIZE, 0)].spacing(4),
+                        row![text("Ping:"), ping(&server.ping)].spacing(4),
+                        game_modes
+                    ]
+                    .padding(4)
+                    .spacing(4)
+                    .align_items(Alignment::End)
+                ]
+            ],
+        ]
+            .spacing(4),
+    )
+    .padding(8)
+    .style(theme::Container::Custom(Box::new(BoxContainerStyle {})))
+    .into()
+    text("Compact Yo!").into()
+
+ */
+}
+
 fn servers_view<'l>(
     servers: &'l [Server],
     bookmarks: &'l Bookmarks,
     filter: &'l Filter,
     game_modes: &'l GameModes,
     servers_list: &'l ServersList,
+    compact_mode: bool,
 ) -> Element<'l, Message> {
+    let server_view_fn = match compact_mode {
+        true => server_view,
+        false => compact_server_view,
+    };
     let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
     let servers_list = container(
         widget::scrollable(servers.fold(column![], |c, server| {
             c.push(
-                container(server_view(server, bookmarks, game_modes))
+                container((server_view_fn)(server, bookmarks, game_modes))
                     .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]),
             )
         }))

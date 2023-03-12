@@ -134,6 +134,7 @@ pub struct TeamworkLauncher {
 
     panes: pane_grid::State<PaneView>,
     panes_split: pane_grid::Split,
+    server_view_compact_mode: bool,
 }
 
 impl iced::Application for TeamworkLauncher {
@@ -196,6 +197,7 @@ impl iced::Application for TeamworkLauncher {
                 is_loading_mods: false,
                 panes,
                 panes_split,
+                server_view_compact_mode: false,
             },
             mods_management::commands::scan_mods_directory(mods_directory),
         )
@@ -320,6 +322,7 @@ impl iced::Application for TeamworkLauncher {
                         servers_list: &self.servers_list,
                         progress: &self.progress,
                         is_loading: self.is_loading_servers,
+                        compact_mode: self.server_view_compact_mode,
                     })
                 }
                 Screens::Server(view) => {
@@ -552,6 +555,18 @@ impl TeamworkLauncher {
         }
     }
 
+    fn require_compact_mode(&self, ratio: f32) -> bool {
+        match self.user_settings.window.as_ref() {
+            None => { false }
+            Some(window) => {
+                const MIN_RIGHT_PANE_WIDTH: f32 = 600.0;
+                let min_ratio = MIN_RIGHT_PANE_WIDTH / window.window_width as f32;
+
+                ratio > min_ratio
+            }
+        }
+    }
+
     fn constraint_pane_ratio(&self, ratio: f32) -> f32 {
         match self.user_settings.window.as_ref() {
             None => { ratio }
@@ -571,10 +586,9 @@ impl TeamworkLauncher {
     fn process_pane_message(&mut self, message: PaneMessage) {
         match message {
             PaneMessage::Resized(pane_grid::ResizeEvent { split, ratio }) => {
-                if let Some(Screens::Main) = self.views.current_mut() {
-                    self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(ratio);
-                    self.panes.resize(&split, self.user_settings.servers_filter_pane_ratio);
-                }
+                self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(ratio);
+                self.panes.resize(&split, self.user_settings.servers_filter_pane_ratio);
+                self.server_view_compact_mode = self.require_compact_mode(ratio);
             }
         }
     }
@@ -611,6 +625,7 @@ impl TeamworkLauncher {
 
                     self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(self.user_settings.servers_filter_pane_ratio);
                     self.panes.resize(&self.panes_split, self.user_settings.servers_filter_pane_ratio);
+                    self.server_view_compact_mode = self.require_compact_mode(self.user_settings.servers_filter_pane_ratio);
                 }
             }
             SettingsMessage::ThemeChanged(theme) => {
