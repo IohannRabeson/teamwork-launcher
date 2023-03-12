@@ -1,7 +1,4 @@
-use {
-    crate::application::IpPort,
-    iced::widget::text_input,
-};
+use {crate::application::IpPort, iced::widget::text_input};
 
 pub enum Screens {
     Main,

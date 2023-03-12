@@ -24,7 +24,6 @@ pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 
-use iced_native::widget::pane_grid::Axis;
 use {
     crate::ui::{self, main::ViewContext},
     iced::{
@@ -33,6 +32,7 @@ use {
         widget::{column, container, image, pane_grid, scrollable},
         Command, Element, Renderer, Subscription, Theme,
     },
+    iced_native::widget::pane_grid::Axis,
     iced_views::Views,
     itertools::Itertools,
     log::{debug, error, trace},
@@ -76,6 +76,7 @@ use {
             paths::PathsProvider,
             process_detection::ProcessDetection,
             progress::Progress,
+            screens::{PaneId, PaneView},
             screenshots::Screenshots,
             servers_source::{ServersSource, SourceKey},
             thumbnail::ThumbnailCache,
@@ -89,7 +90,6 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
-use crate::application::screens::{PaneId, PaneView};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -162,7 +162,9 @@ impl iced::Application for TeamworkLauncher {
         }
 
         let (mut panes, servers_pane) = pane_grid::State::new(PaneView::new(PaneId::Servers));
-        let (_filter_pane, panes_split) = panes.split(Axis::Vertical, &servers_pane, PaneView::new(PaneId::Filters)).expect("split pane vertically");
+        let (_filter_pane, panes_split) = panes
+            .split(Axis::Vertical, &servers_pane, PaneView::new(PaneId::Filters))
+            .expect("split pane vertically");
 
         panes.resize(&panes_split, flags.user_settings.servers_filter_pane_ratio);
 
@@ -343,8 +345,8 @@ impl iced::Application for TeamworkLauncher {
                 }
             }
         ])
-            .style(theme::Container::Custom(Box::new(MainBackground {})))
-            .into()
+        .style(theme::Container::Custom(Box::new(MainBackground {})))
+        .into()
     }
 
     fn theme(&self) -> Self::Theme {
@@ -557,7 +559,7 @@ impl TeamworkLauncher {
 
     fn require_compact_mode(&self, ratio: f32) -> bool {
         match self.user_settings.window.as_ref() {
-            None => { false }
+            None => false,
             Some(window) => {
                 const MIN_RIGHT_PANE_WIDTH: f32 = 600.0;
                 let min_ratio = MIN_RIGHT_PANE_WIDTH / window.window_width as f32;
@@ -569,7 +571,7 @@ impl TeamworkLauncher {
 
     fn constraint_pane_ratio(&self, ratio: f32) -> f32 {
         match self.user_settings.window.as_ref() {
-            None => { ratio }
+            None => ratio,
             Some(window) => {
                 const MAX_LEFT_PANE_WIDTH: f32 = 341.0;
                 let max_ratio = (window.window_width as f32 - MAX_LEFT_PANE_WIDTH) / window.window_width as f32;
@@ -623,8 +625,10 @@ impl TeamworkLauncher {
                     settings.window_width = width;
                     settings.window_height = height;
 
-                    self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(self.user_settings.servers_filter_pane_ratio);
-                    self.panes.resize(&self.panes_split, self.user_settings.servers_filter_pane_ratio);
+                    self.user_settings.servers_filter_pane_ratio =
+                        self.constraint_pane_ratio(self.user_settings.servers_filter_pane_ratio);
+                    self.panes
+                        .resize(&self.panes_split, self.user_settings.servers_filter_pane_ratio);
                     self.server_view_compact_mode = self.require_compact_mode(self.user_settings.servers_filter_pane_ratio);
                 }
             }

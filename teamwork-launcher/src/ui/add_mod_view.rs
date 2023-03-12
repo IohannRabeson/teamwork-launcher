@@ -1,4 +1,3 @@
-use iced::theme;
 use {
     crate::{
         application::{
@@ -9,6 +8,7 @@ use {
         ui::DEFAULT_SPACING,
     },
     iced::{
+        theme,
         widget::{button, column, container, horizontal_space, row, text, text_input},
         Alignment, Element, Length,
     },
