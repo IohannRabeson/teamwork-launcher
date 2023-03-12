@@ -4,7 +4,7 @@ use {
             filter::filter_servers::Filter,
             game_mode::GameModes,
             progress::Progress,
-            screens::{MainView, PaneId},
+            screens::PaneId,
             servers_counts::ServersCounts,
             Bookmarks, FilterMessage, Message, PaneMessage, Server,
         },
@@ -28,9 +28,11 @@ use {
         scrollable::{self, RelativeOffset},
     },
 };
+use crate::application::screens::PaneView;
 
 pub struct ViewContext<'l> {
-    pub view: &'l MainView,
+    pub panes: &'l pane_grid::State<PaneView>,
+    pub panes_split: &'l pane_grid::Split,
     pub servers: &'l [Server],
     pub bookmarks: &'l Bookmarks,
     pub filter: &'l Filter,
@@ -43,7 +45,7 @@ pub struct ViewContext<'l> {
 
 pub fn view(context: ViewContext) -> Element<Message> {
     let textual_filters = container(ui::filter::text_filter(context.filter)).padding([0, 8]);
-    let pane_grid = PaneGrid::new(&context.view.panes, |_id, pane, _is_maximized| {
+    let pane_grid = PaneGrid::new(&context.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => match context.is_loading {
                 false => servers_view(

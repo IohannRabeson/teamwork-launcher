@@ -75,7 +75,7 @@ fn create_notification(notification: &Notification) -> Element<Message> {
 pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notifications) -> Element<'a, Message> {
     let title_widget = title_widget(title);
     let content = match view {
-        Screens::Main(_) => {
+        Screens::Main => {
             row![
                 title_widget,
                 horizontal_space(iced::Length::Fill),

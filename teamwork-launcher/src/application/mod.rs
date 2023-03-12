@@ -24,6 +24,7 @@ pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
 
+use iced_native::widget::pane_grid::Axis;
 use {
     crate::ui::{self, main::ViewContext},
     iced::{
@@ -84,10 +85,11 @@ use {
         ApplicationFlags,
     },
     mods_manager::{ModName, Registry},
-    screens::{MainView, Screens, ServerView},
+    screens::{Screens, ServerView},
     server::Property,
     servers_counts::ServersCounts,
 };
+use crate::application::screens::{PaneId, PaneView};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -129,6 +131,242 @@ pub struct TeamworkLauncher {
     theme: Theme,
     is_loading_servers: bool,
     is_loading_mods: bool,
+
+    panes: pane_grid::State<PaneView>,
+    panes_split: pane_grid::Split,
+}
+
+impl iced::Application for TeamworkLauncher {
+    type Executor = iced::executor::Default;
+    type Message = Message;
+    type Theme = Theme;
+    type Flags = ApplicationFlags;
+
+    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let theme: Theme = flags.user_settings.theme.into();
+        let thumbnail_cache_directory = flags.paths.get_thumbnails_directory();
+        let mut thumbnails_cache = ThumbnailCache::new(thumbnail_cache_directory);
+        let mut notifications = Notifications::new();
+        let mods_directory = flags.paths.get_mods_directory();
+        if let Err(error) = thumbnails_cache.load() {
+            error!("Failed to load thumbnails cache: {}", error);
+        }
+
+        if !flags.user_settings.has_teamwork_api_key() {
+            notifications.push(Notification::new(
+                "No Teamwork.tf API key specified.\nSet your API key in the settings.",
+                None,
+                NotificationKind::Error,
+            ));
+        }
+
+        let (mut panes, servers_pane) = pane_grid::State::new(PaneView::new(PaneId::Servers));
+        let (_filter_pane, panes_split) = panes.split(Axis::Vertical, &servers_pane, PaneView::new(PaneId::Filters)).expect("split pane vertically");
+
+        panes.resize(&panes_split, flags.user_settings.servers_filter_pane_ratio);
+
+        (
+            Self {
+                views: Views::new(Screens::Main),
+                servers: Vec::new(),
+                servers_counts: ServersCounts::default(),
+                user_settings: flags.user_settings,
+                filter: flags.filter,
+                servers_sources: flags.servers_sources,
+                bookmarks: flags.bookmarks,
+                launcher: ExecutableLauncher::new(false),
+                process_detection: ProcessDetection::default(),
+                game_modes: GameModes::new(),
+                country_request_sender: None,
+                ping_request_sender: None,
+                map_thumbnail_request_sender: None,
+                fetch_servers_subscription_id: 0,
+                shift_pressed: false,
+                theme,
+                is_loading_servers: false,
+                notifications,
+                screenshots: Screenshots::new(),
+                servers_list: ServersList::new(),
+                thumbnails_cache,
+                progress: Progress::default(),
+                paths: flags.paths,
+                testing_mode_enabled: flags.testing_mode_enabled,
+                mods_registry: Registry::new(),
+                selected_mod: None,
+                is_loading_mods: false,
+                panes,
+                panes_split,
+            },
+            mods_management::commands::scan_mods_directory(mods_directory),
+        )
+    }
+
+    fn title(&self) -> String {
+        let mut title = String::from("Teamwork launcher");
+
+        if self.testing_mode_enabled {
+            title.push_str(" - TESTING MODE");
+        }
+
+        title
+    }
+
+    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        match message {
+            Message::RefreshServers => self.refresh_servers(),
+            Message::Servers(message) => {
+                self.process_server_message(message);
+            }
+            Message::Mods(message) => {
+                return self.process_mods_message(message);
+            }
+            Message::Country(message) => {
+                self.process_country_message(message);
+            }
+            Message::Ping(message) => {
+                self.process_ping_message(message);
+            }
+            Message::Thumbnail(message) => {
+                self.process_thumbnail_message(message);
+            }
+            Message::Filter(message) => {
+                self.process_filter_message(message);
+            }
+            Message::GameModes(message) => {
+                self.process_game_modes_message(message);
+            }
+            Message::Keyboard(message) => {
+                self.process_keyboard_message(message);
+            }
+            Message::Notification(message) => {
+                self.process_notification_message(message);
+            }
+            Message::Settings(settings_message) => {
+                self.process_settings_message(settings_message);
+            }
+            Message::Pane(message) => {
+                self.process_pane_message(message);
+            }
+            Message::Screenshots(message) => {
+                self.process_screenshots_message(message);
+            }
+            Message::Bookmarked(ip_port, bookmarked) => {
+                self.bookmark(ip_port, bookmarked);
+            }
+            Message::CopyToClipboard(text) => {
+                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
+                return iced::clipboard::write(text);
+            }
+            Message::Back => {
+                self.views.pop();
+
+                // This is the case where the user has just pasted his API key.
+                // Instead of waiting for the user, we refresh spontaneously.
+                if !self.is_loading_servers && self.servers.is_empty() && self.user_settings.has_teamwork_api_key() {
+                    self.refresh_servers();
+                }
+
+                return scrollable::snap_to(self.servers_list.id.clone(), self.servers_list.scroll_position);
+            }
+            Message::ShowSettings => {
+                self.views.push(Screens::Settings);
+            }
+            Message::LaunchGame(ip_port) => {
+                return if self.process_detection.is_game_detected() {
+                    self.push_notification(
+                        "The game is already started.\nConnection string copied to clipboard!",
+                        NotificationKind::Feedback,
+                    );
+                    self.copy_connection_string(ip_port)
+                } else {
+                    self.launch_game(&ip_port)
+                }
+            }
+            Message::CopyConnectionString(ip_port) => {
+                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
+                return self.copy_connection_string(ip_port);
+            }
+            Message::ShowServer(ip_port, map_name) => {
+                self.views.push(Screens::Server(ServerView::new(ip_port)));
+                self.screenshots.set(PromisedValue::Loading);
+                return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
+            }
+            Message::ServerListScroll(position) => {
+                self.servers_list.scroll_position = position;
+            }
+            Message::ShowMods => {
+                self.views.push(Screens::Mods);
+            }
+        }
+
+        Command::none()
+    }
+
+    fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
+        let current = self.views.current().expect("valid view");
+
+        container(column![
+            ui::header::header_view("Teamwork Launcher", current, &self.notifications),
+            match current {
+                Screens::Main => {
+                    ui::main::view(ViewContext {
+                        panes_split: &self.panes_split,
+                        panes: &self.panes,
+                        servers: &self.servers,
+                        bookmarks: &self.bookmarks,
+                        filter: &self.filter,
+                        game_modes: &self.game_modes,
+                        counts: &self.servers_counts,
+                        servers_list: &self.servers_list,
+                        progress: &self.progress,
+                        is_loading: self.is_loading_servers,
+                    })
+                }
+                Screens::Server(view) => {
+                    ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
+                }
+                Screens::Settings => {
+                    ui::settings::view(
+                        &self.user_settings,
+                        &self.servers_sources,
+                        self.paths.get_configuration_directory(),
+                    )
+                }
+                Screens::Mods => {
+                    ui::mods_view::view(&self.mods_registry, self.selected_mod.as_ref(), self.is_loading_mods)
+                }
+                Screens::AddMod(context) => {
+                    ui::add_mod_view::view(context)
+                }
+            }
+        ])
+            .style(theme::Container::Custom(Box::new(MainBackground {})))
+            .into()
+    }
+
+    fn theme(&self) -> Self::Theme {
+        self.theme.clone()
+    }
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        use iced::futures::StreamExt;
+
+        let urls = self.get_sources_urls();
+        let server_stream = fetch_servers(urls).map(Message::from);
+
+        Subscription::batch([
+            subscription::run(self.fetch_servers_subscription_id, server_stream),
+            geolocation::subscription().map(Message::from),
+            ping::subscription().map(Message::from),
+            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
+                .map(Message::from),
+            game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
+                .map(Message::from),
+            keyboard::subscription().map(Message::from),
+            window::subscription(),
+            self.notifications.subscription().map(Message::from),
+        ])
+    }
 }
 
 impl TeamworkLauncher {
@@ -314,12 +552,28 @@ impl TeamworkLauncher {
         }
     }
 
+    fn constraint_pane_ratio(&self, ratio: f32) -> f32 {
+        match self.user_settings.window.as_ref() {
+            None => { ratio }
+            Some(window) => {
+                const MAX_LEFT_PANE_WIDTH: f32 = 341.0;
+                let max_ratio = (window.window_width as f32 - MAX_LEFT_PANE_WIDTH) / window.window_width as f32;
+
+                if ratio > max_ratio {
+                    max_ratio
+                } else {
+                    ratio
+                }
+            }
+        }
+    }
+
     fn process_pane_message(&mut self, message: PaneMessage) {
         match message {
             PaneMessage::Resized(pane_grid::ResizeEvent { split, ratio }) => {
-                if let Some(Screens::Main(view)) = self.views.current_mut() {
-                    self.user_settings.servers_filter_pane_ratio = ratio;
-                    view.panes.resize(&split, ratio);
+                if let Some(Screens::Main) = self.views.current_mut() {
+                    self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(ratio);
+                    self.panes.resize(&split, self.user_settings.servers_filter_pane_ratio);
                 }
             }
         }
@@ -354,6 +608,9 @@ impl TeamworkLauncher {
                 if let Some(settings) = &mut self.user_settings.window {
                     settings.window_width = width;
                     settings.window_height = height;
+
+                    self.user_settings.servers_filter_pane_ratio = self.constraint_pane_ratio(self.user_settings.servers_filter_pane_ratio);
+                    self.panes.resize(&self.panes_split, self.user_settings.servers_filter_pane_ratio);
                 }
             }
             SettingsMessage::ThemeChanged(theme) => {
@@ -814,231 +1071,6 @@ impl Drop for TeamworkLauncher {
                 error
             )
         });
-    }
-}
-
-impl iced::Application for TeamworkLauncher {
-    type Executor = iced::executor::Default;
-    type Message = Message;
-    type Theme = Theme;
-    type Flags = ApplicationFlags;
-
-    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let theme: Theme = flags.user_settings.theme.into();
-        let thumbnail_cache_directory = flags.paths.get_thumbnails_directory();
-        let mut thumbnails_cache = ThumbnailCache::new(thumbnail_cache_directory);
-        let mut notifications = Notifications::new();
-        let mods_directory = flags.paths.get_mods_directory();
-        if let Err(error) = thumbnails_cache.load() {
-            error!("Failed to load thumbnails cache: {}", error);
-        }
-
-        if !flags.user_settings.has_teamwork_api_key() {
-            notifications.push(Notification::new(
-                "No Teamwork.tf API key specified.\nSet your API key in the settings.",
-                None,
-                NotificationKind::Error,
-            ));
-        }
-
-        (
-            Self {
-                views: Views::new(Screens::Main(MainView::new(flags.user_settings.servers_filter_pane_ratio))),
-                servers: Vec::new(),
-                servers_counts: ServersCounts::default(),
-                user_settings: flags.user_settings,
-                filter: flags.filter,
-                servers_sources: flags.servers_sources,
-                bookmarks: flags.bookmarks,
-                launcher: ExecutableLauncher::new(false),
-                process_detection: ProcessDetection::default(),
-                game_modes: GameModes::new(),
-                country_request_sender: None,
-                ping_request_sender: None,
-                map_thumbnail_request_sender: None,
-                fetch_servers_subscription_id: 0,
-                shift_pressed: false,
-                theme,
-                is_loading_servers: false,
-                notifications,
-                screenshots: Screenshots::new(),
-                servers_list: ServersList::new(),
-                thumbnails_cache,
-                progress: Progress::default(),
-                paths: flags.paths,
-                testing_mode_enabled: flags.testing_mode_enabled,
-                mods_registry: Registry::new(),
-                selected_mod: None,
-                is_loading_mods: false,
-            },
-            mods_management::commands::scan_mods_directory(mods_directory),
-        )
-    }
-
-    fn title(&self) -> String {
-        let mut title = String::from("Teamwork launcher");
-
-        if self.testing_mode_enabled {
-            title.push_str(" - TESTING MODE");
-        }
-
-        title
-    }
-
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        match message {
-            Message::RefreshServers => self.refresh_servers(),
-            Message::Servers(message) => {
-                self.process_server_message(message);
-            }
-            Message::Mods(message) => {
-                return self.process_mods_message(message);
-            }
-            Message::Country(message) => {
-                self.process_country_message(message);
-            }
-            Message::Ping(message) => {
-                self.process_ping_message(message);
-            }
-            Message::Thumbnail(message) => {
-                self.process_thumbnail_message(message);
-            }
-            Message::Filter(message) => {
-                self.process_filter_message(message);
-            }
-            Message::GameModes(message) => {
-                self.process_game_modes_message(message);
-            }
-            Message::Keyboard(message) => {
-                self.process_keyboard_message(message);
-            }
-            Message::Notification(message) => {
-                self.process_notification_message(message);
-            }
-            Message::Settings(settings_message) => {
-                self.process_settings_message(settings_message);
-            }
-            Message::Pane(message) => {
-                self.process_pane_message(message);
-            }
-            Message::Screenshots(message) => {
-                self.process_screenshots_message(message);
-            }
-            Message::Bookmarked(ip_port, bookmarked) => {
-                self.bookmark(ip_port, bookmarked);
-            }
-            Message::CopyToClipboard(text) => {
-                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
-                return iced::clipboard::write(text);
-            }
-            Message::Back => {
-                self.views.pop();
-
-                // This is the case where the user has just pasted his API key.
-                // Instead of waiting for the user, we refresh spontaneously.
-                if !self.is_loading_servers && self.servers.is_empty() && self.user_settings.has_teamwork_api_key() {
-                    self.refresh_servers();
-                }
-
-                return scrollable::snap_to(self.servers_list.id.clone(), self.servers_list.scroll_position);
-            }
-            Message::ShowSettings => {
-                self.views.push(Screens::Settings);
-            }
-            Message::LaunchGame(ip_port) => {
-                return if self.process_detection.is_game_detected() {
-                    self.push_notification(
-                        "The game is already started.\nConnection string copied to clipboard!",
-                        NotificationKind::Feedback,
-                    );
-                    self.copy_connection_string(ip_port)
-                } else {
-                    self.launch_game(&ip_port)
-                }
-            }
-            Message::CopyConnectionString(ip_port) => {
-                self.push_notification("Copied to clipboard!", NotificationKind::Feedback);
-                return self.copy_connection_string(ip_port);
-            }
-            Message::ShowServer(ip_port, map_name) => {
-                self.views.push(Screens::Server(ServerView::new(ip_port)));
-                self.screenshots.set(PromisedValue::Loading);
-                return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
-            }
-            Message::ServerListScroll(position) => {
-                self.servers_list.scroll_position = position;
-            }
-            Message::ShowMods => {
-                self.views.push(Screens::Mods);
-            }
-        }
-
-        Command::none()
-    }
-
-    fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
-        let current = self.views.current().expect("valid view");
-
-        container(column![
-            ui::header::header_view("Teamwork Launcher", current, &self.notifications),
-            match current {
-                Screens::Main(view) => {
-                    ui::main::view(ViewContext {
-                        view,
-                        servers: &self.servers,
-                        bookmarks: &self.bookmarks,
-                        filter: &self.filter,
-                        game_modes: &self.game_modes,
-                        counts: &self.servers_counts,
-                        servers_list: &self.servers_list,
-                        progress: &self.progress,
-                        is_loading: self.is_loading_servers,
-                    })
-                }
-                Screens::Server(view) => {
-                    ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
-                }
-                Screens::Settings => {
-                    ui::settings::view(
-                        &self.user_settings,
-                        &self.servers_sources,
-                        self.paths.get_configuration_directory(),
-                    )
-                }
-                Screens::Mods => {
-                    ui::mods_view::view(&self.mods_registry, self.selected_mod.as_ref(), self.is_loading_mods)
-                }
-                Screens::AddMod(context) => {
-                    ui::add_mod_view::view(context)
-                }
-            }
-        ])
-        .style(theme::Container::Custom(Box::new(MainBackground {})))
-        .into()
-    }
-
-    fn theme(&self) -> Self::Theme {
-        self.theme.clone()
-    }
-
-    fn subscription(&self) -> Subscription<Self::Message> {
-        use iced::futures::StreamExt;
-
-        let urls = self.get_sources_urls();
-        let server_stream = fetch_servers(urls).map(Message::from);
-
-        Subscription::batch([
-            subscription::run(self.fetch_servers_subscription_id, server_stream),
-            geolocation::subscription().map(Message::from),
-            ping::subscription().map(Message::from),
-            thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
-                .map(Message::from),
-            game_mode::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
-                .map(Message::from),
-            keyboard::subscription().map(Message::from),
-            window::subscription(),
-            self.notifications.subscription().map(Message::from),
-        ])
     }
 }
 
