@@ -4,6 +4,7 @@ use {
     serde::{Deserialize, Serialize},
     std::fmt::{Display, Formatter},
 };
+use crate::application::paths::get_default_steam_executable;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct WindowSettings {
@@ -56,7 +57,7 @@ impl Default for UserSettings {
         Self {
             servers_filter_pane_ratio: 0.65f32,
             teamwork_api_key: String::new(),
-            steam_executable_path: String::new(),
+            steam_executable_path: get_default_steam_executable().map(|path|path.to_string_lossy().to_string()).unwrap_or_default(),
             quit_on_launch: false,
             quit_on_copy: false,
             window: None,
