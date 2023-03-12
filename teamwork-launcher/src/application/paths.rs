@@ -74,3 +74,22 @@ impl PathsProvider for TestPathsProvider {
         Some(self.temporary_directory.path().join("team_fortress_directory"))
     }
 }
+
+pub fn get_default_steam_executable() -> Option<PathBuf> {
+    SteamDir::locate().map(|steam_dir|steam_dir.path.join(steam_executable_name()))
+}
+
+#[cfg(target_os = "windows")]
+fn steam_executable_name() -> String {
+    String::from("Steam.exe")
+}
+
+#[cfg(target_os = "macos")]
+fn steam_executable_name() -> String {
+    String::from("Steam.AppBundle/Steam/Contents/MacOS/steam_osx")
+}
+
+#[cfg(target_os = "linux")]
+fn steam_executable_name() -> String {
+    String::from("steam")
+}
