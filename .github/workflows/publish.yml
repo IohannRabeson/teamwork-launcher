@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: teamwork-launcher.exe
+            artifact_name: teamwork-launcher-installer-${{ github.ref_name }}.exe
             asset_name: teamwork-launcher-windows.exe
           - os: macos-latest
             artifact_name: teamwork-launcher.zip
@@ -28,12 +28,18 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 10.8
         run: cargo build --release --locked
 
-      - name: Bundle
+      - name: Bundle MacOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
           cd teamwork-launcher
           cargo install cargo-bundle
           cargo bundle --release
+
+      - name: Bundle Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          cd teamwork-launcher
+          iscc.exe teamwork-launcher\innosetup\installer.iss /DMyAppVersion="${{  github.ref_name }}"
 
       - uses: thedoctor0/zip-release@0.7.1
         if: ${{ matrix.os == 'macos-latest' }}
