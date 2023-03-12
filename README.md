@@ -2,7 +2,8 @@
 
 Launcher for Team Fortress 2 that uses Teamwork.tf as data source.  
 
-![Main view screenshot](/screenshots/main_view.png?raw=true)
+![Main view red](/screenshots/main_view_red.png?raw=true)
+![Main view blu](/screenshots/main_view_blu.png?raw=true)
 
 # How to clone
 Mind to also clone sub modules with `--recursive`:
@@ -25,4 +26,4 @@ Alternatively you can specify an environment variable `TEAMWORK_API_KEY`.
 # Testing mode
 The testing mode force the application to store the configuration and the thumbnails cache in a temporary directory, so the application
 writes files but the temporary directory is deleted when the application quits and any existing configuration is untouched.  
-To enable this mode, pass the flag `--testing-mode`.
+To enable this mode, pass the flag `--testing-mode`.  
