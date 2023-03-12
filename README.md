@@ -23,6 +23,6 @@ You must copy/paste your key in the settings page.
 Alternatively you can specify an environment variable `TEAMWORK_API_KEY`.
 
 # Testing mode
-The testing mode force the application to store the configuration and caches in a temporary directory, so the application
+The testing mode force the application to store the configuration and the thumbnails cache in a temporary directory, so the application
 writes files but the temporary directory is deleted when the application quits and any existing configuration is untouched.  
 To enable this mode, pass the flag `--testing-mode`.
