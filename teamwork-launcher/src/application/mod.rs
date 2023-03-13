@@ -561,7 +561,7 @@ impl TeamworkLauncher {
         match self.user_settings.window.as_ref() {
             None => false,
             Some(window) => {
-                const MIN_RIGHT_PANE_WIDTH: f32 = 600.0;
+                const MIN_RIGHT_PANE_WIDTH: f32 = 700.0;
                 let min_ratio = MIN_RIGHT_PANE_WIDTH / window.window_width as f32;
 
                 ratio > min_ratio

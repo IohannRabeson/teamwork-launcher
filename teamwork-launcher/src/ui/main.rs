@@ -79,6 +79,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
     main_column.spacing(4).into()
 }
 
+/// The wide view that displays server information.
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
@@ -132,6 +133,7 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
     .into()
 }
 
+/// This is the compact view that displays server information.
 fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
@@ -175,23 +177,23 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
             row![
                 text(&ip_port_text),
                 svg_button(icons::COPY_ICON.clone(), 10).on_press(Message::CopyToClipboard(ip_port_text)),
+                horizontal_space(Length::Fill),
+                text("Region:"),
+                region(&server.country, BUTTON_SIZE, 0)
             ]
             .spacing(4),
             row![
                 text(&server.map),
-                text(&format!("{} / {}", server.current_players_count, server.max_players_count))
+                horizontal_space(Length::Fill),
+                text(&format!(
+                    "Players: {} / {}",
+                    server.current_players_count, server.max_players_count
+                ))
             ]
-            .spacing(4),
-            row![
-                text("Region:"),
-                region(&server.country, BUTTON_SIZE, 0),
-                text("Ping:"),
-                ping(&server.ping),
-                game_modes
-            ]
-            .spacing(4)
+            .spacing(8),
+            row![game_modes, horizontal_space(Length::Fill), text("Ping:"), ping(&server.ping),].spacing(8)
         ]
-        .align_items(Alignment::Start),
+        .spacing(4),
     )
     .padding(8)
     .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
@@ -215,7 +217,8 @@ fn servers_view<'l>(
         widget::scrollable(servers.fold(column![], |c, server| {
             c.push(
                 container((server_view_fn)(server, bookmarks, game_modes))
-                    .padding([4, 24 /* <- THIS IS TO PREVENT THE SCROLLBAR TO COVER THE VIEW */, 4, 8]),
+                    /* <- THIS IS TO PREVENT THE SCROLLBAR TO OVERLAP THE VIEW */
+                    .padding([4, 16, 4, 8]),
             )
         }))
         .on_scroll(Message::ServerListScroll)
