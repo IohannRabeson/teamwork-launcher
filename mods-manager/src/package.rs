@@ -93,8 +93,8 @@ impl PackageEntry {
 
 /// A package that contains 0 - n [`PackageEntry`].
 pub struct Package {
-    pub root_directory: PathBuf,
-    pub entries: Vec<PackageEntry>,
+    root_directory: PathBuf,
+    entries: Vec<PackageEntry>,
 }
 
 impl Package {
@@ -105,6 +105,14 @@ impl Package {
             root_directory: root_directory.clone(),
             entries: Self::scan(&root_directory)?,
         })
+    }
+
+    pub fn root_directory(&self) -> &Path {
+        &self.root_directory
+    }
+
+    pub fn entries(&self) -> impl Iterator<Item = &PackageEntry> {
+        self.entries.iter()
     }
 
     pub fn mod_names(&self) -> impl Iterator<Item = &ModName> {

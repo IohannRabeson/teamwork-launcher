@@ -6,7 +6,7 @@ use {
             progress::Progress,
             screens::{PaneId, PaneView},
             servers_counts::ServersCounts,
-            Bookmarks, FilterMessage, Message, PaneMessage, PromisedValue, Server,
+            Bookmarks, FilterMessage, Message, PaneMessage, PromisedValue, Server, ViewMode,
         },
         icons,
         ui::{
@@ -14,6 +14,7 @@ use {
             buttons::{favorite_button, svg_button},
             styles::BoxContainerStyle,
             widgets::{self, ping, region, thumbnail},
+            THUMBNAIL_CONTENT_FIT,
         },
     },
     iced::{
@@ -28,8 +29,6 @@ use {
         scrollable::{self, RelativeOffset},
     },
 };
-use crate::application::ViewMode;
-use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 pub struct ViewContext<'l> {
     pub panes: &'l pane_grid::State<PaneView>,
@@ -144,7 +143,10 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
     const BUTTON_SIZE: u16 = 20;
 
     let thumbnail: Element<'l, Message> = match &server.map_thumbnail {
-        PromisedValue::Ready(image) => Image::new(image.clone()).width(Length::Fill).content_fit(THUMBNAIL_CONTENT_FIT).into(),
+        PromisedValue::Ready(image) => Image::new(image.clone())
+            .width(Length::Fill)
+            .content_fit(THUMBNAIL_CONTENT_FIT)
+            .into(),
         PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
             .width(Length::Fill)
             .height(Length::Fixed(250.0))

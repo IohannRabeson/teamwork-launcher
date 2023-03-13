@@ -1,4 +1,3 @@
-use iced::ContentFit;
 use {
     crate::application::{
         filter::{
@@ -7,7 +6,7 @@ use {
         },
         SettingsMessage,
     },
-    iced::Length,
+    iced::{ContentFit, Length},
 };
 
 pub mod add_mod_view;

@@ -66,11 +66,8 @@ fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is
             )))),
         );
 
-        content = content.push(
-            button("Open directory").on_press(Message::Mods(ModsMessage::OpenInstallDirectory(
-                selected_mod.clone(),
-            ))),
-        );
+        content = content
+            .push(button("Open directory").on_press(Message::Mods(ModsMessage::OpenInstallDirectory(selected_mod.clone()))));
     }
 
     content = content.push(vertical_space(Length::Fill));

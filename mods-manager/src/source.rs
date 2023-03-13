@@ -231,8 +231,8 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://github.com/n0kk/ahud/archive/refs/heads/master.zip".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("ahud-master"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("ahud-master"));
     }
 
     #[tokio::test]
@@ -241,8 +241,8 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://www.dropbox.com/s/cwwmppnn3nn68av/3HUD.7z?dl=1".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("3HUD"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("3HUD"));
     }
 
     #[tokio::test]
@@ -251,8 +251,8 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://gamebanana.com/dl/815166".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("Black-Mesa-HUD"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("Black-Mesa-HUD"));
     }
 
     #[tokio::test]
@@ -261,8 +261,8 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://gamebanana.com/dl/601806".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("7hud-5.11"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("7hud-5.11"));
     }
 
     #[tokio::test]
@@ -271,8 +271,8 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://gamebanana.com/dl/601806".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("7hud-5.11"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("7hud-5.11"));
     }
 
     #[tokio::test]
@@ -283,8 +283,11 @@ mod slow_tests {
         );
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("p3tr1ch0r-insomniaHUD-9753cfb"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(
+            package.entries().next().unwrap().name,
+            ModName::new("p3tr1ch0r-insomniaHUD-9753cfb")
+        );
     }
 
     #[tokio::test]
@@ -293,7 +296,7 @@ mod slow_tests {
         let source = Source::DownloadUrl("https://gamebanana.com/dl/945012".into());
         let package = fetch_package(source, directory.path()).await.unwrap();
 
-        assert_eq!(package.entries.len(), 1);
-        assert_eq!(package.entries[0].name, ModName::new("minhud_plus"));
+        assert_eq!(package.entries().count(), 1);
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("minhud_plus"));
     }
 }
