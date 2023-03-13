@@ -569,18 +569,27 @@ impl TeamworkLauncher {
         }
     }
 
-    fn constraint_pane_ratio(&self, ratio: f32) -> f32 {
+    fn constraint_pane_ratio(&self, mut ratio: f32) -> f32 {
         let mut ratio = match self.user_settings.window.as_ref() {
             None => ratio,
             Some(window) => {
-                const MAX_LEFT_PANE_WIDTH: f32 = 341.0;
-                let max_ratio = (window.window_width as f32 - MAX_LEFT_PANE_WIDTH) / window.window_width as f32;
+                const MIN_PANE_WIDTH: u32 = 341;
 
-                if ratio > max_ratio {
-                    max_ratio
-                } else {
-                    ratio
+                if window.window_width >= 341 {
+                    let max_ratio = (window.window_width - MIN_PANE_WIDTH) as f32 / window.window_width as f32;
+
+                    if ratio > max_ratio {
+                        ratio = max_ratio;
+                    }
                 }
+
+                let min_ratio = MIN_PANE_WIDTH as f32 / window.window_width as f32;
+
+                if ratio < min_ratio {
+                    ratio = min_ratio;
+                }
+
+                ratio
             }
         };
 
