@@ -570,7 +570,7 @@ impl TeamworkLauncher {
     }
 
     fn constraint_pane_ratio(&self, ratio: f32) -> f32 {
-        match self.user_settings.window.as_ref() {
+        let mut ratio = match self.user_settings.window.as_ref() {
             None => ratio,
             Some(window) => {
                 const MAX_LEFT_PANE_WIDTH: f32 = 341.0;
@@ -582,7 +582,15 @@ impl TeamworkLauncher {
                     ratio
                 }
             }
-        }
+        };
+
+        if ratio < 0.1 {
+            ratio = 0.1;
+        } else if ratio > 0.9 {
+            ratio = 0.9;
+        };
+
+        ratio
     }
 
     fn process_pane_message(&mut self, message: PaneMessage) {
