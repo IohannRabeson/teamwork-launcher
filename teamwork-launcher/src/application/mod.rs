@@ -200,7 +200,7 @@ impl iced::Application for TeamworkLauncher {
                 progress: Progress::default(),
                 paths: flags.paths,
                 testing_mode_enabled: flags.testing_mode_enabled,
-                mods_registry: Registry::new(),
+                mods_registry: flags.mods,
                 selected_mod: None,
                 is_loading_mods: false,
                 panes,
