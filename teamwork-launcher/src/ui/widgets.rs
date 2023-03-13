@@ -1,3 +1,4 @@
+
 use {
     crate::{
         application::{
@@ -16,6 +17,7 @@ use {
     iced_aw::Spinner,
     std::time::Duration,
 };
+use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'a, Message> {
     let size = Length::Fixed(size as f32 - (padding * 2) as f32);
@@ -86,7 +88,7 @@ pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> 
 
 pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
     match image {
-        PromisedValue::Ready(image) => Image::new(image.clone()).into(),
+        PromisedValue::Ready(image) => Image::new(image.clone()).content_fit(THUMBNAIL_CONTENT_FIT).into(),
         PromisedValue::Loading => Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
     }

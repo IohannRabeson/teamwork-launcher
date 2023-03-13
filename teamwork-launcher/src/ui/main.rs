@@ -28,6 +28,8 @@ use {
         scrollable::{self, RelativeOffset},
     },
 };
+use crate::application::ViewMode;
+use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 pub struct ViewContext<'l> {
     pub panes: &'l pane_grid::State<PaneView>,
@@ -40,7 +42,7 @@ pub struct ViewContext<'l> {
     pub servers_list: &'l ServersList,
     pub progress: &'l Progress,
     pub is_loading: bool,
-    pub compact_mode: bool,
+    pub servers_list_view_mode: ViewMode,
 }
 
 pub fn view(context: ViewContext) -> Element<Message> {
@@ -54,7 +56,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
                     context.filter,
                     context.game_modes,
                     context.servers_list,
-                    context.compact_mode,
+                    context.servers_list_view_mode,
                 ),
                 true => container(Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
                     .width(Length::Fill)
@@ -142,7 +144,7 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
     const BUTTON_SIZE: u16 = 20;
 
     let thumbnail: Element<'l, Message> = match &server.map_thumbnail {
-        PromisedValue::Ready(image) => Image::new(image.clone()).width(Length::Fill).into(),
+        PromisedValue::Ready(image) => Image::new(image.clone()).width(Length::Fill).content_fit(THUMBNAIL_CONTENT_FIT).into(),
         PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
             .width(Length::Fill)
             .height(Length::Fixed(250.0))
@@ -206,11 +208,11 @@ fn servers_view<'l>(
     filter: &'l Filter,
     game_modes: &'l GameModes,
     servers_list: &'l ServersList,
-    compact_mode: bool,
+    servers_list_view_mode: ViewMode,
 ) -> Element<'l, Message> {
-    let server_view_fn = match compact_mode {
-        true => server_view,
-        false => compact_server_view,
+    let server_view_fn = match servers_list_view_mode {
+        ViewMode::Normal => server_view,
+        ViewMode::Compact => compact_server_view,
     };
     let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
     let servers_list = container(

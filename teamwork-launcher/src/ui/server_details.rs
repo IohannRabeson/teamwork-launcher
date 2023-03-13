@@ -11,10 +11,11 @@ use {
     iced::{
         theme,
         widget::{column, container, image, row, text, vertical_space, Image},
-        Alignment, ContentFit, Element, Length,
+        Alignment, Element, Length,
     },
     iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
 };
+use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {
@@ -27,11 +28,11 @@ fn yes_no<'l>(value: bool) -> Element<'l, Message> {
 fn screenshot(screenshot: Option<&image::Handle>) -> Element<Message> {
     match screenshot {
         Some(screenshot) => Image::new(screenshot.clone())
-            .content_fit(ContentFit::Contain)
+            .content_fit(THUMBNAIL_CONTENT_FIT)
             .width(Length::Fill)
             .height(Length::Fill)
             .into(),
-        None => container(Image::new(icons::NO_IMAGE.clone()).content_fit(ContentFit::Contain))
+        None => container(Image::new(icons::NO_IMAGE.clone()).content_fit(THUMBNAIL_CONTENT_FIT))
             .width(Length::Fill)
             .height(Length::Fill)
             .center_x()
