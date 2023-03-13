@@ -6,7 +6,7 @@ use {
             Message, PromisedValue, Server,
         },
         fonts, icons,
-        ui::{buttons::svg_button, form::Form, styles::BoxContainerStyle, widgets},
+        ui::{buttons::svg_button, form::Form, styles::BoxContainerStyle, widgets, THUMBNAIL_CONTENT_FIT},
     },
     iced::{
         theme,
@@ -15,7 +15,6 @@ use {
     },
     iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
 };
-use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {

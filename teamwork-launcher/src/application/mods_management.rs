@@ -1,6 +1,7 @@
 use {
     crate::application::{
         message::{AddViewMessage, ListViewMessage, ModsMessage},
+        notifications::NotificationKind,
         screens::{AddModView, Screens},
         Message, TeamworkLauncher,
     },
@@ -9,7 +10,6 @@ use {
     mods_manager::{Install, Source},
     reqwest::Url,
 };
-use crate::application::notifications::NotificationKind;
 
 impl TeamworkLauncher {
     pub(crate) fn process_mods_message(&mut self, message: ModsMessage) -> Command<Message> {
