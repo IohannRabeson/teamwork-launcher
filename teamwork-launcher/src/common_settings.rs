@@ -43,5 +43,5 @@ where
 
     let encoded = std::fs::read(file_path).map_err(|e| SettingsError::Io(Arc::new(e)))?;
 
-    Ok(bincode::deserialize(&encoded).map_err(|_| SettingsError::InvalidFileFormat)?)
+    bincode::deserialize(&encoded).map_err(|_| SettingsError::InvalidFileFormat)
 }

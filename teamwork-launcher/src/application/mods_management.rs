@@ -52,7 +52,7 @@ impl TeamworkLauncher {
                     if let Some(mods_directory) = self.paths.get_mods_directory() {
                         assert!(matches!(info.install, Install::Installed { .. }));
                         self.is_loading_mods = true;
-                        return commands::uninstall_mod(&info, mods_directory);
+                        return commands::uninstall_mod(info, mods_directory);
                     }
                 }
             }
@@ -143,7 +143,7 @@ impl TeamworkLauncher {
 
                 if let Some(info) = self.mods_registry.remove(&mod_name) {
                     if let Some(mods_directory) = self.paths.get_mods_directory() {
-                        return commands::uninstall_mod(&info, mods_directory.to_path_buf());
+                        return commands::uninstall_mod(&info, mods_directory);
                     }
                 }
             }
@@ -193,13 +193,9 @@ pub mod commands {
     fn search_mod_install(mods_directory: &Path) -> Vec<PackageEntry> {
         let mut directories = Vec::new();
 
-        if let Ok(read_dir) = std::fs::read_dir(mods_directory) {
-            for entry in read_dir {
-                if let Ok(entry) = entry {
-                    if let Ok(entry) = PackageEntry::from_path(entry.path()) {
-                        directories.push(entry);
-                    }
-                }
+        for entry in std::fs::read_dir(mods_directory).into_iter().flatten().flatten() {
+            if let Ok(entry) = PackageEntry::from_path(entry.path()) {
+                directories.push(entry);
             }
         }
 
@@ -220,7 +216,7 @@ pub mod commands {
 
         Command::perform(
             async move { install(source, mod_name, mods_directory).await },
-            move |result| Message::Mods(ModsMessage::InstallationFinished(name.clone(), result)),
+            move |result| Message::Mods(ModsMessage::InstallationFinished(name, result)),
         )
     }
 

@@ -97,7 +97,7 @@ mod archives {
             };
             let destination_path = destination_directory.join(zip_file_name);
 
-            if zip_file.name().ends_with("/") {
+            if zip_file.name().ends_with('/') {
                 std::fs::create_dir_all(&destination_path)
                     .map_err(|e| ArchiveError::CreateDirectoryFailed(destination_path.to_path_buf(), e))?;
             } else {

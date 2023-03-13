@@ -47,7 +47,7 @@ pub struct ViewContext<'l> {
 
 pub fn view(context: ViewContext) -> Element<Message> {
     let textual_filters = container(ui::filter::text_filter(context.filter)).padding([0, 8]);
-    let pane_grid = PaneGrid::new(&context.panes, |_id, pane, _is_maximized| {
+    let pane_grid = PaneGrid::new(context.panes, |_id, pane, _is_maximized| {
         pane_grid::Content::new(responsive(move |_size| match &pane.id {
             PaneId::Servers => match context.is_loading {
                 false => servers_view(

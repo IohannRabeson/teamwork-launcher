@@ -126,18 +126,16 @@ impl ThumbnailCache {
             return Err(ThumbnailCacheError::InvalidDirectoryPath(self.directory_path.clone()));
         }
 
-        for entry in std::fs::read_dir(&self.directory_path)? {
-            if let Ok(entry) = entry {
-                if let Ok(metadata) = entry.metadata() {
-                    if metadata.is_file() {
-                        let map_name = MapName::new(entry.path().file_name().expect("file name").to_string_lossy());
+        for entry in std::fs::read_dir(&self.directory_path)?.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    let map_name = MapName::new(entry.path().file_name().expect("file name").to_string_lossy());
 
-                        trace!("image: {}", entry.path().display());
+                    trace!("image: {}", entry.path().display());
 
-                        let bytes = std::fs::read(entry.path())?;
+                    let bytes = std::fs::read(entry.path())?;
 
-                        self.insert(map_name, image::Handle::from_memory(bytes));
-                    }
+                    self.insert(map_name, image::Handle::from_memory(bytes));
                 }
             }
         }
@@ -176,11 +174,9 @@ impl ThumbnailCache {
     }
 
     fn clear_cache(directory: &Path) -> Result<(), std::io::Error> {
-        for entry in std::fs::read_dir(directory)? {
-            if let Ok(entry) = entry {
-                if let Err(error) = std::fs::remove_file(entry.path()) {
-                    error!("Failed to delete '{}': {}", entry.path().display(), error);
-                }
+        for entry in std::fs::read_dir(directory)?.flatten() {
+            if let Err(error) = std::fs::remove_file(entry.path()) {
+                error!("Failed to delete '{}': {}", entry.path().display(), error);
             }
         }
 

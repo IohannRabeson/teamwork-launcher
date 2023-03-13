@@ -170,7 +170,7 @@ fn error_badge<'a>(error: &str) -> Element<'a, Message> {
         .style(theme::Container::Custom(Box::new(InstalledBadge {})))
         .padding(2);
 
-    tooltip(content, error, iced::widget::tooltip::Position::Bottom).into()
+    tooltip(content, error, iced::widget::tooltip::Position::Bottom)
 }
 
 fn mod_info_view(info: &ModInfo, is_selected: bool) -> Element<Message> {

@@ -118,11 +118,9 @@ impl Package {
     fn scan(root_directory: &Path) -> Result<Vec<PackageEntry>, ScanPackageError> {
         let mut hud_directories = Vec::new();
 
-        for entry in walkdir::WalkDir::new(root_directory) {
-            if let Ok(entry) = entry {
-                if let Ok(package_entry) = PackageEntry::from_path(entry.path()) {
-                    hud_directories.push(package_entry);
-                }
+        for entry in walkdir::WalkDir::new(root_directory).into_iter().flatten() {
+            if let Ok(package_entry) = PackageEntry::from_path(entry.path()) {
+                hud_directories.push(package_entry);
             }
         }
 

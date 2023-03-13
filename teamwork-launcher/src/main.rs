@@ -29,7 +29,7 @@ const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
 const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA_SHORT");
 
 fn main() -> iced::Result {
-    let testing_mode = std::env::args().find(|arg| arg == "--testing-mode").is_some();
+    let testing_mode = std::env::args().any(|arg| arg == "--testing-mode");
     let settings = load_settings(testing_mode);
     let configuration_directory = settings.flags.paths.get_configuration_directory();
 
