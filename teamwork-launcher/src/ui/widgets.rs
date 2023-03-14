@@ -1,4 +1,3 @@
-
 use {
     crate::{
         application::{
@@ -6,7 +5,7 @@ use {
             Country, Message, PromisedValue, Server,
         },
         icons,
-        ui::{styles, styles::ColoredPingIndicatorStyle},
+        ui::{styles, styles::ColoredPingIndicatorStyle, THUMBNAIL_CONTENT_FIT},
     },
     iced::{
         theme,
@@ -17,7 +16,6 @@ use {
     iced_aw::Spinner,
     std::time::Duration,
 };
-use crate::ui::THUMBNAIL_CONTENT_FIT;
 
 pub fn country_icon<'a>(country: &Country, size: u16, padding: u16) -> Element<'a, Message> {
     let size = Length::Fixed(size as f32 - (padding * 2) as f32);

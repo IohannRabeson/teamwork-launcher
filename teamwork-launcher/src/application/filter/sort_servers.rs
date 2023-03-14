@@ -16,6 +16,7 @@ pub enum SortCriterion {
     PlayerSlots,
     Players,
     FreePlayerSlots,
+    Map,
 }
 
 impl Display for SortCriterion {
@@ -41,6 +42,9 @@ impl Display for SortCriterion {
             }
             SortCriterion::FreePlayerSlots => {
                 write!(f, "Free slots")
+            }
+            SortCriterion::Map => {
+                write!(f, "Map")
             }
         }
     }
@@ -74,5 +78,6 @@ pub fn sort_servers(criterion: SortCriterion, left: &Server, right: &Server) -> 
         SortCriterion::PlayerSlots => left.max_players_count.cmp(&right.max_players_count),
         SortCriterion::Players => left.current_players_count.cmp(&right.current_players_count),
         SortCriterion::FreePlayerSlots => left.free_slots().cmp(&right.free_slots()),
+        SortCriterion::Map => left.map.cmp(&right.map),
     }
 }

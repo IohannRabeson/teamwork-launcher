@@ -65,6 +65,9 @@ fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is
                 selected_mod.clone(),
             )))),
         );
+
+        content = content
+            .push(button("Open directory").on_press(Message::Mods(ModsMessage::OpenInstallDirectory(selected_mod.clone()))));
     }
 
     content = content.push(vertical_space(Length::Fill));
@@ -158,16 +161,29 @@ impl container::StyleSheet for InstalledBadge {
     }
 }
 
+struct FailedBadge;
+
+impl container::StyleSheet for FailedBadge {
+    type Style = Theme;
+
+    fn appearance(&self, style: &Self::Style) -> container::Appearance {
+        container::Appearance {
+            background: Some(Background::Color(style.palette().danger)),
+            ..Default::default()
+        }
+    }
+}
+
 fn installed_badge<'a>() -> Element<'a, Message> {
     container(text("Installed").size(16))
-        .style(theme::Container::Custom(Box::new(InstalledBadge {})))
+        .style(theme::Container::Custom(Box::new(InstalledBadge)))
         .padding(2)
         .into()
 }
 
 fn error_badge<'a>(error: &str) -> Element<'a, Message> {
     let content = container(text("Failed").size(16))
-        .style(theme::Container::Custom(Box::new(InstalledBadge {})))
+        .style(theme::Container::Custom(Box::new(FailedBadge)))
         .padding(2);
 
     tooltip(content, error, iced::widget::tooltip::Position::Bottom)
@@ -190,12 +206,12 @@ fn mod_info_view(info: &ModInfo, is_selected: bool) -> Element<Message> {
         ))))
         .width(Length::Fill)
         .style(theme::Button::Custom(match is_selected {
-            true => Box::new(SelectedInfoView {}),
-            false => Box::new(UnselectedInfoView {}),
+            true => Box::new(SelectedInfoView),
+            false => Box::new(UnselectedInfoView),
         }));
 
     if !is_selected {
-        button = button.style(theme::Button::Custom(Box::new(UnselectedInfoView {})));
+        button = button.style(theme::Button::Custom(Box::new(UnselectedInfoView)));
     }
 
     button.into()

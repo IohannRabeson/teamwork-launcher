@@ -1,6 +1,7 @@
 use {
     crate::application::{
         message::{AddViewMessage, ListViewMessage, ModsMessage},
+        notifications::NotificationKind,
         screens::{AddModView, Screens},
         Message, TeamworkLauncher,
     },
@@ -82,6 +83,15 @@ impl TeamworkLauncher {
                     if let Some(install_to_set) = install_to_set {
                         self.mods_registry
                             .set_install(&install_to_set.0, Install::installed_now(install_to_set.1));
+                    }
+                }
+            }
+            ModsMessage::OpenInstallDirectory(mod_name) => {
+                if let Some(mod_info) = self.mods_registry.get(&mod_name) {
+                    if let Install::Installed { package, .. } = &mod_info.install {
+                        if let Err(error) = open::that(&package.path) {
+                            self.push_notification(error, NotificationKind::Error);
+                        }
                     }
                 }
             }

@@ -1,4 +1,3 @@
-use iced::ContentFit;
 use {
     crate::application::{
         filter::{
@@ -7,7 +6,7 @@ use {
         },
         SettingsMessage,
     },
-    iced::Length,
+    iced::{ContentFit, Length},
 };
 
 pub mod add_mod_view;
@@ -25,7 +24,7 @@ pub mod widgets;
 
 const PICK_LIST_WIDTH: Length = Length::Fixed(120.0);
 const DEFAULT_SPACING: f32 = 8.0;
-const THUMBNAIL_CONTENT_FIT: ContentFit = ContentFit::Cover;
+const THUMBNAIL_CONTENT_FIT: ContentFit = ContentFit::ScaleDown;
 
 const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
     PropertyFilterSwitch::With,
@@ -34,7 +33,7 @@ const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
 ];
 
 /// List of criterion exposed by the UI
-pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 7] = [
+pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 8] = [
     SortCriterion::Ip,
     SortCriterion::Name,
     SortCriterion::Country,
@@ -42,6 +41,7 @@ pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 7] = [
     SortCriterion::Players,
     SortCriterion::PlayerSlots,
     SortCriterion::FreePlayerSlots,
+    SortCriterion::Map,
 ];
 
 /// List of criterion exposed by the UI

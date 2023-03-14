@@ -146,6 +146,7 @@ pub enum ModsMessage {
     AddMods(Source, Vec<ModName>),
     Install(ModName),
     Uninstall(ModName),
+    OpenInstallDirectory(ModName),
     InstallationFinished(ModName, Install),
     UninstallationFinished(ModName),
     FoundInstalledMods(Vec<PackageEntry>),
