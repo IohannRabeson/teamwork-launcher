@@ -33,7 +33,7 @@ const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
 ];
 
 /// List of criterion exposed by the UI
-pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 7] = [
+pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 8] = [
     SortCriterion::Ip,
     SortCriterion::Name,
     SortCriterion::Country,
@@ -41,6 +41,7 @@ pub(crate) const AVAILABLE_CRITERION: [SortCriterion; 7] = [
     SortCriterion::Players,
     SortCriterion::PlayerSlots,
     SortCriterion::FreePlayerSlots,
+    SortCriterion::Map,
 ];
 
 /// List of criterion exposed by the UI
