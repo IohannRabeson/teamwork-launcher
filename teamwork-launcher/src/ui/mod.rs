@@ -24,7 +24,7 @@ pub mod widgets;
 
 const PICK_LIST_WIDTH: Length = Length::Fixed(120.0);
 const DEFAULT_SPACING: f32 = 8.0;
-const THUMBNAIL_CONTENT_FIT: ContentFit = ContentFit::Cover;
+const THUMBNAIL_CONTENT_FIT: ContentFit = ContentFit::ScaleDown;
 
 const PROPERTY_FILTER_VALUES: [PropertyFilterSwitch; 3] = [
     PropertyFilterSwitch::With,
