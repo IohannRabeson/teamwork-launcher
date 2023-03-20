@@ -3519,6 +3519,7 @@ checksum = "a12eea80650ae08d8fe6f657d6249d757298bc7a241e00d190ac57cef0e74e02"
 dependencies = [
  "bit-set",
  "byteorder",
+ "bzip2",
  "crc",
  "filetime_creation",
  "js-sys",
@@ -4275,7 +4276,7 @@ checksum = "402bb19d8e03f1d1a7450e2bd613980869438e0666331be3e073089124aa1adc"
 [[package]]
 name = "unrar"
 version = "0.4.4"
-source = "git+https://github.com/IohannRabeson/unrar.rs?branch=macos_fix#80b5def51f91320bd936f9fbeb4acfa7cebd05e0"
+source = "git+https://github.com/IohannRabeson/unrar.rs#583c26ae5985b4c38b5fa393379bf8e99467b74c"
 dependencies = [
  "bitflags",
  "enum_primitive",
@@ -4289,7 +4290,7 @@ dependencies = [
 [[package]]
 name = "unrar_sys"
 version = "0.2.1"
-source = "git+https://github.com/IohannRabeson/unrar.rs?branch=macos_fix#80b5def51f91320bd936f9fbeb4acfa7cebd05e0"
+source = "git+https://github.com/IohannRabeson/unrar.rs#583c26ae5985b4c38b5fa393379bf8e99467b74c"
 dependencies = [
  "cc",
  "libc",
