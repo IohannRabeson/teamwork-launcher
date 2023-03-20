@@ -17,7 +17,7 @@ tokio = { version = "1.26.0", features = ["fs", "macros"] }
 walkdir = "2.3.2"
 
 zip = "0.6.4"
-sevenz-rust = { version = "0.2.8", default-features = false, features = ["zstd"] }
+sevenz-rust = { version = "0.2.9", default-features = false, features = ["zstd"] }
 unrar = { git = "https://github.com/IohannRabeson/unrar.rs", branch = "macos_fix" }
 
 [dev-dependencies]
