@@ -3513,9 +3513,9 @@ dependencies = [
 
 [[package]]
 name = "sevenz-rust"
-version = "0.2.8"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67e6718c2f4298ae1f67fd735619b205f37ce31cb746cc7f68a32010c3ad1f1d"
+checksum = "a12eea80650ae08d8fe6f657d6249d757298bc7a241e00d190ac57cef0e74e02"
 dependencies = [
  "bit-set",
  "byteorder",
