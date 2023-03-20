@@ -14,7 +14,7 @@ serde = { version = "1.0.155", features = ["derive"] }
 tempdir = "0.3.7"
 thiserror = "1.0.40"
 tokio = { version = "1.26.0", features = ["fs", "macros"] }
-walkdir = "2.3.2"
+walkdir = "2.3.3"
 
 zip = "0.6.4"
 sevenz-rust = { version = "0.2.9", default-features = false, features = ["zstd", "bzip2"] }
