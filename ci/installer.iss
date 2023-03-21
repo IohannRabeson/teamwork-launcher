@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Teamwork Launcher"
-#define MyAppVersion "0.0.0"
+; #define MyAppVersion "0.0.0"
 #define MyAppPublisher "Iohann Rabeson"
 #define MyAppURL "https://github.com/IohannRabeson/teamwork-launcher"
 #define MyAppExeName "teamwork-launcher.exe"
