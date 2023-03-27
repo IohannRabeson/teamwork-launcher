@@ -26,7 +26,7 @@ mod ui;
 
 const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
 const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
-const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA_SHORT");
+const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA");
 
 fn main() -> iced::Result {
     let testing_mode = std::env::args().any(|arg| arg == "--testing-mode");

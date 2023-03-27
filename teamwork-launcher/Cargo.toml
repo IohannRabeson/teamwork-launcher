@@ -49,7 +49,7 @@ test-case = "3.0.0"
 
 [build-dependencies]
 anyhow = "1.0"
-vergen = { version = "7", default-features = false, features = ["build", "rustc", "git"] }
+vergen = { version = "8", features = ["build", "git", "git2"] }
 
 [package.metadata.bundle]
 identifier = "com.io.teamwork-launcher"
