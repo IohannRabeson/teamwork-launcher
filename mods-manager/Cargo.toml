@@ -23,4 +23,4 @@ sevenz-rust = { version = "0.2.9", default-features = false, features = ["zstd",
 unrar = { git = "https://github.com/IohannRabeson/unrar.rs" }
 
 [dev-dependencies]
-test-case = "3.0.0"
+test-case = "3.1.0"
