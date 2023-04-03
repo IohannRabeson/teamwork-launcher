@@ -34,7 +34,7 @@ unidecode = "0.3.0"
 sysinfo = "0.28"
 platform-dirs = "0.3.0"
 bytesize = "1.1.0"
-tokio = { version = "1.25.0", features = ["macros", "time"] }
+tokio = { version = "1.27.0", features = ["macros", "time"] }
 log = "0.4"
 fern = { version = "0.6", features = ["chrono"] }
 chrono = "0.4"
