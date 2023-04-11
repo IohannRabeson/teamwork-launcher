@@ -182,7 +182,9 @@ fn extract_file_name(url: &str) -> Option<String> {
 
 async fn download_url(url: &str, directory: impl AsRef<Path>) -> Result<PathBuf, FetchError> {
     let directory = directory.as_ref();
-    let response = reqwest::get(url).await?;
+    let response = backoff::future::retry(backoff::ExponentialBackoff::default(), || async {
+        Ok(reqwest::get(url).await?)
+    }).await?;
     let file_name = get_file_name(url, &response).ok_or(FetchError::InvalidUrl(url.to_string()))?;
     let archive_file_path = directory.join(file_name);
     let content = response.bytes().await?;
