@@ -24,7 +24,7 @@ use {
 
 pub fn text_filter(filter: &Filter) -> Element<Message> {
     row![
-        text_input("Filter", filter.text.text(), |text| {
+        text_input("Filter", filter.text.text()).on_input(|text| {
             Message::Filter(FilterMessage::TextChanged(text))
         }),
         svg_button(icons::CLEAR_ICON.clone(), 20).on_press(Message::Filter(FilterMessage::TextChanged(String::new()))),
@@ -215,7 +215,7 @@ pub fn players_filter(filter: &Filter) -> Element<Message> {
 
 pub fn maps_filter<'l>(filter: &'l Filter, counts: &'l ServersCounts) -> Element<'l, Message> {
     column![
-        text_input("Filter", &filter.maps.text, |text| Message::Filter(
+        text_input("Filter", &filter.maps.text).on_input(|text| Message::Filter(
             FilterMessage::MapNameFilterChanged(text)
         )),
         filter

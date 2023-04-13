@@ -366,7 +366,7 @@ impl iced::Application for TeamworkLauncher {
         let server_stream = fetch_servers(urls).map(Message::from);
 
         Subscription::batch([
-            subscription::run(self.fetch_servers_subscription_id, server_stream),
+            subscription::run_with_id(self.fetch_servers_subscription_id, server_stream),
             geolocation::subscription().map(Message::from),
             ping::subscription().map(Message::from),
             thumbnail::subscription(self.fetch_servers_subscription_id, &self.user_settings.teamwork_api_key())
@@ -806,6 +806,7 @@ impl TeamworkLauncher {
                     Self::obfuscate_api_key(&self.user_settings.teamwork_api_key(), error)
                 );
             }
+            ThumbnailMessage::Wait => {}
         }
     }
 
