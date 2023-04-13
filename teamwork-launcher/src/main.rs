@@ -100,9 +100,9 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             mods,
         });
 
-        settings.window.position = Position::Specific(window_settings.window_x, window_settings.window_y);
-        settings.window.size.0 = window_settings.window_width;
-        settings.window.size.1 = window_settings.window_height;
+        settings.window.position = Position::Specific(std::cmp::max(window_settings.window_x, 0), std::cmp::max(window_settings.window_y, 0));
+        settings.window.size.0 = std::cmp::max(window_settings.window_width, 800);
+        settings.window.size.1 = std::cmp::max(window_settings.window_height, 600);
 
         settings
     } else {
