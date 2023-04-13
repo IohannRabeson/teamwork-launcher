@@ -11,10 +11,10 @@ build = "build.rs"
 [dependencies]
 teamwork = { path = "../teamwork" }
 mods-manager = { path = "../mods-manager" }
-iced = { version = "0.8.0", features = ["tokio", "svg", "image"] }
+iced = { version = "0.9.0", features = ["tokio", "svg", "image"] }
 # For access to image::Data
-iced_native = "0.9.1"
-iced_lazy = "0.5.0"
+iced_native = "0.10.1"
+iced_lazy = "0.6.1"
 # Change to the next version after 0.4.1
 iced_aw = { git = "https://github.com/iced-rs/iced_aw", default-features = false, features = ["floating_element", "number_input", "spinner"] }
 thiserror = "1"

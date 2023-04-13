@@ -59,13 +59,15 @@ enum State {
 }
 
 pub fn subscription() -> Subscription<CountryServiceMessage> {
-    subscription::unfold((), State::Starting, |state| async move {
+    struct Geolocation;
+
+    subscription::unfold(std::any::TypeId::of::<Geolocation>(), State::Starting, |state| async move {
         match state {
             State::Starting => {
                 let (sender, receiver) = unbounded();
 
                 (
-                    Some(CountryServiceMessage::Started(sender)),
+                    CountryServiceMessage::Started(sender),
                     State::Ready(receiver, BTreeMap::new()),
                 )
             }
@@ -77,14 +79,14 @@ pub fn subscription() -> Subscription<CountryServiceMessage> {
                         Ok(country) => {
                             vacant.insert(country.clone());
                             (
-                                Some(CountryServiceMessage::CountryFound(ip, country)),
+                                CountryServiceMessage::CountryFound(ip, country),
                                 State::Ready(receiver, cache),
                             )
                         }
-                        Err(error) => (Some(CountryServiceMessage::Error(error)), State::Ready(receiver, cache)),
+                        Err(error) => (CountryServiceMessage::Error(error), State::Ready(receiver, cache)),
                     },
                     Entry::Occupied(occupied) => (
-                        Some(CountryServiceMessage::CountryFound(ip, occupied.get().clone())),
+                        CountryServiceMessage::CountryFound(ip, occupied.get().clone()),
                         State::Ready(receiver, cache),
                     ),
                 }

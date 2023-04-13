@@ -53,6 +53,7 @@ pub enum ThumbnailMessage {
     Started(UnboundedSender<MapName>),
     Thumbnail(MapName, Option<image::Handle>),
     Error(MapName, Arc<teamwork::Error>),
+    Wait,
 }
 
 #[derive(Debug, Clone)]

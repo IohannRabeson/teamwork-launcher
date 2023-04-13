@@ -22,7 +22,7 @@ pub fn view<'l>(
 ) -> Element<'l, Message> {
     let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
         true => text("API key specified as environment variable").into(),
-        false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key(), |text| {
+        false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key()).on_input(|text| {
             Message::Settings(SettingsMessage::TeamworkApiKeyChanged(text))
         })
         .password()
@@ -38,8 +38,8 @@ pub fn view<'l>(
                 text_input(
                     "Put Steam executable file path here",
                     &settings.steam_executable_path,
-                    |text| { Message::Settings(SettingsMessage::SteamExecutableChanged(text)) }
                 )
+                .on_input(|text| { Message::Settings(SettingsMessage::SteamExecutableChanged(text)) })
             ),
             field(
                 Some("Team"),

@@ -64,13 +64,13 @@ enum State {
 }
 
 pub fn subscription() -> Subscription<PingServiceMessage> {
-    subscription::unfold((), State::Starting, |state| async move {
+    subscription::unfold(std::any::TypeId::of::<PingService>(), State::Starting, |state| async move {
         match state {
             State::Starting => {
                 let (sender, receiver) = unbounded();
 
                 (
-                    Some(PingServiceMessage::Started(sender)),
+                    PingServiceMessage::Started(sender),
                     State::Ready(receiver, PingService::default()),
                 )
             }
@@ -81,10 +81,10 @@ pub fn subscription() -> Subscription<PingServiceMessage> {
 
                 match service.ping(&ip).await {
                     Ok(duration) => (
-                        Some(PingServiceMessage::Answer(ip, duration)),
+                        PingServiceMessage::Answer(ip, duration),
                         State::Ready(receiver, service),
                     ),
-                    Err(error) => (Some(PingServiceMessage::Error(ip, error)), State::Ready(receiver, service)),
+                    Err(error) => (PingServiceMessage::Error(ip, error), State::Ready(receiver, service)),
                 }
             }
         }

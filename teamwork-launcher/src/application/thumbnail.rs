@@ -34,7 +34,56 @@ struct Context {
 pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
     const SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS: u64 = 60;
     const SECONDS_TO_WAIT_ON_ERROR: u64 = 5;
-
+    // let api_key = api_key.to_string();
+    //
+    // subscription::channel(id, 1000, |mut message_sender| async move {
+    //     let mut state = State::Starting;
+    //     let mut context = Context {
+    //         requests_sender: sender.clone(),
+    //         requests_receiver: receiver,
+    //         teamwork_api_key: api_key,
+    //         client: teamwork::Client::default(),
+    //     };
+    //
+    //     loop {
+    //         match state {
+    //             State::Starting => {
+    //                 message_sender.send(ThumbnailMessage::Started(context.requests_sender.clone())).unwrap();
+    //             }
+    //             State::Ready => {
+    //                 use iced::futures::StreamExt;
+    //
+    //                 let map_name = context.requests_receiver.select_next_some().await;
+    //
+    //                 match context
+    //                     .client
+    //                     .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
+    //                     .await
+    //                 {
+    //                     Ok(thumbnail) => (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context)),
+    //                     Err(teamwork::Error::TooManyAttempts) => {
+    //                         context.requests_sender.send(map_name.clone()).await.unwrap();
+    //
+    //                         (
+    //                             Some(ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts))),
+    //                             State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
+    //                         )
+    //                     }
+    //                     Err(error) => {
+    //                         context.requests_sender.send(map_name.clone()).await.unwrap();
+    //
+    //                         (
+    //                             Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
+    //                             State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
+    //                         )
+    //                     }
+    //                 }
+    //
+    //             }
+    //             State::Wait(_, _) => {}
+    //         }
+    //     }
+    // })
     subscription::unfold(
         id,
         State::Starting {
@@ -44,7 +93,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
             match state {
                 State::Wait(duration, context) => {
                     tokio::time::sleep(duration).await;
-                    (None, State::Ready(context))
+                    (ThumbnailMessage::Wait, State::Ready(context))
                 }
                 State::Starting { api_key } => {
                     let (sender, receiver) = unbounded();
@@ -55,7 +104,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                         client: teamwork::Client::default(),
                     };
 
-                    (Some(ThumbnailMessage::Started(sender)), State::Ready(context))
+                    (ThumbnailMessage::Started(sender), State::Ready(context))
                 }
                 State::Ready(mut context) => {
                     use iced::futures::StreamExt;
@@ -67,12 +116,12 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                         .get_map_thumbnail(&context.teamwork_api_key, map_name.as_str(), image::Handle::from_memory)
                         .await
                     {
-                        Ok(thumbnail) => (Some(ThumbnailMessage::Thumbnail(map_name, thumbnail)), State::Ready(context)),
+                        Ok(thumbnail) => (ThumbnailMessage::Thumbnail(map_name, thumbnail), State::Ready(context)),
                         Err(teamwork::Error::TooManyAttempts) => {
                             context.requests_sender.send(map_name.clone()).await.unwrap();
 
                             (
-                                Some(ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts))),
+                                ThumbnailMessage::Error(map_name, Arc::new(teamwork::Error::TooManyAttempts)),
                                 State::Wait(Duration::from_secs(SECONDS_TO_WAIT_IF_TOO_MANY_ATTEMPTS), context),
                             )
                         }
@@ -80,7 +129,7 @@ pub fn subscription(id: u64, api_key: &str) -> Subscription<ThumbnailMessage> {
                             context.requests_sender.send(map_name.clone()).await.unwrap();
 
                             (
-                                Some(ThumbnailMessage::Error(map_name, Arc::new(error))),
+                                ThumbnailMessage::Error(map_name, Arc::new(error)),
                                 State::Wait(Duration::from_secs(SECONDS_TO_WAIT_ON_ERROR), context),
                             )
                         }
