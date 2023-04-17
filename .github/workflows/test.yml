@@ -22,8 +22,8 @@ jobs:
     - name: Build
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.8
-      run: cargo build --locked
+      run: cargo build --locked --features flaky-tests
     - name: Run tests
       env:
         TEST_TEAMWORK_API_KEY: ${{ secrets.TEAMWORK_API_KEY }}
-      run: cargo test --locked --verbose
+      run: cargo test --locked --verbose --features flaky-tests
