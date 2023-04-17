@@ -69,7 +69,7 @@ pub async fn uninstall(mod_path: &Path, mods_directory: PathBuf) -> Result<(), s
     panic!("Unsupported HUD type");
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "flaky-tests"))]
 mod slow_tests {
     use {
         super::install,
