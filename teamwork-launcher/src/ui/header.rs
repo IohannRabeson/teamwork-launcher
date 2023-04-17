@@ -12,7 +12,7 @@ use {
             screens::Screens,
             Message,
         },
-        icons, APPLICATION_VERSION, GIT_SHA_SHORT,
+        icons, application_version, GIT_SHA_SHORT,
     },
     iced::{
         widget::{button, horizontal_space, row, text},
@@ -113,7 +113,7 @@ pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notificat
 fn title_widget<'a>(title: &str) -> Element<'a, Message> {
     row![
         text(title).font(crate::fonts::TF2_BUILD).size(TITLE_FONT_SIZE),
-        text(format!("{}-{}", APPLICATION_VERSION, GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
+        text(format!("{}-{}", application_version(), GIT_SHA_SHORT)).size(VERSION_FONT_SIZE)
     ]
     .into()
 }
