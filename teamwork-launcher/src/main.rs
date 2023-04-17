@@ -25,8 +25,17 @@ mod icons;
 mod ui;
 
 const APPLICATION_NAME: &str = env!("CARGO_PKG_NAME");
-const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
+const CARGO_APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
+const CI_APPLICATION_VERSION: Option<&str> = option_env!("CI_PKG_VERSION");
 const GIT_SHA_SHORT: &str = env!("VERGEN_GIT_SHA");
+
+pub const fn application_version() -> &'static str {
+    if let Some(version) = CI_APPLICATION_VERSION {
+        version
+    } else {
+        CARGO_APPLICATION_VERSION
+    }
+}
 
 fn main() -> iced::Result {
     let testing_mode = std::env::args().any(|arg| arg == "--testing-mode");
@@ -35,7 +44,7 @@ fn main() -> iced::Result {
 
     std::fs::create_dir_all(&configuration_directory).expect("create configuration directory");
     setup_logger(&configuration_directory).expect("setup logger");
-    info!("Teamwork Launcher v{}", APPLICATION_VERSION);
+    info!("Teamwork Launcher v{}", application_version());
     application::TeamworkLauncher::run(settings)
 }
 

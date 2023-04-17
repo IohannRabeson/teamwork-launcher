@@ -36,6 +36,7 @@ jobs:
       - name: Build
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.8
+          CI_PKG_VERSION: "${{  github.ref_name }}"
         run: cargo build --release --locked
 
       - name: Bundle MacOS
