@@ -50,9 +50,7 @@ impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
     fn view(&self, state: &Self::State) -> Element<'_, Self::Event, iced::Renderer> {
         column![
             row![
-                text_input("Type something", state)
-                    .on_input(Event::EditNewTerm)
-                    .on_submit(Event::Add),
+                text_input("", state).on_input(Event::EditNewTerm).on_submit(Event::Add),
                 button("+").on_press(Event::Add)
             ]
             .spacing(ui::DEFAULT_SPACING),

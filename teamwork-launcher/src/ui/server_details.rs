@@ -2,8 +2,13 @@ use {
     super::widgets::{ping, ping_time, region},
     crate::{
         application::{
-            game_mode::GameModes, map::MapName, message::ScreenshotsMessage, palettes, screenshots::Screenshots, IpPort,
-            Message, PromisedValue, Server,
+            blacklist::Blacklist,
+            game_mode::GameModes,
+            map::MapName,
+            message::{BlacklistMessage, ScreenshotsMessage},
+            palettes,
+            screenshots::Screenshots,
+            IpPort, Message, PromisedValue, Server,
         },
         fonts, icons,
         ui::{buttons::svg_button, form::Form, styles::BoxContainerStyle, widgets, THUMBNAIL_CONTENT_FIT},
@@ -14,6 +19,7 @@ use {
         Alignment, Element, Length,
     },
     iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
+    iced_native::widget::button,
 };
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
@@ -137,12 +143,31 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
     }
 }
 
-fn content<'l>(server: &'l Server, game_modes: &'l GameModes, screenshots: &'l Screenshots) -> Element<'l, Message> {
+fn blacklist_button<'l>(server: &'l Server, blacklist: &'l Blacklist) -> Element<'l, Message> {
+    let ip_port = server.ip_port.to_string();
+
+    match blacklist.index_of(&ip_port) {
+        Some(index) => button("Remove from blacklist").on_press(Message::Blacklist(BlacklistMessage::Remove(index))),
+        None => button("Add to blacklist").on_press(Message::Blacklist(BlacklistMessage::Add(ip_port))),
+    }
+    .into()
+}
+
+fn content<'l>(
+    server: &'l Server,
+    game_modes: &'l GameModes,
+    screenshots: &'l Screenshots,
+    blacklist: &'l Blacklist,
+) -> Element<'l, Message> {
     row![
         screenshot_view(screenshots, &server.map),
-        column![text(&server.name).size(28), server_details_form(server, game_modes)]
-            .spacing(4)
-            .width(Length::Fill),
+        column![
+            text(&server.name).size(28),
+            server_details_form(server, game_modes),
+            blacklist_button(server, blacklist),
+        ]
+        .spacing(4)
+        .width(Length::Fill),
     ]
     .spacing(4)
     .padding(4)
@@ -154,10 +179,11 @@ pub fn view<'l>(
     game_modes: &'l GameModes,
     ip_port: &'l IpPort,
     screenshots: &'l Screenshots,
+    blacklist: &'l Blacklist,
 ) -> Element<'l, Message> {
     let server = servers.iter().find(|s| &s.ip_port == ip_port).expect("find server");
-    let content =
-        container(content(server, game_modes, screenshots)).style(theme::Container::Custom(Box::new(BoxContainerStyle)));
+    let content = container(content(server, game_modes, screenshots, blacklist))
+        .style(theme::Container::Custom(Box::new(BoxContainerStyle)));
 
     container(content).width(Length::Fill).height(Length::Fill).padding(16).into()
 }

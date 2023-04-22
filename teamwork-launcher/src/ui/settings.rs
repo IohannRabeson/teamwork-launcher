@@ -88,8 +88,10 @@ pub fn view<'l>(
                 )),
             ),
             field(
-                Some("Server blacklist"),
-                Some("Servers can be blacklisted by name, or by IP.\nYou can enter text, like \"fastpass\" but also IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\"."),
+                Some("Servers blacklist"),
+                Some("Servers can be blacklisted by name, or by IP.\n\
+                You can enter text, like \"fastpath\", if this text is found in the name the server will be discarded.\n\
+                It also possible to specify an IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\"."),
                 Blacklist::new(blacklist),
             )
         ]
