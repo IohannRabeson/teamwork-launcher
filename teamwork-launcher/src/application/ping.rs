@@ -80,10 +80,7 @@ pub fn subscription() -> Subscription<PingServiceMessage> {
                 let ip = receiver.select_next_some().await;
 
                 match service.ping(&ip).await {
-                    Ok(duration) => (
-                        PingServiceMessage::Answer(ip, duration),
-                        State::Ready(receiver, service),
-                    ),
+                    Ok(duration) => (PingServiceMessage::Answer(ip, duration), State::Ready(receiver, service)),
                     Err(error) => (PingServiceMessage::Error(ip, error), State::Ready(receiver, service)),
                 }
             }

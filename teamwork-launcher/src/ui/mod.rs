@@ -10,6 +10,7 @@ use {
 };
 
 pub mod add_mod_view;
+pub mod blacklist;
 pub mod buttons;
 pub mod color;
 pub mod filter;

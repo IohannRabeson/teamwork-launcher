@@ -161,6 +161,12 @@ impl ModsMessage {
 }
 
 #[derive(Debug, Clone)]
+pub enum BlacklistMessage {
+    Add(String),
+    Remove(usize),
+}
+
+#[derive(Debug, Clone)]
 pub enum Message {
     Servers(FetchServersMessage),
     Country(CountryServiceMessage),
@@ -173,6 +179,7 @@ pub enum Message {
     Keyboard(KeyboardMessage),
     Notification(NotificationMessage),
     Screenshots(ScreenshotsMessage),
+    Blacklist(BlacklistMessage),
     Mods(ModsMessage),
     RefreshServers,
     ShowSettings,
@@ -183,6 +190,7 @@ pub enum Message {
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
     ServerListScroll(RelativeOffset),
+
     Back,
 }
 

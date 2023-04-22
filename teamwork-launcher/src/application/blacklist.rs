@@ -1,6 +1,7 @@
-use std::net::Ipv4Addr;
-use crate::application::{IpPort, Server};
-use serde::{Serialize, Deserialize};
+use {
+    crate::application::Server,
+    serde::{Deserialize, Serialize},
+};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Blacklist {
@@ -25,7 +26,7 @@ impl Blacklist {
 
         for term in &self.terms {
             if ip_port.contains(term) || server.name.contains(term) {
-                return false
+                return false;
             }
         }
 
@@ -33,6 +34,6 @@ impl Blacklist {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &str> {
-        self.terms.iter().map(|term|term.as_str())
+        self.terms.iter().map(|term| term.as_str())
     }
 }

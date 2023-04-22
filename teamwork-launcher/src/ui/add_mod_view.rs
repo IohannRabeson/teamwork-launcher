@@ -41,12 +41,10 @@ pub fn view(context: &AddModView) -> Element<Message> {
             let input = row![
                 horizontal_space(Length::Fill),
                 text_input("Enter a download url", &context.download_url)
-                .on_input(|text| Message::Mods(
-                    ModsMessage::AddView(AddViewMessage::DownloadUrlChanged(text))
-                ))
-                .id(context.download_url_text_input.clone())
-                .width(Length::FillPortion(3))
-                .on_submit(scan_package_message),
+                    .on_input(|text| Message::Mods(ModsMessage::AddView(AddViewMessage::DownloadUrlChanged(text))))
+                    .id(context.download_url_text_input.clone())
+                    .width(Length::FillPortion(3))
+                    .on_submit(scan_package_message),
                 horizontal_space(Length::Fill)
             ];
 
