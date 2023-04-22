@@ -17,6 +17,7 @@ use {
     mods_manager::Registry,
     std::{fs::OpenOptions, path::Path},
 };
+use crate::application::blacklist::Blacklist;
 
 mod application;
 mod common_settings;
@@ -50,6 +51,7 @@ fn main() -> iced::Result {
 
 pub struct ApplicationFlags {
     pub bookmarks: Bookmarks,
+    pub blacklist: Blacklist,
     pub user_settings: UserSettings,
     pub filter: Filter,
     pub servers_sources: Vec<ServersSource>,
@@ -62,6 +64,7 @@ impl Default for ApplicationFlags {
     fn default() -> Self {
         Self {
             bookmarks: Bookmarks::default(),
+            blacklist: Blacklist::default(),
             user_settings: UserSettings::default(),
             filter: Filter::default(),
             servers_sources: Vec::new(),
@@ -96,6 +99,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
                 ServersSource::new("Medieval Mode", "https://teamwork.tf/api/v1/quickplay/medieval-mode/servers"),
             ]
         });
+    let blacklist = read_file(configuration_directory.join("blacklist.json")).unwrap_or_default();
     let mods = read_bin_file(configuration_directory.join("mods.registry")).unwrap_or_default();
 
     if let Some(window_settings) = user_settings.window.clone() {
@@ -107,6 +111,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             paths,
             testing_mode_enabled,
             mods,
+            blacklist,
         });
 
         settings.window.position = Position::Specific(std::cmp::max(window_settings.window_x, 0), std::cmp::max(window_settings.window_y, 0));
@@ -125,6 +130,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             paths,
             testing_mode_enabled,
             mods,
+            blacklist,
         })
     }
 }
