@@ -2,7 +2,7 @@ use {
     crate::{
         application::{servers_source::ServersSource, user_settings::LauncherTheme, Message, UserSettings},
         icons,
-        ui::{buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
+        ui::{blacklist::Blacklist, buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
     },
     iced::{
         theme,
@@ -18,15 +18,15 @@ const THEMES: [LauncherTheme; 2] = [LauncherTheme::Blue, LauncherTheme::Red];
 pub fn view<'l>(
     settings: &'l UserSettings,
     sources: &'l [ServersSource],
+    blacklist: &'l crate::Blacklist,
     configuration_directory_path: PathBuf,
 ) -> Element<'l, Message> {
     let teamwork_api_key_field: Element<'l, Message> = match settings.is_teamwork_api_key_from_env() {
         true => text("API key specified as environment variable").into(),
-        false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key()).on_input(|text| {
-            Message::Settings(SettingsMessage::TeamworkApiKeyChanged(text))
-        })
-        .password()
-        .into(),
+        false => text_input("Put your Teamwork.tf API key here", &settings.teamwork_api_key())
+            .on_input(|text| Message::Settings(SettingsMessage::TeamworkApiKeyChanged(text)))
+            .password()
+            .into(),
     };
 
     scrollable(
@@ -35,11 +35,8 @@ pub fn view<'l>(
             field(
                 Some("Steam executable file path"),
                 None,
-                text_input(
-                    "Put Steam executable file path here",
-                    &settings.steam_executable_path,
-                )
-                .on_input(|text| { Message::Settings(SettingsMessage::SteamExecutableChanged(text)) })
+                text_input("Put Steam executable file path here", &settings.steam_executable_path,)
+                    .on_input(|text| { Message::Settings(SettingsMessage::SteamExecutableChanged(text)) })
             ),
             field(
                 Some("Team"),
@@ -90,6 +87,11 @@ pub fn view<'l>(
                     SettingsMessage::MaxCacheSizeChanged(value)
                 )),
             ),
+            field(
+                Some("Server blacklist"),
+                Some("You can enter word, like \"fastpass\" but also IP address like \"127.0.0.1\"."),
+                Blacklist::new(blacklist),
+            )
         ]
         .padding(8)
         .spacing(8),

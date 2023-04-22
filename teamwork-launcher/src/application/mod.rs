@@ -1,3 +1,4 @@
+pub mod blacklist;
 mod bookmarks;
 pub mod country;
 pub mod fetch_servers;
@@ -23,7 +24,6 @@ pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
-pub mod blacklist;
 
 use {
     crate::ui::{self, main::ViewContext},
@@ -65,6 +65,7 @@ pub use {
 use {
     crate::{
         application::{
+            blacklist::Blacklist,
             filter::{
                 filter_servers::Filter,
                 sort_servers::{sort_servers, SortDirection},
@@ -72,7 +73,7 @@ use {
             game_mode::{GameModeId, GameModes},
             launcher::ExecutableLauncher,
             map::MapName,
-            message::{KeyboardMessage, NotificationMessage, ScreenshotsMessage},
+            message::{BlacklistMessage, KeyboardMessage, NotificationMessage, ScreenshotsMessage},
             notifications::{Notification, NotificationKind, Notifications},
             paths::PathsProvider,
             process_detection::ProcessDetection,
@@ -91,7 +92,6 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
-use crate::application::blacklist::Blacklist;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -264,6 +264,9 @@ impl iced::Application for TeamworkLauncher {
             Message::Screenshots(message) => {
                 self.process_screenshots_message(message);
             }
+            Message::Blacklist(message) => {
+                self.process_blacklist_message(message);
+            }
             Message::Bookmarked(ip_port, bookmarked) => {
                 self.bookmark(ip_port, bookmarked);
             }
@@ -344,6 +347,7 @@ impl iced::Application for TeamworkLauncher {
                     ui::settings::view(
                         &self.user_settings,
                         &self.servers_sources,
+                        &self.blacklist,
                         self.paths.get_configuration_directory(),
                     )
                 }
@@ -929,6 +933,17 @@ impl TeamworkLauncher {
         }
     }
 
+    fn process_blacklist_message(&mut self, message: BlacklistMessage) {
+        match message {
+            BlacklistMessage::Add(term) => {
+                self.blacklist.insert(term);
+            }
+            BlacklistMessage::Remove(index) => {
+                self.blacklist.remove(index);
+            }
+        }
+    }
+
     /// Get the list of URLS to get the servers information.
     ///
     /// The order is specified by the bookmarks. The rule is
@@ -1093,6 +1108,7 @@ impl Drop for TeamworkLauncher {
         let filters_file_path = configuration_directory.join("filters.json");
         let sources_file_path = configuration_directory.join("sources.json");
         let mods_registry_file_path = configuration_directory.join("mods.registry");
+        let blacklist_path = configuration_directory.join("blacklist.json");
 
         write_file(&self.bookmarks, &bookmarks_file_path).unwrap_or_else(|error| {
             error!(
@@ -1107,6 +1123,8 @@ impl Drop for TeamworkLauncher {
             .unwrap_or_else(|error| error!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
         write_file(&self.servers_sources, &sources_file_path)
             .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
+        write_file(&self.blacklist, &blacklist_path)
+            .unwrap_or_else(|error| error!("Failed to write blacklist file '{}': {}", blacklist_path.display(), error));
 
         if let Err(error) = self
             .thumbnails_cache

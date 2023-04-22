@@ -12,7 +12,7 @@ use {
             screens::Screens,
             Message,
         },
-        icons, application_version, GIT_SHA_SHORT,
+        application_version, icons, GIT_SHA_SHORT,
     },
     iced::{
         widget::{button, horizontal_space, row, text},

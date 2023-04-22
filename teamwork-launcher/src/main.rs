@@ -4,6 +4,7 @@
 use {
     crate::{
         application::{
+            blacklist::Blacklist,
             filter::filter_servers::Filter,
             paths::{DefaultPathsProvider, PathsProvider, TestPathsProvider},
             servers_source::ServersSource,
@@ -17,7 +18,6 @@ use {
     mods_manager::Registry,
     std::{fs::OpenOptions, path::Path},
 };
-use crate::application::blacklist::Blacklist;
 
 mod application;
 mod common_settings;
@@ -114,7 +114,10 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             blacklist,
         });
 
-        settings.window.position = Position::Specific(std::cmp::max(window_settings.window_x, 0), std::cmp::max(window_settings.window_y, 0));
+        settings.window.position = Position::Specific(
+            std::cmp::max(window_settings.window_x, 0),
+            std::cmp::max(window_settings.window_y, 0),
+        );
         settings.window.size.0 = std::cmp::max(window_settings.window_width, 800);
         settings.window.size.1 = std::cmp::max(window_settings.window_height, 600);
 
