@@ -23,6 +23,7 @@ pub mod servers_counts;
 pub mod servers_source;
 mod thumbnail;
 pub mod user_settings;
+pub mod blacklist;
 
 use {
     crate::ui::{self, main::ViewContext},
@@ -90,6 +91,7 @@ use {
     server::Property,
     servers_counts::ServersCounts,
 };
+use crate::application::blacklist::Blacklist;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SettingsError {
@@ -114,6 +116,7 @@ pub struct TeamworkLauncher {
     user_settings: UserSettings,
     filter: Filter,
     servers_sources: Vec<ServersSource>,
+    blacklist: Blacklist,
     launcher: ExecutableLauncher,
     process_detection: ProcessDetection,
     bookmarks: Bookmarks,
@@ -182,6 +185,7 @@ impl iced::Application for TeamworkLauncher {
                 user_settings: flags.user_settings,
                 filter: flags.filter,
                 servers_sources: flags.servers_sources,
+                blacklist: flags.blacklist,
                 bookmarks: flags.bookmarks,
                 launcher: ExecutableLauncher::new(false),
                 process_detection: ProcessDetection::default(),
@@ -381,11 +385,12 @@ impl iced::Application for TeamworkLauncher {
 }
 
 impl TeamworkLauncher {
-    fn new_servers(&mut self, new_servers: Vec<Server>) {
+    fn new_servers(&mut self, mut new_servers: Vec<Server>) {
+        new_servers.retain(|server| self.blacklist.accept(server));
+
         let countries = new_servers.iter().filter_map(|server| server.country.get()).unique().cloned();
 
         self.filter.country.dictionary.extend(countries);
-
         self.servers.extend(new_servers.into_iter());
         self.sort_server();
     }
