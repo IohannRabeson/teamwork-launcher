@@ -89,7 +89,7 @@ pub fn view<'l>(
             ),
             field(
                 Some("Server blacklist"),
-                Some("You can enter word, like \"fastpass\" but also IP address like \"127.0.0.1\"."),
+                Some("Servers can be blacklisted by name, or by IP.\nYou can enter text, like \"fastpass\" but also IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\"."),
                 Blacklist::new(blacklist),
             )
         ]
