@@ -341,7 +341,13 @@ impl iced::Application for TeamworkLauncher {
                     })
                 }
                 Screens::Server(view) => {
-                    ui::server_details::view(&self.servers, &self.game_modes, &view.ip_port, &self.screenshots)
+                    ui::server_details::view(
+                        &self.servers,
+                        &self.game_modes,
+                        &view.ip_port,
+                        &self.screenshots,
+                        &self.blacklist,
+                    )
                 }
                 Screens::Settings => {
                     ui::settings::view(

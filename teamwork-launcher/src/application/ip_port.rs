@@ -39,3 +39,9 @@ impl From<(Ipv4Addr, u16)> for IpPort {
         Self::new(input.0, input.1)
     }
 }
+
+impl ToString for IpPort {
+    fn to_string(&self) -> String {
+        format!("{}:{}", self.ip(), self.port())
+    }
+}

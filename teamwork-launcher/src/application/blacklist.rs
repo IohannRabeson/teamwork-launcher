@@ -22,7 +22,7 @@ impl Blacklist {
     }
 
     pub fn accept(&self, server: &Server) -> bool {
-        let ip_port = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
+        let ip_port = server.ip_port.to_string();
 
         for term in &self.terms {
             if ip_port.contains(term) || server.name.contains(term) {
@@ -31,6 +31,10 @@ impl Blacklist {
         }
 
         true
+    }
+
+    pub fn index_of(&self, text: &String) -> Option<usize> {
+        self.terms.iter().position(|term| term == text)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &str> {
