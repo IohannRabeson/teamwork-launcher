@@ -1,12 +1,14 @@
 use {
     crate::{
-        application::{servers_source::ServersSource, user_settings::LauncherTheme, Message, UserSettings},
+        application::{
+            servers_source::ServersSource, user_settings::LauncherTheme, BlacklistMessage, Message, UserSettings,
+        },
         icons,
-        ui::{blacklist::Blacklist, buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
+        ui::{self, blacklist::Blacklist, buttons::svg_button, styles::BoxContainerStyle, SettingsMessage},
     },
     iced::{
         theme,
-        widget::{checkbox, column, container, pick_list, row, scrollable, text, text_input},
+        widget::{button, checkbox, column, container, pick_list, row, scrollable, text, text_input},
         Element, Length,
     },
     iced_aw::NumberInput,
@@ -89,11 +91,22 @@ pub fn view<'l>(
             ),
             field(
                 Some("Servers blacklist"),
-                Some("Servers can be blacklisted by name, or by IP.\n\
+                Some(
+                    "Servers can be blacklisted by name, or by IP.\n\
                 You can enter text, like \"fastpath\", if this text is found in the name the server will be discarded.\n\
-                It also possible to specify an IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\"."),
-                Blacklist::new(blacklist),
-            )
+                It also possible to specify an IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\".\n\
+                The import function expects a text file containing one address per line."
+                ),
+                column![
+                    row![
+                        button("Import file").on_press(Message::Blacklist(BlacklistMessage::Import)),
+                        button("Clear blacklist").on_press(Message::Blacklist(BlacklistMessage::RemoveAll)),
+                    ]
+                    .spacing(ui::DEFAULT_SPACING),
+                    Blacklist::new(blacklist)
+                ]
+                .spacing(ui::DEFAULT_SPACING),
+            ),
         ]
         .padding(8)
         .spacing(8),
