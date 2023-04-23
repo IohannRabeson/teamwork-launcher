@@ -42,7 +42,7 @@ pub enum Event {
     Remove(usize),
 }
 
-impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
+impl<'a> Component<Message, iced::Renderer> for Blacklist<'a> {
     type State = String;
     type Event = Event;
 
@@ -67,7 +67,7 @@ impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
         }
     }
 
-    fn view(&self, state: &Self::State) -> Element<'_, Self::Event, iced::Renderer> {
+    fn view(&self, state: &Self::State) -> Element<'a, Self::Event, iced::Renderer> {
         column![
             row![
                 text_input("Enter a word or an IP address", state)
