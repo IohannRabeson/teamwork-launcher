@@ -4,7 +4,7 @@ use {
         icons,
         ui::{self, buttons::svg_button},
     },
-    iced::widget::{button, column, row, text, text_input},
+    iced::widget::{column, row, text, text_input},
     iced_lazy::Component,
     iced_native::Element,
 };
@@ -73,7 +73,7 @@ impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
                 text_input("Enter a word or an IP address", state)
                     .on_input(Event::EditNewTerm)
                     .on_submit(Event::Add),
-                button("+").on_press(Event::Add)
+                svg_button(icons::PLUS.clone(), 20).on_press(Event::Add)
             ]
             .spacing(ui::DEFAULT_SPACING),
             self.blacklist_view()
