@@ -53,16 +53,14 @@ impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
                 None
             }
             Event::Add => {
-                let new_blacklist_entry = state.trim().to_string();
+                let text = state.trim().to_string();
 
                 state.clear();
 
-                if new_blacklist_entry.is_empty() {
+                if text.is_empty() {
                     None
                 } else {
-                    Some(Message::Blacklist(BlacklistMessage::Add(BlacklistEntry::parse(
-                        &new_blacklist_entry,
-                    ))))
+                    Some(Message::Blacklist(BlacklistMessage::Add(BlacklistEntry::parse(&text))))
                 }
             }
             Event::Remove(index) => Some(Message::Blacklist(BlacklistMessage::Remove(index))),

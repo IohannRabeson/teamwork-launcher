@@ -195,7 +195,6 @@ pub enum Message {
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
     ServerListScroll(RelativeOffset),
-
     Back,
 }
 
