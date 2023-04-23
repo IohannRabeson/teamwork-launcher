@@ -1,6 +1,6 @@
 use {
     crate::{
-        application::{message::BlacklistMessage, Message},
+        application::{blacklist::BlacklistEntry, message::BlacklistMessage, Message},
         icons,
         ui::{self, buttons::svg_button},
     },
@@ -60,7 +60,9 @@ impl<'l> Component<Message, iced::Renderer> for Blacklist<'l> {
                 if new_blacklist_entry.is_empty() {
                     None
                 } else {
-                    Some(Message::Blacklist(BlacklistMessage::Add(new_blacklist_entry)))
+                    Some(Message::Blacklist(BlacklistMessage::Add(BlacklistEntry::parse(
+                        &new_blacklist_entry,
+                    ))))
                 }
             }
             Event::Remove(index) => Some(Message::Blacklist(BlacklistMessage::Remove(index))),
