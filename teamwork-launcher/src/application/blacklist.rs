@@ -1,36 +1,155 @@
 use {
-    crate::application::Server,
+    crate::application::{IpPort, Server},
+    nom::Finish,
     rfd::AsyncFileDialog,
     serde::{Deserialize, Serialize},
-    std::path::PathBuf,
+    std::{
+        fmt::{Display, Formatter},
+        net::Ipv4Addr,
+        path::PathBuf,
+    },
     tokio::io::{AsyncBufReadExt, BufReader},
 };
 
+#[derive(Eq, PartialEq, Debug, Serialize, Deserialize, Clone)]
+pub enum BlacklistEntry {
+    Text(String),
+    Ip(Ipv4Addr),
+    IpPort(IpPort),
+}
+
+impl BlacklistEntry {
+    pub fn parse(input: &str) -> BlacklistEntry {
+        // It's safe to unwrap as the parsing should never fail (in the worst case it's
+        // a BlacklistEntry::Text.
+        parsing::parse_entry(input).finish().ok().map(|(_, output)| output).unwrap()
+    }
+
+    pub fn accept(&self, server: &Server) -> bool {
+        match self {
+            BlacklistEntry::Text(text) => !server.name.contains(text),
+            BlacklistEntry::Ip(ip) => server.ip_port.ip() != ip,
+            BlacklistEntry::IpPort(ip_port) => &server.ip_port != ip_port,
+        }
+    }
+}
+
+impl Display for BlacklistEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BlacklistEntry::Text(text) => {
+                write!(f, "{}", text)
+            }
+            BlacklistEntry::Ip(ip) => {
+                write!(f, "{}", ip)
+            }
+            BlacklistEntry::IpPort(ip_port) => {
+                write!(f, "{}", ip_port)
+            }
+        }
+    }
+}
+
+mod parsing {
+    use {
+        crate::application::{blacklist::BlacklistEntry, IpPort},
+        nom::{
+            branch::alt,
+            bytes::complete::tag,
+            character::complete::digit1,
+            combinator::{map, map_res},
+            sequence::tuple,
+            IResult,
+        },
+        std::net::Ipv4Addr,
+    };
+
+    fn parse_u8(input: &str) -> IResult<&str, u8> {
+        let mut parser = map_res(digit1, str::parse);
+
+        parser(input)
+    }
+
+    fn parse_u16(input: &str) -> IResult<&str, u16> {
+        let mut parser = map_res(digit1, str::parse);
+
+        parser(input)
+    }
+
+    fn parse_ip_impl(input: &str) -> IResult<&str, Ipv4Addr> {
+        let mut parser = map(
+            tuple((parse_u8, tag("."), parse_u8, tag("."), parse_u8, tag("."), parse_u8)),
+            |(a, _, b, _, c, _, d)| Ipv4Addr::new(a, b, c, d),
+        );
+
+        parser(input)
+    }
+
+    fn parse_ip(input: &str) -> IResult<&str, BlacklistEntry> {
+        let mut parser = map(parse_ip_impl, |ip| BlacklistEntry::Ip(ip));
+
+        parser(input)
+    }
+
+    fn parse_ip_port(input: &str) -> IResult<&str, BlacklistEntry> {
+        let mut parser = map(tuple((parse_ip_impl, tag(":"), parse_u16)), |(ip, _sep, port)| {
+            BlacklistEntry::IpPort(IpPort::new(ip, port))
+        });
+
+        parser(input)
+    }
+
+    fn parse_text(input: &str) -> IResult<&str, BlacklistEntry> {
+        Ok(("", BlacklistEntry::Text(input.to_string())))
+    }
+
+    pub fn parse_entry(input: &str) -> IResult<&str, BlacklistEntry> {
+        let mut parser = alt((parse_ip_port, parse_ip, parse_text));
+
+        parser(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        crate::application::{blacklist::BlacklistEntry, IpPort},
+        std::net::Ipv4Addr,
+        test_case::test_case,
+    };
+
+    #[test_case("hello", BlacklistEntry::Text("hello".to_string()))]
+    #[test_case("123.45.67.89", BlacklistEntry::Ip(Ipv4Addr::new(123, 45, 67, 89)))]
+    #[test_case(
+        "123.45.67.89:321",
+        BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(123, 45, 67, 89), 321))
+    )]
+    fn test_entry_parse(input: &str, expected: BlacklistEntry) {
+        assert_eq!(BlacklistEntry::parse(input), expected)
+    }
+}
+
 #[derive(Serialize, Deserialize, Default)]
 pub struct Blacklist {
-    terms: Vec<String>,
+    entries: Vec<BlacklistEntry>,
 }
 
 impl Blacklist {
-    pub fn insert(&mut self, term: impl ToString) {
-        let term = term.to_string();
-
-        if !self.terms.contains(&term) {
-            self.terms.push(term);
+    pub fn push(&mut self, entry: BlacklistEntry) {
+        if !self.entries.contains(&entry) {
+            self.entries.push(entry);
         }
     }
 
     pub fn remove(&mut self, index: usize) {
-        self.terms.remove(index);
+        self.entries.remove(index);
     }
     pub fn clear(&mut self) {
-        self.terms.clear();
+        self.entries.clear();
     }
     pub fn accept(&self, server: &Server) -> bool {
-        let ip_port = server.ip_port.to_string();
-
-        for term in &self.terms {
-            if ip_port.contains(term) || server.name.contains(term) {
+        for entry in &self.entries {
+            if !entry.accept(server) {
                 return false;
             }
         }
@@ -38,16 +157,16 @@ impl Blacklist {
         true
     }
 
-    pub fn index_of(&self, text: &String) -> Option<usize> {
-        self.terms.iter().position(|term| term == text)
+    pub fn index_of(&self, entry: &BlacklistEntry) -> Option<usize> {
+        self.entries.iter().position(|e| e == entry)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &str> {
-        self.terms.iter().map(|term| term.as_str())
+    pub fn iter(&self) -> impl Iterator<Item = &BlacklistEntry> {
+        self.entries.iter()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.terms.is_empty()
+        self.entries.is_empty()
     }
 }
 
@@ -57,7 +176,7 @@ pub enum ImportBlacklistError {
     Io(PathBuf, String),
 }
 
-pub async fn import_blacklist() -> Result<Vec<String>, ImportBlacklistError> {
+pub async fn import_blacklist() -> Result<Vec<BlacklistEntry>, ImportBlacklistError> {
     let file_handle = AsyncFileDialog::new().set_directory("/").pick_file().await;
     let mut terms = Vec::new();
 
@@ -73,7 +192,7 @@ pub async fn import_blacklist() -> Result<Vec<String>, ImportBlacklistError> {
             .map_err(|error| ImportBlacklistError::Io(file_handle.path().to_path_buf(), error.to_string()))?
         {
             if !line.trim().is_empty() {
-                terms.push(line);
+                terms.push(BlacklistEntry::parse(&line));
             }
         }
     }

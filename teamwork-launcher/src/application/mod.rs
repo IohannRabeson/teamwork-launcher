@@ -941,8 +941,8 @@ impl TeamworkLauncher {
 
     fn process_blacklist_message(&mut self, message: BlacklistMessage) -> Command<Message> {
         match message {
-            BlacklistMessage::Add(term) => {
-                self.blacklist.insert(term);
+            BlacklistMessage::Add(entry) => {
+                self.blacklist.push(entry);
             }
             BlacklistMessage::Remove(index) => {
                 self.blacklist.remove(index);
@@ -955,7 +955,7 @@ impl TeamworkLauncher {
             }
             BlacklistMessage::Extend(terms) => {
                 for term in terms {
-                    self.blacklist.insert(term);
+                    self.blacklist.push(term);
                 }
             }
             BlacklistMessage::ImportFailed(error) => {

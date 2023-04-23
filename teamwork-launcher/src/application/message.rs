@@ -1,6 +1,6 @@
 use {
     crate::application::{
-        blacklist::ImportBlacklistError,
+        blacklist::{BlacklistEntry, ImportBlacklistError},
         filter::{
             properties_filter::PropertyFilterSwitch,
             sort_servers::{SortCriterion, SortDirection},
@@ -163,8 +163,8 @@ impl ModsMessage {
 
 #[derive(Debug, Clone)]
 pub enum BlacklistMessage {
-    Add(String),
-    Extend(Vec<String>),
+    Add(BlacklistEntry),
+    Extend(Vec<BlacklistEntry>),
     Remove(usize),
     RemoveAll,
     Import,

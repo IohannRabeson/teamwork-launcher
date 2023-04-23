@@ -1,6 +1,9 @@
 use {
     serde::{Deserialize, Serialize},
-    std::net::Ipv4Addr,
+    std::{
+        fmt::{Display, Formatter},
+        net::Ipv4Addr,
+    },
 };
 
 /// The unique key identifying a server.
@@ -40,8 +43,8 @@ impl From<(Ipv4Addr, u16)> for IpPort {
     }
 }
 
-impl ToString for IpPort {
-    fn to_string(&self) -> String {
-        format!("{}:{}", self.ip(), self.port())
+impl Display for IpPort {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.ip(), self.port())
     }
 }

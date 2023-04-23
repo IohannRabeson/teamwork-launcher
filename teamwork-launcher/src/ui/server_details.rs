@@ -2,7 +2,7 @@ use {
     super::widgets::{ping, ping_time, region},
     crate::{
         application::{
-            blacklist::Blacklist,
+            blacklist::{Blacklist, BlacklistEntry},
             game_mode::GameModes,
             map::MapName,
             message::{BlacklistMessage, ScreenshotsMessage},
@@ -144,7 +144,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
 }
 
 fn blacklist_button<'l>(server: &'l Server, blacklist: &'l Blacklist) -> Element<'l, Message> {
-    let ip_port = server.ip_port.to_string();
+    let ip_port = BlacklistEntry::IpPort(server.ip_port.clone());
 
     match blacklist.index_of(&ip_port) {
         Some(index) => button("Remove from blacklist").on_press(Message::Blacklist(BlacklistMessage::Remove(index))),
