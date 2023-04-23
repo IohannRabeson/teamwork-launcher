@@ -56,7 +56,7 @@ pub use {
     fetch_servers::{fetch_servers, FetchServersEvent},
     ip_port::IpPort,
     message::{
-        CountryServiceMessage, FetchServersMessage, FilterMessage, GameModesMessage, Message, PaneMessage,
+        BlacklistMessage, CountryServiceMessage, FetchServersMessage, FilterMessage, GameModesMessage, Message, PaneMessage,
         PingServiceMessage, SettingsMessage, ThumbnailMessage,
     },
     promised_value::PromisedValue,
@@ -65,7 +65,7 @@ pub use {
 use {
     crate::{
         application::{
-            blacklist::Blacklist,
+            blacklist::{import_blacklist, Blacklist},
             filter::{
                 filter_servers::Filter,
                 sort_servers::{sort_servers, SortDirection},
@@ -73,7 +73,7 @@ use {
             game_mode::{GameModeId, GameModes},
             launcher::ExecutableLauncher,
             map::MapName,
-            message::{BlacklistMessage, KeyboardMessage, NotificationMessage, ScreenshotsMessage},
+            message::{KeyboardMessage, NotificationMessage, ScreenshotsMessage},
             notifications::{Notification, NotificationKind, Notifications},
             paths::PathsProvider,
             process_detection::ProcessDetection,
@@ -265,7 +265,7 @@ impl iced::Application for TeamworkLauncher {
                 self.process_screenshots_message(message);
             }
             Message::Blacklist(message) => {
-                self.process_blacklist_message(message);
+                return self.process_blacklist_message(message);
             }
             Message::Bookmarked(ip_port, bookmarked) => {
                 self.bookmark(ip_port, bookmarked);
@@ -939,7 +939,7 @@ impl TeamworkLauncher {
         }
     }
 
-    fn process_blacklist_message(&mut self, message: BlacklistMessage) {
+    fn process_blacklist_message(&mut self, message: BlacklistMessage) -> Command<Message> {
         match message {
             BlacklistMessage::Add(term) => {
                 self.blacklist.insert(term);
@@ -947,7 +947,26 @@ impl TeamworkLauncher {
             BlacklistMessage::Remove(index) => {
                 self.blacklist.remove(index);
             }
+            BlacklistMessage::Import => {
+                return Command::perform(import_blacklist(), |result| match result {
+                    Ok(terms) => Message::Blacklist(BlacklistMessage::Extend(terms)),
+                    Err(error) => Message::Blacklist(BlacklistMessage::ImportFailed(error)),
+                })
+            }
+            BlacklistMessage::Extend(terms) => {
+                for term in terms {
+                    self.blacklist.insert(term);
+                }
+            }
+            BlacklistMessage::ImportFailed(error) => {
+                self.push_notification(error, NotificationKind::Error);
+            }
+            BlacklistMessage::RemoveAll => {
+                self.blacklist.clear();
+            }
         }
+
+        Command::none()
     }
 
     /// Get the list of URLS to get the servers information.
