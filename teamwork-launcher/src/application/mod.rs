@@ -1133,7 +1133,7 @@ impl Drop for TeamworkLauncher {
         let filters_file_path = configuration_directory.join("filters.json");
         let sources_file_path = configuration_directory.join("sources.json");
         let mods_registry_file_path = configuration_directory.join("mods.registry");
-        let blacklist_path = configuration_directory.join("blacklist.json");
+        let blacklist_file_path = configuration_directory.join("blacklist.json");
 
         write_file(&self.bookmarks, &bookmarks_file_path).unwrap_or_else(|error| {
             error!(
@@ -1148,8 +1148,13 @@ impl Drop for TeamworkLauncher {
             .unwrap_or_else(|error| error!("Failed to write filters file '{}': {}", filters_file_path.display(), error));
         write_file(&self.servers_sources, &sources_file_path)
             .unwrap_or_else(|error| error!("Failed to write sources file '{}': {}", sources_file_path.display(), error));
-        write_file(&self.blacklist, &blacklist_path)
-            .unwrap_or_else(|error| error!("Failed to write blacklist file '{}': {}", blacklist_path.display(), error));
+        write_file(&self.blacklist, &blacklist_file_path).unwrap_or_else(|error| {
+            error!(
+                "Failed to write blacklist file '{}': {}",
+                blacklist_file_path.display(),
+                error
+            )
+        });
 
         if let Err(error) = self
             .thumbnails_cache
