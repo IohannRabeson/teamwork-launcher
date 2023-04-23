@@ -64,7 +64,7 @@ pub fn view<'l>(
                         Message::Settings(SettingsMessage::QuitWhenLaunchChecked(checked))
                     }),
                     checkbox(
-                        "Quit when the connection string is copied to the clipboard",
+                        "Quit on connection string copied to clipboard",
                         settings.quit_on_copy,
                         |checked| Message::Settings(SettingsMessage::QuitWhenCopyChecked(checked))
                     ),
@@ -93,8 +93,8 @@ pub fn view<'l>(
                 Some("Servers blacklist"),
                 Some(
                     "Servers can be blacklisted by name, or by IP.\n\
-                You can enter text, like \"fastpath\", if this text is found in the name the server will be discarded.\n\
-                It also possible to specify an IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\".\n\
+                You can enter a word, like \"fastpath\", that will be searched for in the server name.\n\
+                It's also possible to specify an IP address like \"127.0.0.1\" or with the port \"127.0.0.1:1234\".\n\
                 The import function expects a text file containing one address per line."
                 ),
                 column![
