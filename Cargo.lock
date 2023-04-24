@@ -4062,8 +4062,8 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "steamlocate"
-version = "1.2.0"
-source = "git+https://github.com/WilliamVenner/steamlocate-rs#a6c155a8348f6c6e1a7971f1058aad887c8b8c4d"
+version = "1.2.1"
+source = "git+https://github.com/WilliamVenner/steamlocate-rs#49826554e81fab76994ecbb843b3480173f611b5"
 dependencies = [
  "dirs",
  "keyvalues-parser",
