@@ -28,6 +28,7 @@ OutputDir=..\target\release
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+CloseApplications=force
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
