@@ -216,20 +216,29 @@ fn servers_view<'l>(
         ViewMode::Normal => server_view,
         ViewMode::Compact => compact_server_view,
     };
-    let servers = servers.iter().filter(|server| filter.accept(server, bookmarks));
-    let servers_list = container(
-        widget::scrollable(servers.fold(column![], |c, server| {
-            c.push(
-                container((server_view_fn)(server, bookmarks, game_modes))
-                    /* <- THIS IS TO PREVENT THE SCROLLBAR TO OVERLAP THE VIEW */
-                    .padding([4, 16, 4, 8]),
+    let servers: Vec<&Server> = servers.iter().filter(|server| filter.accept(server, bookmarks)).collect();
+    let servers_list = match servers.is_empty() {
+        true => container(text("No servers!"))
+            .center_x()
+            .center_y()
+            .height(Length::Fill)
+            .width(Length::Fill),
+        false => {
+            container(
+                widget::scrollable(servers.iter().fold(column![], |c, server| {
+                    c.push(
+                        container((server_view_fn)(server, bookmarks, game_modes))
+                            /* <- THIS IS TO PREVENT THE SCROLLBAR TO OVERLAP THE VIEW */
+                            .padding([4, 16, 4, 8]),
+                    )
+                }))
+                .on_scroll(Message::ServerListScroll)
+                .id(servers_list.id.clone()),
             )
-        }))
-        .on_scroll(Message::ServerListScroll)
-        .id(servers_list.id.clone()),
-    )
-    .height(Length::Fill)
-    .width(Length::Fill);
+            .height(Length::Fill)
+            .width(Length::Fill)
+        }
+    };
 
     servers_list.into()
 }
