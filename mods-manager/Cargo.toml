@@ -16,7 +16,7 @@ thiserror = "1"
 tokio = { version = "1.28.0", features = ["fs", "macros"] }
 walkdir = "2.3.3"
 
-zip = "0.6.4"
+zip = "0.6.5"
 sevenz-rust = { version = "0.2.9", default-features = false, features = ["zstd", "bzip2"] }
 # If https://github.com/muja/unrar.rs/pull/29 get merged switch back
 # to the original repository.
