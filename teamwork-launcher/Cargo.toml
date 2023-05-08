@@ -30,7 +30,7 @@ lazy_static = "1.4.0"
 itertools = "0.10"
 nom = "7"
 unidecode = "0.3.0"
-sysinfo = "0.28"
+sysinfo = "0.29"
 platform-dirs = "0.3.0"
 tokio = { version = "1.28.0", features = ["macros", "time"] }
 log = "0.4"
