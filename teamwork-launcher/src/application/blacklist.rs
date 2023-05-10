@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use {
     crate::application::{IpPort, Server},
     nom::Finish,
@@ -110,25 +111,6 @@ mod parsing {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use {
-        crate::application::{blacklist::BlacklistEntry, IpPort},
-        std::net::Ipv4Addr,
-        test_case::test_case,
-    };
-
-    #[test_case("hello", BlacklistEntry::Text("hello".to_string()))]
-    #[test_case("123.45.67.89", BlacklistEntry::Ip(Ipv4Addr::new(123, 45, 67, 89)))]
-    #[test_case(
-        "123.45.67.89:321",
-        BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(123, 45, 67, 89), 321))
-    )]
-    fn test_entry_parse(input: &str, expected: BlacklistEntry) {
-        assert_eq!(BlacklistEntry::parse(input), expected)
-    }
-}
-
 #[derive(Serialize, Deserialize, Default)]
 pub struct Blacklist {
     entries: Vec<BlacklistEntry>,
@@ -198,4 +180,175 @@ pub async fn import_blacklist() -> Result<Vec<BlacklistEntry>, ImportBlacklistEr
     }
 
     Ok(terms)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::application::blacklist::Blacklist;
+    use crate::application::Server;
+    use {
+        crate::application::{blacklist::BlacklistEntry, IpPort},
+        std::net::Ipv4Addr,
+        test_case::test_case,
+    };
+
+    #[test_case("hello", BlacklistEntry::Text("hello".to_string()))]
+    #[test_case("123.45.67.89", BlacklistEntry::Ip(Ipv4Addr::new(123, 45, 67, 89)))]
+    #[test_case(
+    "123.45.67.89:321",
+    BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(123, 45, 67, 89), 321))
+    )]
+    fn test_entry_parse(input: &str, expected: BlacklistEntry) {
+        assert_eq!(BlacklistEntry::parse(input), expected)
+    }
+
+    #[test]
+    fn test_blacklist_by_ip() {
+        let accepted_server = Server {
+            name: "test 2".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(4, 3, 2, 1), 1234),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let rejected_server = Server {
+            name: "test".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 1234),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let mut blacklist = Blacklist::default();
+
+        blacklist.push(BlacklistEntry::Ip(Ipv4Addr::new(1, 2, 3, 4)));
+
+        assert_eq!(false, blacklist.accept(&rejected_server));
+        assert_eq!(true, blacklist.accept(&accepted_server));
+    }
+
+    #[test]
+    fn test_blacklist_by_ip_port() {
+        let accepted_server = Server {
+            name: "test 2".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 421),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let rejected_server = Server {
+            name: "test".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 1234),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let mut blacklist = Blacklist::default();
+
+        blacklist.push(BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 1234)));
+
+        assert_eq!(false, blacklist.accept(&rejected_server));
+        assert_eq!(true, blacklist.accept(&accepted_server));
+    }
+
+    #[test]
+    fn test_blacklist_by_text_port() {
+        let accepted_server = Server {
+            name: "test 2".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 421),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let rejected_server = Server {
+            name: "test_reject".to_string(),
+            max_players_count: 0,
+            current_players_count: 0,
+            map: Default::default(),
+            next_map: None,
+            map_thumbnail: Default::default(),
+            ip_port: IpPort::new(Ipv4Addr::new(1, 2, 3, 4), 1234),
+            country: Default::default(),
+            ping: Default::default(),
+            source_key: None,
+            game_modes: vec![],
+            provider: "".to_string(),
+            vac_secured: false,
+            has_rtd: false,
+            has_no_respawn_time: false,
+            has_all_talk: false,
+            has_random_crits: false,
+            need_password: false,
+        };
+        let mut blacklist = Blacklist::default();
+
+        blacklist.push(BlacklistEntry::Text("reject".into()));
+
+        assert_eq!(false, blacklist.accept(&rejected_server));
+        assert_eq!(true, blacklist.accept(&accepted_server));
+    }
 }
