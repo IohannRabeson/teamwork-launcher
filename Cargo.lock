@@ -2672,6 +2672,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nt-time"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91dd7a30dbf611fc3c790404c9ef8e1631971a9dd020a45905c7685727e9cf43"
+dependencies = [
+ "chrono",
+ "time 0.3.20",
+]
+
+[[package]]
 name = "ntapi"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3893,9 +3903,9 @@ dependencies = [
 
 [[package]]
 name = "sevenz-rust"
-version = "0.2.10"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1e99665d02305372743530ff8b84069ea54f4edee8eceb4c92f840e5664c7b3"
+checksum = "0bf83efe73d438a1aad929279a2fc0ff3fb32f841421c09a64f3d04c4d162a23"
 dependencies = [
  "bit-set",
  "byteorder",
@@ -3904,6 +3914,7 @@ dependencies = [
  "filetime_creation",
  "js-sys",
  "lzma-rust",
+ "nt-time",
  "sha2 0.9.9",
  "wasm-bindgen",
  "zstd 0.12.3+zstd.1.5.2",
