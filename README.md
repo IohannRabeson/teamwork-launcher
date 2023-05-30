@@ -6,7 +6,7 @@ Launcher for Team Fortress 2 that uses Teamwork.tf as data source.
 ![Main view blu](/screenshots/main_view_blu.png?raw=true)
 
 # How to clone
-Mind to also clone sub modules with `--recursive`:
+Mind to also clone sub modules with `--recursive`:  
 `git clone --recursive https://github.com/IohannRabeson/teamwork-launcher.git`
 
 # Supported platforms
