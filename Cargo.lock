@@ -978,9 +978,9 @@ dependencies = [
 
 [[package]]
 name = "enum-as-inner"
-version = "0.5.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "356538125fac8ab67d41d09b010daa294659f0b6279a175a947ad5c254b6114c"
+checksum = "5ffccbb6966c05b32ef8fbac435df276c4ae4d3dc55a8cd0eb9745e6c12f546a"
 dependencies = [
  "heck",
  "proc-macro2",
