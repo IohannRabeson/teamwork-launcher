@@ -17,7 +17,7 @@ tokio = { version = "1.28.2", features = ["fs", "macros"] }
 walkdir = "2.3.3"
 
 zip = "0.6.6"
-sevenz-rust = { version = "0.2.11", default-features = false, features = ["zstd", "bzip2"] }
+sevenz-rust = { version = "0.4.0", default-features = false, features = ["zstd", "bzip2"] }
 # If https://github.com/muja/unrar.rs/pull/29 get merged switch back
 # to the original repository.
 unrar = { git = "https://github.com/IohannRabeson/unrar.rs" }
