@@ -19,7 +19,7 @@ walkdir = "2.3.3"
 zip = "0.6.6"
 # We have to enable the feature "compress" even if we don't need it
 # to be able to build sevenz-rust. See https://github.com/dyz1990/sevenz-rust/issues/22.
-sevenz-rust = { version = "0.4.0", default-features = false, features = ["zstd", "bzip2", "compress"] }
+sevenz-rust = { version = "0.4.2", default-features = false, features = ["zstd", "bzip2", "compress"] }
 # If https://github.com/muja/unrar.rs/pull/29 get merged switch back
 # to the original repository.
 unrar = { git = "https://github.com/IohannRabeson/unrar.rs" }
