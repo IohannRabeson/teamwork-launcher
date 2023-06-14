@@ -4733,7 +4733,7 @@ checksum = "402bb19d8e03f1d1a7450e2bd613980869438e0666331be3e073089124aa1adc"
 [[package]]
 name = "unrar"
 version = "0.4.4"
-source = "git+https://github.com/IohannRabeson/unrar.rs#fc67ca1b9a64ccd572c980a5d66685fa4da8190e"
+source = "git+https://github.com/muja/unrar.rs#b8f213903955c066a494dc92a790549f2ab9b1e9"
 dependencies = [
  "bitflags",
  "enum_primitive",
@@ -4747,7 +4747,7 @@ dependencies = [
 [[package]]
 name = "unrar_sys"
 version = "0.2.1"
-source = "git+https://github.com/IohannRabeson/unrar.rs#fc67ca1b9a64ccd572c980a5d66685fa4da8190e"
+source = "git+https://github.com/muja/unrar.rs#b8f213903955c066a494dc92a790549f2ab9b1e9"
 dependencies = [
  "cc",
  "libc",
