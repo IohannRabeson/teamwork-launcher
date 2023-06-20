@@ -52,6 +52,3 @@ vergen = { version = "8", features = ["build", "git", "git2"] }
 identifier = "com.io.teamwork-launcher"
 copyright = "Copyright (c) Iohann Rabeson 2023. All rights reserved."
 osx_minimum_system_version = "10.8"
-
-[features]
-flaky-tests = ["mods-manager/flaky-tests"]
