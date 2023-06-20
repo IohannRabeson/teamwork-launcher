@@ -71,15 +71,17 @@ pub async fn uninstall(mod_path: &Path, mods_directory: PathBuf) -> Result<(), s
 
 #[cfg(all(test, feature = "flaky-tests"))]
 mod slow_tests {
+    use std::path::{Path, PathBuf};
     use {
         super::install,
         crate::{ModName, Source},
         tempdir::TempDir,
     };
+    use crate::tests::get_resource_path;
 
     #[tokio::test]
     async fn test_install_zip() {
-        let source = Source::DownloadUrl("https://github.com/n0kk/ahud/archive/refs/heads/master.zip".into());
+        let source = Source::LocalArchive(get_resource_path("ahud-master.zip"));
         let directory = TempDir::new("test_install_zip").unwrap();
         let install = install(source, ModName::new("ahud-master"), directory.path().to_path_buf()).await;
         let entry = install.as_installed().unwrap().0;
@@ -89,7 +91,7 @@ mod slow_tests {
 
     #[tokio::test]
     async fn test_install_7z() {
-        let source = Source::DownloadUrl("https://www.dropbox.com/s/cwwmppnn3nn68av/3HUD.7z?dl=1".into());
+        let source = Source::LocalArchive(get_resource_path("3HUD.7z"));
         let directory = TempDir::new("test_install_7z").unwrap();
         let install = install(source, ModName::new("3HUD"), directory.path().to_path_buf()).await;
         let entry = install.as_installed().unwrap().0;
@@ -99,7 +101,7 @@ mod slow_tests {
 
     #[tokio::test]
     async fn test_install_vpk() {
-        let source = Source::DownloadUrl("https://gamebanana.com/dl/945012".into());
+        let source = Source::LocalArchive(get_resources_path("minhud_plus.zip"));
         let directory = TempDir::new("test_install_vpk").unwrap();
         let install = install(source, ModName::new("minhud_plus"), directory.path().to_path_buf()).await;
         let entry = install.as_installed().unwrap().0;

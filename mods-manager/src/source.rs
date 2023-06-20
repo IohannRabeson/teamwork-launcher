@@ -11,6 +11,7 @@ use {
 pub enum Source {
     None,
     DownloadUrl(String),
+    LocalArchive(PathBuf),
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -42,6 +43,9 @@ pub async fn fetch_package(source: Source, directory: impl AsRef<Path>) -> Resul
         Source::DownloadUrl(url) => {
             let archive_file_path = download_url(&url, &directory).await?;
 
+            extract_archive(&archive_file_path, &directory)?
+        }
+        Source::LocalArchive(archive_file_path) => {
             extract_archive(&archive_file_path, &directory)?
         }
     };
@@ -200,6 +204,12 @@ mod tests {
         super::{extract_file_name, is_valid_filename_with_extension},
         test_case::test_case,
     };
+    use {
+        super::fetch_package,
+        crate::{ModName, Source},
+        tempdir::TempDir,
+    };
+    use crate::tests::get_resource_path;
 
     #[test_case(
         "https://github.com/n0kk/ahud/archive/refs/heads/master.zip",
@@ -213,24 +223,17 @@ mod tests {
     }
 
     #[test_case("3HUD.7z", true)]
+    #[test_case("3HUD.rar", true)]
+    #[test_case("3HUD.zip", true)]
     #[test_case("BAAAAD", false)]
     fn test_is_valid_filename_with_extension(input: &str, expected: bool) {
         assert_eq!(expected, is_valid_filename_with_extension(input))
     }
-}
-
-#[cfg(test)]
-mod slow_tests {
-    use {
-        super::fetch_package,
-        crate::{ModName, Source},
-        tempdir::TempDir,
-    };
 
     #[tokio::test]
     async fn test_fetch_zip() {
         let directory = TempDir::new("test_fetch_zip").unwrap();
-        let source = Source::DownloadUrl("https://github.com/n0kk/ahud/archive/refs/heads/master.zip".into());
+        let source = Source::LocalArchive(get_resource_path("ahud-master.zip"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
@@ -240,7 +243,7 @@ mod slow_tests {
     #[tokio::test]
     async fn test_fetch_7z() {
         let directory = TempDir::new("test_fetch_7z").unwrap();
-        let source = Source::DownloadUrl("https://www.dropbox.com/s/cwwmppnn3nn68av/3HUD.7z?dl=1".into());
+        let source = Source::LocalArchive(get_resource_path("3HUD.7z"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
@@ -250,27 +253,17 @@ mod slow_tests {
     #[tokio::test]
     async fn test_fetch_rar() {
         let directory = TempDir::new("test_fetch_rar").unwrap();
-        let source = Source::DownloadUrl("https://gamebanana.com/dl/815166".into());
+        let source = Source::LocalArchive(get_resource_path("sbk_scattergun_v2.rar"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
-        assert_eq!(package.entries().next().unwrap().name, ModName::new("Black-Mesa-HUD"));
+        assert_eq!(package.entries().next().unwrap().name, ModName::new("SBK Scattergun v2"));
     }
 
     #[tokio::test]
     async fn test_fetch_7z_gamebanana() {
-        let directory = TempDir::new("test_fetch_7z_gamebanana").unwrap();
-        let source = Source::DownloadUrl("https://gamebanana.com/dl/601806".into());
-        let package = fetch_package(source, directory.path()).await.unwrap();
-
-        assert_eq!(package.entries().count(), 1);
-        assert_eq!(package.entries().next().unwrap().name, ModName::new("7hud-5.11"));
-    }
-
-    #[tokio::test]
-    async fn test_fetch_gamebanana_hud_name_without_quotes() {
-        let directory = TempDir::new("test_fetch_gamebanana").unwrap();
-        let source = Source::DownloadUrl("https://gamebanana.com/dl/601806".into());
+        let directory = TempDir::new("test_fetch_7hud").unwrap();
+        let source = Source::LocalArchive(get_resource_path("7hud-511.zip"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
@@ -280,22 +273,20 @@ mod slow_tests {
     #[tokio::test]
     async fn test_fetch_masterconfig() {
         let directory = TempDir::new("test_fetch_masterconfig").unwrap();
-        let source = Source::DownloadUrl(
-            "https://codeload.github.com/p3tr1ch0r/insomniaHUD/legacy.zip/9753cfb9d655a617d4527cce37fca079f740378f".into(),
-        );
+        let source = Source::LocalArchive(get_resource_path("leadpaws-insomniaHUD-9753cfb.zip"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
         assert_eq!(
             package.entries().next().unwrap().name,
-            ModName::new("p3tr1ch0r-insomniaHUD-9753cfb")
+            ModName::new("leadpaws-insomniaHUD-9753cfb")
         );
     }
 
     #[tokio::test]
     async fn test_fetch_minihub_vpk() {
         let directory = TempDir::new("test_fetch_vpk").unwrap();
-        let source = Source::DownloadUrl("https://gamebanana.com/dl/945012".into());
+        let source = Source::LocalArchive(get_resource_path("minhud_plus.zip"));
         let package = fetch_package(source, directory.path()).await.unwrap();
 
         assert_eq!(package.entries().count(), 1);
