@@ -128,12 +128,20 @@ mod archives {
     fn extract_rar(archive_file_path: &Path, destination_directory: impl AsRef<Path>) -> Result<PathBuf, ArchiveError> {
         let destination_directory = destination_directory.as_ref();
 
-        unrar::Archive::new(archive_file_path)
-            .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(RarError(e.to_string()))))?
-            .extract_to(destination_directory)
-            .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(RarError(e.to_string()))))?
-            .process()
-            .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(RarError(e.to_string()))))?;
+        let mut archive =
+            unrar::Archive::new(archive_file_path)
+                .open_for_processing()
+                .unwrap();
+
+        while let Some(header) = archive.read_header().map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))? {
+            archive = if header.entry().is_file() {
+                header.extract_with_base(destination_directory)
+                    .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))
+                    ?
+            } else {
+                header.skip().map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))?
+            };
+        }
 
         Ok(destination_directory.to_path_buf())
     }
