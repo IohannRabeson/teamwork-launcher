@@ -27,6 +27,7 @@ pub enum FetchServersMessage {
     FetchServersFinish,
     FetchServersError(Arc<teamwork::Error>),
     NewServers(Vec<Server>),
+    ServerInfoReady(Option<Server>),
 }
 
 #[derive(Debug, Clone)]
@@ -187,6 +188,7 @@ pub enum Message {
     Blacklist(BlacklistMessage),
     Mods(ModsMessage),
     RefreshServers,
+    RefreshServer(IpPort),
     ShowSettings,
     ShowServer(IpPort, MapName),
     ShowMods,

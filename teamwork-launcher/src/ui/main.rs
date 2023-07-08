@@ -100,6 +100,8 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
                         .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
                         .on_press(Message::CopyConnectionString(server.ip_port.clone())),
+                    svg_button(icons::REFRESH_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::RefreshServer(server.ip_port.clone())),
                     svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
                 ]
                 .padding(4)
@@ -172,6 +174,8 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
                         .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
                     svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
                         .on_press(Message::CopyConnectionString(server.ip_port.clone())),
+                    svg_button(icons::REFRESH_ICON.clone(), BUTTON_SIZE)
+                        .on_press(Message::RefreshServer(server.ip_port.clone())),
                     svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
                 ]
                 .spacing(4)
