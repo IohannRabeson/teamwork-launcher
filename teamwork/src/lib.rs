@@ -1,3 +1,4 @@
+use std::net::Ipv4Addr;
 use {
     self::models::GameModes,
     async_mutex::Mutex,
@@ -65,6 +66,7 @@ struct ThumbnailResponse {
 const TEAMWORK_TF_QUICKPLAY_API: &str = "https://teamwork.tf/api/v1/quickplay";
 const TEAMWORK_TF_MAP_THUMBNAIL_API: &str = "https://teamwork.tf/api/v1/map-stats/mapthumbnail";
 const TEAMWORK_TF_MAP_STATS_API: &str = "https://teamwork.tf/api/v1/map-stats/map";
+
 const TEAMWORK_TOO_MANY_ATTEMPTS: &str = "Too Many Attempts.";
 
 mod map_details_response_json {
@@ -168,6 +170,13 @@ impl Client {
         game_modes.extend(modes.community);
 
         Ok(game_modes)
+    }
+
+    pub async fn get_server(&self, ip: Ipv4Addr, port: u16, api_key: &str) -> Result<Option<Server>, Error> {
+        let url = UrlWithKey::new(format!("https://teamwork.tf/api/v1/quickplay/server?ip={0}&port={1}", ip, port), api_key);
+        let mut servers: Vec<Server> = self.get(&url).await?;
+
+        Ok(servers.pop())
     }
 
     pub async fn get_servers(&self, url: UrlWithKey) -> Result<Vec<Server>, Error> {

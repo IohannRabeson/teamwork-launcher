@@ -228,6 +228,7 @@ impl iced::Application for TeamworkLauncher {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::RefreshServers => self.refresh_servers(),
+            Message::RefreshServer(ip_port) => return self.refresh_server(ip_port),
             Message::Servers(message) => {
                 self.process_server_message(message);
             }
@@ -405,6 +406,43 @@ impl TeamworkLauncher {
         self.sort_server();
     }
 
+    fn update_server(&mut self, server: Server) {
+        if let Some(index) = self.servers.iter().position(|s|s.ip_port == server.ip_port) {
+            if self.servers[index].map != server.map {
+                self.servers[index].map = server.map;
+                self.servers[index].map_thumbnail = PromisedValue::Loading;
+
+                if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
+                    thumbnail_sender
+                        .send(self.servers[index].map.clone())
+                        .unwrap_or_else(|e| error!("thumbnail sender {}", e))
+                        .now_or_never();
+                }
+            }
+
+            if let Some(ping_sender) = &mut self.ping_request_sender {
+                ping_sender
+                    .send(server.ip_port.ip().clone())
+                    .unwrap_or_else(|e| error!("ping sender {}", e))
+                    .now_or_never();
+            }
+
+            self.servers[index].name = server.name;
+            self.servers[index].max_players_count = server.max_players_count;
+            self.servers[index].current_players_count = server.current_players_count;
+            self.servers[index].next_map = server.next_map;
+            self.servers[index].ping = PromisedValue::Loading;
+            self.servers[index].game_modes = server.game_modes;
+            self.servers[index].provider = server.provider;
+            self.servers[index].vac_secured = server.vac_secured;
+            self.servers[index].has_rtd = server.has_rtd;
+            self.servers[index].has_no_respawn_time = server.has_no_respawn_time;
+            self.servers[index].has_all_talk = server.has_all_talk;
+            self.servers[index].has_random_crits = server.has_random_crits;
+            self.servers[index].need_password = server.need_password;
+        }
+    }
+
     fn on_finish(&mut self) {
         self.is_loading_servers = false;
 
@@ -523,6 +561,33 @@ impl TeamworkLauncher {
             self.filter.players.maximum_players = 0;
             self.fetch_servers_subscription_id += 1;
         }
+    }
+
+    fn refresh_server(&mut self, ip_port: IpPort) -> Command<<TeamworkLauncher as iced::Application>::Message> {
+        if !self.user_settings.has_teamwork_api_key() {
+            self.push_notification(
+                "No Teamwork.tf API key specified.\nSet your API key in the settings.",
+                NotificationKind::Error,
+            );
+
+            return Command::none()
+        }
+
+        let api_key = self.user_settings.teamwork_api_key();
+
+        Command::perform(Self::fetch_server(ip_port.ip().clone(), ip_port.port(), api_key),
+        |result| {
+            match result {
+                Ok(server) => Message::Servers(FetchServersMessage::ServerInfoReady(server)),
+                Err(error) => Message::Servers(FetchServersMessage::FetchServersError(Arc::new(error))),
+            }
+        })
+    }
+
+    async fn fetch_server(ip: Ipv4Addr, port: u16, api_key: String) -> Result<Option<Server>, teamwork::Error> {
+        let client = teamwork::Client::default();
+
+        Ok(client.get_server(ip, port, &api_key).await?.map(std::convert::Into::<Server>::into))
     }
 
     fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
@@ -872,6 +937,11 @@ impl TeamworkLauncher {
                 );
             }
             FetchServersMessage::NewServers(new_servers) => self.new_servers(new_servers),
+            FetchServersMessage::ServerInfoReady(server) => {
+                if let Some(server) = server {
+                    self.update_server(server);
+                }
+            },
         }
     }
 
