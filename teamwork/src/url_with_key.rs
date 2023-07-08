@@ -17,7 +17,11 @@ impl UrlWithKey {
     }
 
     pub fn make_url(&self) -> String {
-        format!("{}?key={}", self.url, self.api_key)
+        let mut url = url::Url::parse(&self.url).unwrap();
+
+        url.query_pairs_mut().append_pair("key", &self.api_key);
+
+        url.to_string()
     }
 }
 
