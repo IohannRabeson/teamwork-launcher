@@ -10,6 +10,7 @@ use {
     },
     surge_ping::{Client, Config, IcmpPacket, PingIdentifier, PingSequence},
 };
+use crate::application::PingRequest;
 
 #[derive(Clone)]
 struct PingService {
@@ -60,7 +61,7 @@ impl Default for PingService {
 
 enum State {
     Starting,
-    Ready(UnboundedReceiver<Ipv4Addr>, PingService),
+    Ready(UnboundedReceiver<PingRequest>, PingService),
 }
 
 pub fn subscription() -> Subscription<PingServiceMessage> {
@@ -77,11 +78,11 @@ pub fn subscription() -> Subscription<PingServiceMessage> {
             State::Ready(mut receiver, service) => {
                 use iced::futures::StreamExt;
 
-                let ip = receiver.select_next_some().await;
+                let request = receiver.select_next_some().await;
 
-                match service.ping(&ip).await {
-                    Ok(duration) => (PingServiceMessage::Answer(ip, duration), State::Ready(receiver, service)),
-                    Err(error) => (PingServiceMessage::Error(ip, error), State::Ready(receiver, service)),
+                match service.ping(&request.ip).await {
+                    Ok(duration) => (PingServiceMessage::Answer(request.ip, duration, request.sort), State::Ready(receiver, service)),
+                    Err(error) => (PingServiceMessage::Error(request.ip, error, request.sort), State::Ready(receiver, service)),
                 }
             }
         }

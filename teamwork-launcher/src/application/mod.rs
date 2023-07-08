@@ -109,6 +109,11 @@ pub enum ViewMode {
     Compact,
 }
 
+pub struct PingRequest {
+    pub ip: Ipv4Addr,
+    pub sort: bool,
+}
+
 pub struct TeamworkLauncher {
     views: Views<Screens>,
     servers: Vec<Server>,
@@ -130,7 +135,7 @@ pub struct TeamworkLauncher {
     testing_mode_enabled: bool,
 
     country_request_sender: Option<UnboundedSender<Ipv4Addr>>,
-    ping_request_sender: Option<UnboundedSender<Ipv4Addr>>,
+    ping_request_sender: Option<UnboundedSender<PingRequest>>,
     map_thumbnail_request_sender: Option<UnboundedSender<MapName>>,
     thumbnails_cache: ThumbnailCache,
     progress: Progress,
@@ -422,7 +427,7 @@ impl TeamworkLauncher {
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
-                    .send(server.ip_port.ip().clone())
+                    .send(PingRequest{ ip: server.ip_port.ip().clone(), sort: false})
                     .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
             }
@@ -497,7 +502,7 @@ impl TeamworkLauncher {
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
-                    .send(*ip)
+                    .send(PingRequest{ ip: *ip, sort: true })
                     .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
 
@@ -604,7 +609,7 @@ impl TeamworkLauncher {
         self.progress.increment_current();
     }
 
-    fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>) {
+    fn ping_found(&mut self, ip: Ipv4Addr, duration: Option<Duration>, sort_servers: bool) {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
             if duration.is_none() {
                 self.servers_counts.timeouts += 1;
@@ -613,7 +618,9 @@ impl TeamworkLauncher {
             server.ping = duration.into();
         }
 
-        self.sort_server();
+        if sort_servers {
+            self.sort_server();
+        }
 
         self.progress.increment_current();
     }
@@ -896,12 +903,12 @@ impl TeamworkLauncher {
                 self.ping_request_sender = Some(sender);
                 debug!("Ping service started");
             }
-            PingServiceMessage::Answer(ip, duration) => {
-                self.ping_found(ip, Some(duration));
+            PingServiceMessage::Answer(ip, duration, sort) => {
+                self.ping_found(ip, Some(duration), sort);
             }
-            PingServiceMessage::Error(ip, error) => {
+            PingServiceMessage::Error(ip, error, sort) => {
                 error!("Ping service error: {}", error);
-                self.ping_found(ip, None);
+                self.ping_found(ip, None, sort);
             }
         }
     }

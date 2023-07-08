@@ -20,6 +20,7 @@ use {
     mods_manager::{Install, ModName, PackageEntry, Source},
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
 };
+use crate::application::PingRequest;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {
@@ -39,9 +40,9 @@ pub enum CountryServiceMessage {
 
 #[derive(Debug, Clone)]
 pub enum PingServiceMessage {
-    Started(UnboundedSender<Ipv4Addr>),
-    Answer(Ipv4Addr, Duration),
-    Error(Ipv4Addr, ping::Error),
+    Started(UnboundedSender<PingRequest>),
+    Answer(Ipv4Addr, Duration, bool),
+    Error(Ipv4Addr, ping::Error, bool),
 }
 
 #[derive(Debug, Clone)]
