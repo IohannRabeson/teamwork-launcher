@@ -408,9 +408,15 @@ impl TeamworkLauncher {
 
         self.filter.country.dictionary.extend(countries);
         self.servers.extend(new_servers.into_iter());
-        self.sort_server();
+        self.sort_servers();
     }
 
+    /// Update the information about a specific server, identified by the IP/port.
+    ///
+    /// Notice I do not update:
+    /// - the country: because the IP does not change
+    /// - the name: because Teamwork.tf is weird and return different name (its always the same name but with emoji) when
+    /// refreshing only one server.
     fn update_server(&mut self, server: Server) {
         if let Some(index) = self.servers.iter().position(|s|s.ip_port == server.ip_port) {
             if self.servers[index].map != server.map {
@@ -432,7 +438,6 @@ impl TeamworkLauncher {
                     .now_or_never();
             }
 
-            self.servers[index].name = server.name;
             self.servers[index].max_players_count = server.max_players_count;
             self.servers[index].current_players_count = server.current_players_count;
             self.servers[index].next_map = server.next_map;
@@ -451,7 +456,7 @@ impl TeamworkLauncher {
     fn on_finish(&mut self) {
         self.is_loading_servers = false;
 
-        self.sort_server();
+        self.sort_servers();
 
         for server in self.servers.iter_mut() {
             if let Some(image) = self.thumbnails_cache.get(&server.map) {
@@ -604,7 +609,7 @@ impl TeamworkLauncher {
 
         self.servers_counts.add_country(country);
 
-        self.sort_server();
+        self.sort_servers();
 
         self.progress.increment_current();
     }
@@ -619,7 +624,7 @@ impl TeamworkLauncher {
         }
 
         if sort_servers {
-            self.sort_server();
+            self.sort_servers();
         }
 
         self.progress.increment_current();
@@ -639,7 +644,7 @@ impl TeamworkLauncher {
         self.progress.increment_current();
     }
 
-    fn sort_server(&mut self) {
+    fn sort_servers(&mut self) {
         match self.filter.sort_direction {
             SortDirection::Ascending => {
                 self.servers.sort_by(|l, r| sort_servers(self.filter.sort_criterion, l, r));
@@ -837,11 +842,11 @@ impl TeamworkLauncher {
             }
             FilterMessage::SortCriterionChanged(criterion) => {
                 self.filter.sort_criterion = criterion;
-                self.sort_server();
+                self.sort_servers();
             }
             FilterMessage::SortDirectionChanged(direction) => {
                 self.filter.sort_direction = direction;
-                self.sort_server();
+                self.sort_servers();
             }
             FilterMessage::MinimumPlayersChanged(value) => {
                 self.filter.players.minimum_players = value;
