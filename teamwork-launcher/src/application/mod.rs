@@ -418,7 +418,7 @@ impl TeamworkLauncher {
     /// - the name: because Teamwork.tf is weird and return different name (its always the same name but with emoji) when
     /// refreshing only one server.
     fn update_server(&mut self, server: Server) {
-        if let Some(index) = self.servers.iter().position(|s|s.ip_port == server.ip_port) {
+        if let Some(index) = self.servers.iter().position(|s| s.ip_port == server.ip_port) {
             if self.servers[index].map != server.map {
                 self.servers[index].map = server.map;
                 self.servers[index].map_thumbnail = PromisedValue::Loading;
@@ -433,7 +433,10 @@ impl TeamworkLauncher {
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
-                    .send(PingRequest{ ip: server.ip_port.ip().clone(), sort: false})
+                    .send(PingRequest {
+                        ip: server.ip_port.ip().clone(),
+                        sort: false,
+                    })
                     .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
             }
@@ -507,7 +510,7 @@ impl TeamworkLauncher {
 
             if let Some(ping_sender) = &mut self.ping_request_sender {
                 ping_sender
-                    .send(PingRequest{ ip: *ip, sort: true })
+                    .send(PingRequest { ip: *ip, sort: true })
                     .unwrap_or_else(|e| error!("ping sender {}", e))
                     .now_or_never();
 
@@ -580,24 +583,27 @@ impl TeamworkLauncher {
                 NotificationKind::Error,
             );
 
-            return Command::none()
+            return Command::none();
         }
 
         let api_key = self.user_settings.teamwork_api_key();
 
-        Command::perform(Self::fetch_server(ip_port.ip().clone(), ip_port.port(), api_key),
-        |result| {
-            match result {
+        Command::perform(
+            Self::fetch_server(ip_port.ip().clone(), ip_port.port(), api_key),
+            |result| match result {
                 Ok(server) => Message::Servers(FetchServersMessage::ServerInfoReady(server)),
                 Err(error) => Message::Servers(FetchServersMessage::FetchServersError(Arc::new(error))),
-            }
-        })
+            },
+        )
     }
 
     async fn fetch_server(ip: Ipv4Addr, port: u16, api_key: String) -> Result<Option<Server>, teamwork::Error> {
         let client = teamwork::Client::default();
 
-        Ok(client.get_server(ip, port, &api_key).await?.map(std::convert::Into::<Server>::into))
+        Ok(client
+            .get_server(ip, port, &api_key)
+            .await?
+            .map(std::convert::Into::<Server>::into))
     }
 
     fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
@@ -953,7 +959,7 @@ impl TeamworkLauncher {
                 if let Some(server) = server {
                     self.update_server(server);
                 }
-            },
+            }
         }
     }
 

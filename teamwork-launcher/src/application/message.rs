@@ -11,7 +11,7 @@ use {
         ping,
         servers_source::SourceKey,
         user_settings::LauncherTheme,
-        Country, FetchServersEvent, IpPort, Server,
+        Country, FetchServersEvent, IpPort, PingRequest, Server,
     },
     iced::{
         futures::channel::mpsc::UnboundedSender,
@@ -20,7 +20,6 @@ use {
     mods_manager::{Install, ModName, PackageEntry, Source},
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
 };
-use crate::application::PingRequest;
 
 #[derive(Debug, Clone)]
 pub enum FetchServersMessage {

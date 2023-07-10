@@ -183,10 +183,11 @@ pub async fn import_blacklist() -> Result<Vec<BlacklistEntry>, ImportBlacklistEr
 
 #[cfg(test)]
 mod tests {
-    use crate::application::blacklist::Blacklist;
-    use crate::application::Server;
     use {
-        crate::application::{blacklist::BlacklistEntry, IpPort},
+        crate::application::{
+            blacklist::{Blacklist, BlacklistEntry},
+            IpPort, Server,
+        },
         std::net::Ipv4Addr,
         test_case::test_case,
     };
@@ -194,8 +195,8 @@ mod tests {
     #[test_case("hello", BlacklistEntry::Text("hello".to_string()))]
     #[test_case("123.45.67.89", BlacklistEntry::Ip(Ipv4Addr::new(123, 45, 67, 89)))]
     #[test_case(
-    "123.45.67.89:321",
-    BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(123, 45, 67, 89), 321))
+        "123.45.67.89:321",
+        BlacklistEntry::IpPort(IpPort::new(Ipv4Addr::new(123, 45, 67, 89), 321))
     )]
     fn test_entry_parse(input: &str, expected: BlacklistEntry) {
         assert_eq!(BlacklistEntry::parse(input), expected)

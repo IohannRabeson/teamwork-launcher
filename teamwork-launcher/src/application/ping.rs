@@ -1,5 +1,5 @@
 use {
-    crate::application::message::PingServiceMessage,
+    crate::application::{message::PingServiceMessage, PingRequest},
     iced::{
         futures::channel::mpsc::{unbounded, UnboundedReceiver},
         subscription, Subscription,
@@ -10,7 +10,6 @@ use {
     },
     surge_ping::{Client, Config, IcmpPacket, PingIdentifier, PingSequence},
 };
-use crate::application::PingRequest;
 
 #[derive(Clone)]
 struct PingService {
@@ -81,8 +80,14 @@ pub fn subscription() -> Subscription<PingServiceMessage> {
                 let request = receiver.select_next_some().await;
 
                 match service.ping(&request.ip).await {
-                    Ok(duration) => (PingServiceMessage::Answer(request.ip, duration, request.sort), State::Ready(receiver, service)),
-                    Err(error) => (PingServiceMessage::Error(request.ip, error, request.sort), State::Ready(receiver, service)),
+                    Ok(duration) => (
+                        PingServiceMessage::Answer(request.ip, duration, request.sort),
+                        State::Ready(receiver, service),
+                    ),
+                    Err(error) => (
+                        PingServiceMessage::Error(request.ip, error, request.sort),
+                        State::Ready(receiver, service),
+                    ),
                 }
             }
         }
