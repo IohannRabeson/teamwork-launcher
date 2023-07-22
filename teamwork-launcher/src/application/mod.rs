@@ -411,6 +411,42 @@ impl TeamworkLauncher {
         self.sort_servers();
     }
 
+    fn request_map_thumbnail(&mut self, map_name: MapName) {
+        let thumbnail_sender = self.map_thumbnail_request_sender.as_mut().unwrap();
+
+        thumbnail_sender
+            .send(map_name)
+            .unwrap_or_else(|e| error!("thumbnail sender {}", e))
+            .now_or_never();
+
+        self.progress.increment_total();
+    }
+
+    fn request_ping(&mut self, ip: Ipv4Addr, sort: bool) {
+        let ping_sender = self.ping_request_sender.as_mut().unwrap();
+
+        ping_sender
+            .send(PingRequest {
+                ip,
+                sort,
+            })
+            .unwrap_or_else(|e| error!("ping sender {}", e))
+            .now_or_never();
+
+        self.progress.increment_total();
+    }
+
+    fn request_country(&mut self, ip: Ipv4Addr) {
+        let country_sender = self.country_request_sender.as_mut().unwrap();
+
+        country_sender
+            .send(ip)
+            .unwrap_or_else(|e| error!("country sender {}", e))
+            .now_or_never();
+
+        self.progress.increment_total();
+    }
+
     /// Update the information about a specific server, identified by the IP/port.
     ///
     /// Notice I do not update:
@@ -423,23 +459,10 @@ impl TeamworkLauncher {
                 self.servers[index].map = server.map;
                 self.servers[index].map_thumbnail = PromisedValue::Loading;
 
-                if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
-                    thumbnail_sender
-                        .send(self.servers[index].map.clone())
-                        .unwrap_or_else(|e| error!("thumbnail sender {}", e))
-                        .now_or_never();
-                }
+                self.request_map_thumbnail(self.servers[index].map.clone());
             }
 
-            if let Some(ping_sender) = &mut self.ping_request_sender {
-                ping_sender
-                    .send(PingRequest {
-                        ip: server.ip_port.ip().clone(),
-                        sort: false,
-                    })
-                    .unwrap_or_else(|e| error!("ping sender {}", e))
-                    .now_or_never();
-            }
+            self.request_ping(server.ip_port.ip().clone(), false);
 
             self.servers[index].max_players_count = server.max_players_count;
             self.servers[index].current_players_count = server.current_players_count;
@@ -486,36 +509,18 @@ impl TeamworkLauncher {
             }
 
             unique_map_names.insert(server.map.clone());
-
-            if let Some(thumbnail_sender) = &mut self.map_thumbnail_request_sender {
-                thumbnail_sender
-                    .send(server.map.clone())
-                    .unwrap_or_else(|e| error!("thumbnail sender {}", e))
-                    .now_or_never();
-
-                self.progress.increment_total();
-            }
         }
 
-        // Request country for each server
-        for ip in servers_refs.iter().map(|server| server.ip_port.ip()).unique() {
-            if let Some(country_sender) = &mut self.country_request_sender {
-                country_sender
-                    .send(*ip)
-                    .unwrap_or_else(|e| error!("country sender {}", e))
-                    .now_or_never();
+        let unique_ips: BTreeSet<Ipv4Addr> = BTreeSet::from_iter(servers_refs.iter().map(|server| server.ip_port.ip()).cloned());
 
-                self.progress.increment_total();
-            }
+        drop(servers_refs);
 
-            if let Some(ping_sender) = &mut self.ping_request_sender {
-                ping_sender
-                    .send(PingRequest { ip: *ip, sort: true })
-                    .unwrap_or_else(|e| error!("ping sender {}", e))
-                    .now_or_never();
-
-                self.progress.increment_total();
-            }
+        for ip in unique_ips.iter() {
+            self.request_country(*ip);
+            self.request_ping(*ip, true);
+        }
+        for map in unique_map_names.iter().cloned() {
+            self.request_map_thumbnail(map);
         }
 
         // Update counts
