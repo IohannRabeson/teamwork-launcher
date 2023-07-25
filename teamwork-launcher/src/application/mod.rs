@@ -611,14 +611,16 @@ impl TeamworkLauncher {
             .map(std::convert::Into::<Server>::into))
     }
 
-    fn country_found(&mut self, ip: Ipv4Addr, country: Country) {
-        self.filter.country.dictionary.add(country.clone());
-
+    fn country_found(&mut self, ip: Ipv4Addr, country: Option<Country>) {
         for server in self.servers.iter_mut().filter(|server| server.ip_port.ip() == &ip) {
-            server.country = PromisedValue::Ready(country.clone());
+            server.country = country.clone().into();
         }
 
-        self.servers_counts.add_country(country);
+        if let Some(country) = country {
+            self.filter.country.dictionary.add(country.clone());
+
+            self.servers_counts.add_country(country);
+        }
 
         self.sort_servers();
 
@@ -936,10 +938,11 @@ impl TeamworkLauncher {
                 debug!("country service started");
             }
             CountryServiceMessage::CountryFound(ip, country) => {
-                self.country_found(ip, country);
+                self.country_found(ip, Some(country));
             }
-            CountryServiceMessage::Error(error) => {
+            CountryServiceMessage::Error(ip, error) => {
                 error!("Country service error: {}", error);
+                self.country_found(ip, None);
             }
         }
     }

@@ -80,7 +80,7 @@ pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> 
     match country {
         PromisedValue::Ready(country) => country_icon(country, size, padding),
         PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
-        PromisedValue::None => text("Region: unknown").into(),
+        PromisedValue::None => text("Unknown").into(),
     }
 }
 

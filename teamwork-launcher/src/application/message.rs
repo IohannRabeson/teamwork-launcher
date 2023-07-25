@@ -34,7 +34,7 @@ pub enum FetchServersMessage {
 pub enum CountryServiceMessage {
     Started(UnboundedSender<Ipv4Addr>),
     CountryFound(Ipv4Addr, Country),
-    Error(geolocation::Error),
+    Error(Ipv4Addr, geolocation::Error),
 }
 
 #[derive(Debug, Clone)]

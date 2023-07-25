@@ -1,3 +1,4 @@
+use std::time::Duration;
 use {
     crate::application::{country::Country, message::CountryServiceMessage},
     iced::{
@@ -36,13 +37,13 @@ struct CountryIsResponse {
     country: String,
 }
 
-async fn locate(ip: &Ipv4Addr) -> Result<Country, Error> {
+async fn locate(ip: &Ipv4Addr, timeout: Duration) -> Result<Country, Error> {
     const COUNTRY_IS_API_URL: &str = "https://api.country.is";
 
     let url = format!("{}/{}", COUNTRY_IS_API_URL, ip);
     let ip = ip.to_string();
-    let raw_text = reqwest::get(url)
-        .await
+    let client = reqwest::Client::builder().timeout(timeout).build().map_err(|error| Error::new(ip.clone(), &error))?;
+    let raw_text = client.get(url).send().await
         .map_err(|error| Error::new(ip.clone(), &error))?
         .text()
         .await
@@ -75,15 +76,20 @@ pub fn subscription() -> Subscription<CountryServiceMessage> {
                 let ip = receiver.select_next_some().await;
 
                 match cache.entry(ip) {
-                    Entry::Vacant(vacant) => match locate(&ip).await {
-                        Ok(country) => {
-                            vacant.insert(country.clone());
-                            (
-                                CountryServiceMessage::CountryFound(ip, country),
-                                State::Ready(receiver, cache),
-                            )
+                    Entry::Vacant(vacant) => {
+                        match locate(&ip, Duration::from_secs(10)).await {
+                            Ok(country) => {
+                                vacant.insert(country.clone());
+                                (
+                                    CountryServiceMessage::CountryFound(ip, country),
+                                    State::Ready(receiver, cache),
+                                )
+                            }
+                            Err(error) => {
+                                (CountryServiceMessage::Error(ip, error),
+                                 State::Ready(receiver, cache))
+                            },
                         }
-                        Err(error) => (CountryServiceMessage::Error(error), State::Ready(receiver, cache)),
                     },
                     Entry::Occupied(occupied) => (
                         CountryServiceMessage::CountryFound(ip, occupied.get().clone()),
