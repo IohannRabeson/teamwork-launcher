@@ -13,9 +13,6 @@ Mind to also clone sub modules with `--recursive`:
 The application is tested on Windows and partially tested on MacOS, and might build and run on Linux.  
 Pull requests are welcome to improve specific platform support.
 
-On MacOS (and Linux), the ping can't be queried without starting the application with privileges, this is a limitation
-that comes from the library surge-ping (see [#30](https://github.com/kolapapa/surge-ping/issues/30)).
-
 # How to use it
 You must have a [Teamwork](https://teamwork.tf) API key.  
 To get one, connect to [teamwork.tf](https://teamwork.tf), go to https://teamwork.tf/settings and click "Show optional settings".  
