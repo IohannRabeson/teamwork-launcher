@@ -143,8 +143,8 @@ impl container::StyleSheet for GameModeStyle {
 
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
-            border_radius: 4.0,
-            border_width: 1.0,
+            border_radius: 4.0.into(),
+            border_width: 1.0.into(),
             border_color: self.color,
             ..Default::default()
         }

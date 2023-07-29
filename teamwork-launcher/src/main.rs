@@ -102,7 +102,7 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
     let blacklist = read_file(configuration_directory.join("blacklist.json")).unwrap_or_default();
     let mods = read_bin_file(configuration_directory.join("mods.registry")).unwrap_or_default();
 
-    if let Some(window_settings) = user_settings.window.clone() {
+    let mut settings = if let Some(window_settings) = user_settings.window.clone() {
         let mut settings = Settings::with_flags(ApplicationFlags {
             bookmarks,
             user_settings,
@@ -135,7 +135,11 @@ fn load_settings(testing_mode_enabled: bool) -> Settings<ApplicationFlags> {
             mods,
             blacklist,
         })
-    }
+    };
+
+    settings.default_font = fonts::DEFAULT_FONT;
+
+    settings
 }
 
 fn setup_logger(configuration_directory: &Path) -> Result<(), fern::InitError> {

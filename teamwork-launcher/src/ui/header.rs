@@ -35,7 +35,7 @@ impl button::StyleSheet for FeedbackNotificationStyle {
         button::Appearance {
             background: Some(Background::Color(style.palette().success)),
             text_color: style.palette().text,
-            border_radius: NOTIFICATION_BORDER_RADIUS,
+            border_radius: NOTIFICATION_BORDER_RADIUS.into(),
             ..Default::default()
         }
     }
@@ -50,7 +50,7 @@ impl button::StyleSheet for ErrorNotificationStyle {
         button::Appearance {
             background: Some(Background::Color(style.palette().danger)),
             text_color: style.palette().text,
-            border_radius: NOTIFICATION_BORDER_RADIUS,
+            border_radius: NOTIFICATION_BORDER_RADIUS.into(),
             ..Default::default()
         }
     }
@@ -103,7 +103,7 @@ pub fn header_view<'a>(title: &str, view: &Screens, notifications: &'a Notificat
 
     match notifications.current() {
         None => content.into(),
-        Some(notification) => FloatingElement::new(content, || create_notification(notification))
+        Some(notification) => FloatingElement::new(content, create_notification(notification))
             .anchor(Anchor::North)
             .offset([0.0, 8.0])
             .into(),

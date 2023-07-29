@@ -58,7 +58,7 @@ pub fn view(context: &AddModView) -> Element<Message> {
 
             let content = container(main_column).height(Length::Fill).center_y();
 
-            FloatingElement::new(content, || button("X").on_press(Message::Back).into())
+            FloatingElement::new(content, button("X").on_press(Message::Back))
                 .anchor(Anchor::NorthEast)
                 .into()
         }

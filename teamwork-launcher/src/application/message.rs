@@ -1,3 +1,4 @@
+use iced::widget::scrollable::Viewport;
 use {
     crate::application::{
         blacklist::{BlacklistEntry, ImportBlacklistError},
@@ -15,7 +16,7 @@ use {
     },
     iced::{
         futures::channel::mpsc::UnboundedSender,
-        widget::{image, pane_grid, scrollable::RelativeOffset},
+        widget::{image, pane_grid},
     },
     mods_manager::{Install, ModName, PackageEntry, Source},
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},
@@ -196,8 +197,9 @@ pub enum Message {
     CopyConnectionString(IpPort),
     Bookmarked(IpPort, bool),
     CopyToClipboard(String),
-    ServerListScroll(RelativeOffset),
+    ServerListScroll(Viewport),
     Back,
+    FontLoaded(Result<(), iced::font::Error>),
 }
 
 impl From<FetchServersEvent> for Message {

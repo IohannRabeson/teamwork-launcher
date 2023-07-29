@@ -109,8 +109,8 @@ impl button::StyleSheet for SelectedInfoView {
         button::Appearance {
             shadow_offset: Default::default(),
             background: Some(Background::Color(style.palette().primary)),
-            border_radius: 0.0,
-            border_width: 0.0,
+            border_radius: 0.0.into(),
+            border_width: 0.0.into(),
             border_color: Color::TRANSPARENT,
             text_color: style.palette().text,
         }
@@ -132,8 +132,8 @@ impl button::StyleSheet for UnselectedInfoView {
         button::Appearance {
             shadow_offset: Default::default(),
             background: Some(Background::Color(color::brighter(style.palette().background))),
-            border_radius: 0.0,
-            border_width: 0.0,
+            border_radius: 0.0.into(),
+            border_width: 0.0.into(),
             border_color: Color::TRANSPARENT,
             text_color: style.palette().text,
         }
