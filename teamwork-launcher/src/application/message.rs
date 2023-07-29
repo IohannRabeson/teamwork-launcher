@@ -1,4 +1,3 @@
-use iced::widget::scrollable::Viewport;
 use {
     crate::application::{
         blacklist::{BlacklistEntry, ImportBlacklistError},
@@ -16,7 +15,7 @@ use {
     },
     iced::{
         futures::channel::mpsc::UnboundedSender,
-        widget::{image, pane_grid},
+        widget::{image, pane_grid, scrollable::Viewport},
     },
     mods_manager::{Install, ModName, PackageEntry, Source},
     std::{net::Ipv4Addr, path::PathBuf, sync::Arc, time::Duration},

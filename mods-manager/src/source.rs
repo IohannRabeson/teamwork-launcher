@@ -45,9 +45,7 @@ pub async fn fetch_package(source: Source, directory: impl AsRef<Path>) -> Resul
 
             extract_archive(&archive_file_path, &directory)?
         }
-        Source::LocalArchive(archive_file_path) => {
-            extract_archive(&archive_file_path, &directory)?
-        }
+        Source::LocalArchive(archive_file_path) => extract_archive(&archive_file_path, &directory)?,
     };
 
     Ok(Package::open(package_root_directory)?)
@@ -128,18 +126,20 @@ mod archives {
     fn extract_rar(archive_file_path: &Path, destination_directory: impl AsRef<Path>) -> Result<PathBuf, ArchiveError> {
         let destination_directory = destination_directory.as_ref();
 
-        let mut archive =
-            unrar::Archive::new(archive_file_path)
-                .open_for_processing()
-                .unwrap();
+        let mut archive = unrar::Archive::new(archive_file_path).open_for_processing().unwrap();
 
-        while let Some(header) = archive.read_header().map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))? {
+        while let Some(header) = archive
+            .read_header()
+            .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))?
+        {
             archive = if header.entry().is_file() {
-                header.extract_with_base(destination_directory)
-                    .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))
-                    ?
+                header
+                    .extract_with_base(destination_directory)
+                    .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))?
             } else {
-                header.skip().map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))?
+                header
+                    .skip()
+                    .map_err(|e| ArchiveError::ReadFailed(archive_file_path.to_path_buf(), Box::new(e)))?
             };
         }
 
@@ -196,7 +196,8 @@ async fn download_url(url: &str, directory: impl AsRef<Path>) -> Result<PathBuf,
     let directory = directory.as_ref();
     let response = backoff::future::retry(backoff::ExponentialBackoff::default(), || async {
         Ok(reqwest::get(url).await?)
-    }).await?;
+    })
+    .await?;
     let file_name = get_file_name(url, &response).ok_or(FetchError::InvalidUrl(url.to_string()))?;
     let archive_file_path = directory.join(file_name);
     let content = response.bytes().await?;
@@ -209,15 +210,11 @@ async fn download_url(url: &str, directory: impl AsRef<Path>) -> Result<PathBuf,
 #[cfg(test)]
 mod tests {
     use {
-        super::{extract_file_name, is_valid_filename_with_extension},
+        super::{extract_file_name, fetch_package, is_valid_filename_with_extension},
+        crate::{tests::get_resource_path, ModName, Source},
+        tempdir::TempDir,
         test_case::test_case,
     };
-    use {
-        super::fetch_package,
-        crate::{ModName, Source},
-        tempdir::TempDir,
-    };
-    use crate::tests::get_resource_path;
 
     #[test_case(
         "https://github.com/n0kk/ahud/archive/refs/heads/master.zip",

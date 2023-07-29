@@ -30,10 +30,13 @@ use {
     iced::{
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
         subscription, theme,
-        widget::{column, container, image, pane_grid, scrollable},
+        widget::{
+            column, container, image,
+            pane_grid::{self, Axis},
+            scrollable,
+        },
         Command, Element, Renderer, Subscription, Theme,
     },
-    iced::widget::pane_grid::Axis,
     iced_views::Views,
     itertools::Itertools,
     log::{debug, error, trace},
@@ -331,7 +334,7 @@ impl iced::Application for TeamworkLauncher {
                 if let Err(error) = result {
                     panic!("Failed to load font: {:?}", error);
                 }
-            },
+            }
         }
 
         Command::none()
@@ -438,10 +441,7 @@ impl TeamworkLauncher {
         let ping_sender = self.ping_request_sender.as_mut().unwrap();
 
         ping_sender
-            .send(PingRequest {
-                ip,
-                sort,
-            })
+            .send(PingRequest { ip, sort })
             .unwrap_or_else(|e| error!("ping sender {}", e))
             .now_or_never();
 
@@ -523,7 +523,8 @@ impl TeamworkLauncher {
             unique_map_names.insert(server.map.clone());
         }
 
-        let unique_ips: BTreeSet<Ipv4Addr> = BTreeSet::from_iter(servers_refs.iter().map(|server| server.ip_port.ip()).cloned());
+        let unique_ips: BTreeSet<Ipv4Addr> =
+            BTreeSet::from_iter(servers_refs.iter().map(|server| server.ip_port.ip()).cloned());
 
         drop(servers_refs);
 
