@@ -1,10 +1,9 @@
-use std::net::Ipv4Addr;
 use {
     self::models::GameModes,
     async_mutex::Mutex,
     log::{error, trace},
     serde::{de::DeserializeOwned, Deserialize},
-    std::{collections::BTreeMap, sync::Arc, time::Duration},
+    std::{collections::BTreeMap, net::Ipv4Addr, sync::Arc, time::Duration},
 };
 pub use {
     models::{GameMode, Server},
@@ -173,7 +172,10 @@ impl Client {
     }
 
     pub async fn get_server(&self, ip: Ipv4Addr, port: u16, api_key: &str) -> Result<Option<Server>, Error> {
-        let url = UrlWithKey::new(format!("https://teamwork.tf/api/v1/quickplay/server?ip={0}&port={1}", ip, port), api_key);
+        let url = UrlWithKey::new(
+            format!("https://teamwork.tf/api/v1/quickplay/server?ip={0}&port={1}", ip, port),
+            api_key,
+        );
         let mut servers: Vec<Server> = self.get(&url).await?;
 
         Ok(servers.pop())

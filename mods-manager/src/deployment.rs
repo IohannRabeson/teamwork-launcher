@@ -73,10 +73,9 @@ pub async fn uninstall(mod_path: &Path, mods_directory: PathBuf) -> Result<(), s
 mod tests {
     use {
         super::install,
-        crate::{ModName, Source},
+        crate::{tests::get_resource_path, ModName, Source},
         tempdir::TempDir,
     };
-    use crate::tests::get_resource_path;
 
     #[tokio::test]
     async fn test_install_zip() {

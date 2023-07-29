@@ -4,8 +4,10 @@ use {
         icons,
         ui::{self, buttons::svg_button},
     },
-    iced::widget::{column, row, text, text_input, Component},
-    iced::Element,
+    iced::{
+        widget::{column, row, text, text_input, Component},
+        Element,
+    },
 };
 
 pub struct Blacklist<'l> {

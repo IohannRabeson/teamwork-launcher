@@ -1,4 +1,3 @@
-use iced::widget::responsive;
 use {
     crate::{
         application::{
@@ -20,14 +19,14 @@ use {
     },
     iced::{
         theme,
-        widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, Image, PaneGrid},
+        widget::{
+            self, column, container, horizontal_space, pane_grid, progress_bar, responsive, row,
+            scrollable::{self, RelativeOffset},
+            text, toggler, Container, Image, PaneGrid,
+        },
         Alignment, Element, Length,
     },
     iced_aw::Spinner,
-    iced::widget::{
-        progress_bar,
-        scrollable::{self, RelativeOffset},
-    },
 };
 
 pub struct ViewContext<'l> {

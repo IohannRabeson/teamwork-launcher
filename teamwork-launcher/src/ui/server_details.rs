@@ -15,11 +15,10 @@ use {
     },
     iced::{
         theme,
-        widget::{column, container, image, row, text, vertical_space, Image},
+        widget::{button, column, container, image, row, text, vertical_space, Image},
         Alignment, Element, Length,
     },
     iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
-    iced::widget::button,
 };
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
@@ -118,9 +117,12 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
             .spacing(4);
 
             column![
-                FloatingElement::new(screenshot(Some(image)), container(text(map_name.as_str()).font(fonts::TF2_SECONDARY).size(28))
+                FloatingElement::new(
+                    screenshot(Some(image)),
+                    container(text(map_name.as_str()).font(fonts::TF2_SECONDARY).size(28))
                         .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
-                        .padding(4))
+                        .padding(4)
+                )
                 .anchor(Anchor::NorthWest),
                 container(navigation_buttons).width(Length::Fill).center_x(),
                 vertical_space(Length::Shrink),
