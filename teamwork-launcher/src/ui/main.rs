@@ -26,8 +26,8 @@ use {
         },
         Alignment, Element, Length,
     },
-    iced_aw::Spinner,
 };
+use crate::ui::widgets::spinner;
 
 pub struct ViewContext<'l> {
     pub panes: &'l pane_grid::State<PaneView>,
@@ -56,7 +56,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
                     context.servers_list,
                     context.servers_list_view_mode,
                 ),
-                true => container(Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
+                true => container(spinner(Length::Fixed(20.0), 2.0))
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .center_x()
@@ -148,7 +148,7 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
             .width(Length::Fill)
             .content_fit(THUMBNAIL_CONTENT_FIT)
             .into(),
-        PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
+        PromisedValue::Loading => container(spinner(Length::Fixed(32.0), 2.5))
             .width(Length::Fill)
             .height(Length::Fixed(250.0))
             .center_x()

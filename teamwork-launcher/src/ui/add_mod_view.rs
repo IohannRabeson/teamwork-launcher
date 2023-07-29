@@ -12,18 +12,14 @@ use {
         widget::{button, column, container, horizontal_space, row, text, text_input},
         Alignment, Element, Length,
     },
-    iced_aw::{floating_element::Anchor, native::FloatingElement, Spinner},
+    iced_aw::{floating_element::Anchor, native::FloatingElement},
     mods_manager::Source,
 };
+use crate::ui::widgets::spinner;
 
 pub fn view(context: &AddModView) -> Element<Message> {
     match context.scanning {
-        true => container(
-            Spinner::new()
-                .circle_radius(4.0)
-                .width(Length::Fixed(64.0))
-                .height(Length::Fixed(64.0)),
-        )
+        true => container(spinner(Length::Fixed(64.0), 4.0))
         .width(Length::Fill)
         .height(Length::Fill)
         .center_x()
