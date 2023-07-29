@@ -18,8 +18,9 @@ use {
         widget::{button, column, container, image, row, text, vertical_space, Image},
         Alignment, Element, Length,
     },
-    iced_aw::{floating_element::Anchor, FloatingElement, Spinner},
+    iced_aw::{floating_element::Anchor, FloatingElement},
 };
+use crate::ui::widgets::spinner;
 
 fn yes_no<'l>(value: bool) -> Element<'l, Message> {
     match value {
@@ -130,7 +131,7 @@ fn screenshot_view<'l>(screenshots: &'l Screenshots, map_name: &'l MapName) -> E
             .width(Length::FillPortion(2))
             .into()
         }
-        PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(64.0)).height(Length::Fixed(64.0)))
+        PromisedValue::Loading => container(spinner(Length::Fixed(64.0), 2.0))
             .center_x()
             .center_y()
             .width(Length::FillPortion(2))
