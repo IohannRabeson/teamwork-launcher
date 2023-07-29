@@ -12,7 +12,7 @@ impl container::StyleSheet for ToolTip {
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
             background: Some(Background::Color(Color::from_rgb(0.3, 0.3, 0.3))),
-            border_radius: 4f32,
+            border_radius: 4f32.into(),
             ..Default::default()
         }
     }
@@ -60,7 +60,7 @@ impl container::StyleSheet for BoxContainerStyle {
         let background = style.palette().background;
 
         container::Appearance {
-            background: background.into(),
+            background: Some(Background::Color(background)),
             ..Default::default()
         }
     }

@@ -1,3 +1,4 @@
+use iced::widget::responsive;
 use {
     crate::{
         application::{
@@ -23,8 +24,7 @@ use {
         Alignment, Element, Length,
     },
     iced_aw::Spinner,
-    iced_lazy::responsive,
-    iced_native::widget::{
+    iced::widget::{
         progress_bar,
         scrollable::{self, RelativeOffset},
     },

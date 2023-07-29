@@ -9,7 +9,6 @@ use {
         widget::image,
         Subscription,
     },
-    iced_native::image::Data,
     log::{error, trace},
     std::{
         collections::BTreeMap,
@@ -161,7 +160,7 @@ impl ThumbnailCache {
                 break;
             }
 
-            if let Data::Bytes(bytes) = handle.data() {
+            if let iced::advanced::image::Data::Bytes(bytes) = handle.data() {
                 let file_path = self.directory_path.join(map_name.as_str());
 
                 current_bytes += bytes.len() as u64;

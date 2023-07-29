@@ -6,7 +6,7 @@ use {
         Message, TeamworkLauncher,
     },
     iced::widget::text_input,
-    iced_native::Command,
+    iced::Command,
     mods_manager::{Install, Source},
     reqwest::Url,
 };
