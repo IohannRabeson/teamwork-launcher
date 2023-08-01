@@ -15,7 +15,7 @@ iced = { version = "0.9.0", features = ["tokio", "svg", "image"] }
 # For access to image::Data
 iced_native = "0.10.1"
 iced_lazy = "0.6.1"
-iced_aw = { version = "0.5.2", default-features = false, features = ["floating_element", "number_input", "spinner"] }
+iced_aw = { version = "0.6.0", default-features = false, features = ["floating_element", "number_input", "spinner"] }
 thiserror = "1"
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1"
