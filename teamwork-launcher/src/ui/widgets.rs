@@ -63,7 +63,7 @@ pub fn tooltip<'a>(
 pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
         PromisedValue::Ready(duration) => ping_icon(duration, 20),
-        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => spinner(Length::Fixed(20.0), 2.0),
         PromisedValue::None => text("Timeout").into(),
     }
 }
@@ -71,7 +71,7 @@ pub fn ping<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
 pub fn ping_time<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
     match value {
         PromisedValue::Ready(duration) => text(format!("{}ms", duration.as_millis())).into(),
-        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => spinner(Length::Fixed(20.0), 2.0),
         PromisedValue::None => horizontal_space(Length::Shrink).into(),
     }
 }
@@ -79,15 +79,19 @@ pub fn ping_time<'a>(value: &PromisedValue<Duration>) -> Element<'a, Message> {
 pub fn region<'a>(country: &PromisedValue<Country>, size: u16, padding: u16) -> Element<'a, Message> {
     match country {
         PromisedValue::Ready(country) => country_icon(country, size, padding),
-        PromisedValue::Loading => Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)).into(),
+        PromisedValue::Loading => spinner(Length::Fixed(20.0), 2.0),
         PromisedValue::None => text("Unknown").into(),
     }
+}
+
+pub fn spinner<'l>(length: Length, indicator_size: f32) -> Element<'l, Message> {
+    Spinner::new().width(length).height(length).circle_radius(indicator_size).into()
 }
 
 pub fn image_thumbnail_content<'a>(image: &PromisedValue<image::Handle>) -> Element<'a, Message> {
     match image {
         PromisedValue::Ready(image) => Image::new(image.clone()).content_fit(THUMBNAIL_CONTENT_FIT).into(),
-        PromisedValue::Loading => Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)).into(),
+        PromisedValue::Loading => spinner(Length::Fixed(32.0), 2.0),
         PromisedValue::None => Image::new(icons::NO_IMAGE.clone()).into(),
     }
 }
@@ -143,8 +147,8 @@ impl container::StyleSheet for GameModeStyle {
 
     fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
-            border_radius: 4.0,
-            border_width: 1.0,
+            border_radius: 4.0.into(),
+            border_width: 1.0.into(),
             border_color: self.color,
             ..Default::default()
         }

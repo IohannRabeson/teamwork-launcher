@@ -30,10 +30,13 @@ use {
     iced::{
         futures::{channel::mpsc::UnboundedSender, FutureExt, SinkExt, TryFutureExt},
         subscription, theme,
-        widget::{column, container, image, pane_grid, scrollable},
+        widget::{
+            column, container, image,
+            pane_grid::{self, Axis},
+            scrollable,
+        },
         Command, Element, Renderer, Subscription, Theme,
     },
-    iced_native::widget::pane_grid::Axis,
     iced_views::Views,
     itertools::Itertools,
     log::{debug, error, trace},
@@ -182,6 +185,13 @@ impl iced::Application for TeamworkLauncher {
 
         panes.resize(&panes_split, flags.user_settings.servers_filter_pane_ratio);
 
+        let initial_commands = Command::batch(vec![
+            mods_management::commands::scan_mods_directory(mods_directory),
+            iced::font::load(include_bytes!("../fonts/tf2build.ttf").as_slice()).map(Message::FontLoaded),
+            iced::font::load(include_bytes!("../fonts/TF2secondary.ttf").as_slice()).map(Message::FontLoaded),
+            iced::font::load(include_bytes!("../fonts/Lato-Regular.ttf").as_slice()).map(Message::FontLoaded),
+        ]);
+
         (
             Self {
                 views: Views::new(Screens::Main),
@@ -216,7 +226,7 @@ impl iced::Application for TeamworkLauncher {
                 panes_split,
                 servers_list_view_mode: ViewMode::Normal,
             },
-            mods_management::commands::scan_mods_directory(mods_directory),
+            initial_commands,
         )
     }
 
@@ -314,11 +324,16 @@ impl iced::Application for TeamworkLauncher {
                 self.screenshots.set(PromisedValue::Loading);
                 return screenshots::fetch_screenshot(map_name, self.user_settings.teamwork_api_key());
             }
-            Message::ServerListScroll(position) => {
-                self.servers_list.scroll_position = position;
+            Message::ServerListScroll(viewport) => {
+                self.servers_list.scroll_position = viewport.relative_offset();
             }
             Message::ShowMods => {
                 self.views.push(Screens::Mods);
+            }
+            Message::FontLoaded(result) => {
+                if let Err(error) = result {
+                    panic!("Failed to load font: {:?}", error);
+                }
             }
         }
 
@@ -426,10 +441,7 @@ impl TeamworkLauncher {
         let ping_sender = self.ping_request_sender.as_mut().unwrap();
 
         ping_sender
-            .send(PingRequest {
-                ip,
-                sort,
-            })
+            .send(PingRequest { ip, sort })
             .unwrap_or_else(|e| error!("ping sender {}", e))
             .now_or_never();
 
@@ -511,7 +523,8 @@ impl TeamworkLauncher {
             unique_map_names.insert(server.map.clone());
         }
 
-        let unique_ips: BTreeSet<Ipv4Addr> = BTreeSet::from_iter(servers_refs.iter().map(|server| server.ip_port.ip()).cloned());
+        let unique_ips: BTreeSet<Ipv4Addr> =
+            BTreeSet::from_iter(servers_refs.iter().map(|server| server.ip_port.ip()).cloned());
 
         drop(servers_refs);
 

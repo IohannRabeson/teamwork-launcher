@@ -11,9 +11,9 @@ use {
         widget::{button, column, container, row, scrollable, text, vertical_space, Container},
         Alignment, Background, Color, Element, Length, Theme,
     },
-    iced_aw::Spinner,
     mods_manager::{Install, ModInfo, ModName, Registry},
 };
+use crate::ui::widgets::spinner;
 
 pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Element<'a, Message> {
     row![
@@ -31,7 +31,7 @@ pub fn view<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_lo
 
 fn action_list<'a>(registry: &'a Registry, selected_mod: Option<&'a ModName>, is_loading: bool) -> Container<'a, Message> {
     if is_loading {
-        return container(Spinner::new())
+        return container(spinner(Length::Fixed(20.0), 2.0))
             .style(theme::Container::Custom(Box::new(BoxContainerStyle)))
             .center_x()
             .center_y()
@@ -109,8 +109,8 @@ impl button::StyleSheet for SelectedInfoView {
         button::Appearance {
             shadow_offset: Default::default(),
             background: Some(Background::Color(style.palette().primary)),
-            border_radius: 0.0,
-            border_width: 0.0,
+            border_radius: 0.0.into(),
+            border_width: 0.0.into(),
             border_color: Color::TRANSPARENT,
             text_color: style.palette().text,
         }
@@ -132,8 +132,8 @@ impl button::StyleSheet for UnselectedInfoView {
         button::Appearance {
             shadow_offset: Default::default(),
             background: Some(Background::Color(color::brighter(style.palette().background))),
-            border_radius: 0.0,
-            border_width: 0.0,
+            border_radius: 0.0.into(),
+            border_width: 0.0.into(),
             border_color: Color::TRANSPARENT,
             text_color: style.palette().text,
         }

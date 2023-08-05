@@ -5,8 +5,7 @@ use {
         screens::{AddModView, Screens},
         Message, TeamworkLauncher,
     },
-    iced::widget::text_input,
-    iced_native::Command,
+    iced::{widget::text_input, Command},
     mods_manager::{Install, Source},
     reqwest::Url,
 };

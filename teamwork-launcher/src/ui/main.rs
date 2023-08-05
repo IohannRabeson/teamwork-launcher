@@ -11,24 +11,24 @@ use {
         icons,
         ui::{
             self,
-            buttons::{favorite_button, svg_button},
+            buttons::{svg_button},
             styles::BoxContainerStyle,
-            widgets::{self, ping, region, thumbnail},
+            widgets::{self, ping, region, thumbnail, tooltip},
             THUMBNAIL_CONTENT_FIT,
         },
     },
     iced::{
         theme,
-        widget::{self, column, container, horizontal_space, pane_grid, row, text, toggler, Container, Image, PaneGrid},
+        widget::{
+            self, column, container, horizontal_space, pane_grid, progress_bar, responsive, row,
+            scrollable::{self, RelativeOffset},
+            text, toggler, Container, Image, PaneGrid,
+        },
         Alignment, Element, Length,
     },
-    iced_aw::Spinner,
-    iced_lazy::responsive,
-    iced_native::widget::{
-        progress_bar,
-        scrollable::{self, RelativeOffset},
-    },
 };
+use crate::ui::widgets::spinner;
+use crate::ui::buttons;
 
 pub struct ViewContext<'l> {
     pub panes: &'l pane_grid::State<PaneView>,
@@ -57,7 +57,7 @@ pub fn view(context: ViewContext) -> Element<Message> {
                     context.servers_list,
                     context.servers_list_view_mode,
                 ),
-                true => container(Spinner::new().width(Length::Fixed(20.0)).height(Length::Fixed(20.0)))
+                true => container(spinner(Length::Fixed(20.0), 2.0))
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .center_x()
@@ -80,13 +80,42 @@ pub fn view(context: ViewContext) -> Element<Message> {
     main_column.spacing(4).into()
 }
 
+const BUTTON_SIZE: u16 = 20;
+
+fn details_button(server: &Server) -> Element<Message> {
+    tooltip(svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
+            .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
+            "Show details", iced::widget::tooltip::Position::Bottom)
+}
+
+fn favorite_button(server: &Server, is_bookmarked: bool) -> Element<Message> {
+    tooltip(buttons::favorite_button(is_bookmarked, BUTTON_SIZE)
+                .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
+            "Add / remove from favorites", iced::widget::tooltip::Position::Bottom)
+}
+
+fn copy_connection_string_button(server: &Server) -> Element<Message> {
+    tooltip(svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
+                .on_press(Message::CopyConnectionString(server.ip_port.clone())),
+            "Copy the connection string to the clipboard", iced::widget::tooltip::Position::Bottom)
+}
+
+fn refresh_server_button(server: &Server) -> Element<Message> {
+    tooltip(svg_button(icons::REFRESH_ICON.clone(), BUTTON_SIZE)
+                .on_press(Message::RefreshServer(server.ip_port.clone())),
+            "Refresh server information", iced::widget::tooltip::Position::Bottom)
+}
+
+fn start_game_button(server: &Server) -> Element<Message> {
+    tooltip(svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
+            "Start Team Fortress 2", iced::widget::tooltip::Position::Bottom)
+}
+
 /// The wide view that displays server information.
 fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l GameModes) -> Element<'l, Message> {
     let is_bookmarked = bookmarks.is_bookmarked(&server.ip_port);
     let ip_port_text = format!("{}:{}", server.ip_port.ip(), server.ip_port.port());
     let game_modes = widgets::game_modes(game_modes, &server.game_modes);
-
-    const BUTTON_SIZE: u16 = 20;
 
     container(
         row![
@@ -94,15 +123,11 @@ fn server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_modes: &'l
             column![
                 row![
                     text(&server.name).size(28).width(Length::Fill),
-                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
-                    favorite_button(is_bookmarked, BUTTON_SIZE)
-                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
-                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
-                    svg_button(icons::REFRESH_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::RefreshServer(server.ip_port.clone())),
-                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
+                    details_button(server),
+                    favorite_button(server, is_bookmarked),
+                    copy_connection_string_button(server),
+                    refresh_server_button(server),
+                    start_game_button(server),
                 ]
                 .padding(4)
                 .spacing(4),
@@ -149,7 +174,7 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
             .width(Length::Fill)
             .content_fit(THUMBNAIL_CONTENT_FIT)
             .into(),
-        PromisedValue::Loading => container(Spinner::new().width(Length::Fixed(32.0)).height(Length::Fixed(32.0)))
+        PromisedValue::Loading => container(spinner(Length::Fixed(32.0), 2.5))
             .width(Length::Fill)
             .height(Length::Fixed(250.0))
             .center_x()
@@ -168,15 +193,11 @@ fn compact_server_view<'l>(server: &'l Server, bookmarks: &'l Bookmarks, game_mo
             row![
                 thumbnail,
                 column![
-                    svg_button(icons::INFO_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::ShowServer(server.ip_port.clone(), server.map.clone())),
-                    favorite_button(is_bookmarked, BUTTON_SIZE)
-                        .on_press(Message::Bookmarked(server.ip_port.clone(), !is_bookmarked)),
-                    svg_button(icons::COPY_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::CopyConnectionString(server.ip_port.clone())),
-                    svg_button(icons::REFRESH_ICON.clone(), BUTTON_SIZE)
-                        .on_press(Message::RefreshServer(server.ip_port.clone())),
-                    svg_button(icons::PLAY_ICON.clone(), BUTTON_SIZE).on_press(Message::LaunchGame(server.ip_port.clone())),
+                    details_button(server),
+                    favorite_button(server, is_bookmarked),
+                    copy_connection_string_button(server),
+                    refresh_server_button(server),
+                    start_game_button(server),
                 ]
                 .spacing(4)
             ]

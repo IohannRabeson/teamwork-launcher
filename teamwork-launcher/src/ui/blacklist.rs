@@ -4,9 +4,10 @@ use {
         icons,
         ui::{self, buttons::svg_button},
     },
-    iced::widget::{column, row, text, text_input},
-    iced_lazy::Component,
-    iced_native::Element,
+    iced::{
+        widget::{column, row, text, text_input, Component},
+        Element,
+    },
 };
 
 pub struct Blacklist<'l> {
@@ -85,6 +86,6 @@ impl<'a> Component<Message, iced::Renderer> for Blacklist<'a> {
 
 impl<'a> From<Blacklist<'a>> for Element<'a, Message, iced::Renderer> {
     fn from(blacklist: Blacklist<'a>) -> Self {
-        iced_lazy::component(blacklist)
+        iced::widget::component(blacklist)
     }
 }
