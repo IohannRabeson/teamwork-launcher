@@ -14,4 +14,4 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4.19"
 async-mutex = "1.4.0"
 enum-as-inner = "0.6"
-url = "2.4.0"
+url = "2.4.1"
